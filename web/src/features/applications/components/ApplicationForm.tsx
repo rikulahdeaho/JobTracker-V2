@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import type {
   ApplicationStatus,
   CreateJobApplicationInput,
 } from "../types/application";
+import {
+  applicationFormSchema,
+  type ApplicationFormValues,
+} from "../utils/applicationFormSchema";
 
 type ApplicationFormProps = {
   initialValues?: CreateJobApplicationInput;
@@ -15,6 +21,8 @@ const defaultValues: CreateJobApplicationInput = {
   companyName: "",
   jobTitle: "",
   status: "Draft",
+  appliedDate: "",
+  deadline: "",
   location: "",
   jobUrl: "",
   source: "",
@@ -41,21 +49,21 @@ export function ApplicationForm({
   submitLabel = "Add Application",
   onSubmit,
 }: ApplicationFormProps) {
-  const [values, setValues] = useState(initialValues);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ApplicationFormValues>({
+    resolver: zodResolver(applicationFormSchema),
+    defaultValues: initialValues,
+  });
 
-  function updateField(
-    field: keyof CreateJobApplicationInput,
-    value: string | ApplicationStatus,
-  ) {
-    setValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
+  useEffect(() => {
+    reset(initialValues);
+  }, [initialValues, reset]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function submit(values: ApplicationFormValues) {
     await onSubmit({
       ...values,
       companyName: values.companyName.trim(),
@@ -63,43 +71,38 @@ export function ApplicationForm({
       location: values.location?.trim() || null,
       jobUrl: values.jobUrl?.trim() || null,
       source: values.source?.trim() || null,
+      appliedDate: values.appliedDate || null,
+      deadline: values.deadline || null,
       salaryRange: values.salaryRange?.trim() || null,
       notes: values.notes?.trim() || null,
       jobDescription: values.jobDescription?.trim() || null,
     });
 
-    setValues(initialValues);
+    reset(initialValues);
   }
 
   return (
-    <form className="application-form" onSubmit={handleSubmit}>
+    <form className="application-form" onSubmit={handleSubmit(submit)}>
       <div className="form-grid">
         <label className="field">
           <span>Company</span>
-          <input
-            required
-            value={values.companyName}
-            onChange={(event) => updateField("companyName", event.target.value)}
-          />
+          <input {...register("companyName")} />
+          {errors.companyName && (
+            <small className="field-error">{errors.companyName.message}</small>
+          )}
         </label>
 
         <label className="field">
-          <span>Role</span>
-          <input
-            required
-            value={values.jobTitle}
-            onChange={(event) => updateField("jobTitle", event.target.value)}
-          />
+          <span>Job title</span>
+          <input {...register("jobTitle")} />
+          {errors.jobTitle && (
+            <small className="field-error">{errors.jobTitle.message}</small>
+          )}
         </label>
 
         <label className="field">
           <span>Status</span>
-          <select
-            value={values.status}
-            onChange={(event) =>
-              updateField("status", event.target.value as ApplicationStatus)
-            }
-          >
+          <select {...register("status")}>
             {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -109,56 +112,46 @@ export function ApplicationForm({
         </label>
 
         <label className="field">
-          <span>Location</span>
-          <input
-            value={values.location ?? ""}
-            onChange={(event) => updateField("location", event.target.value)}
-          />
+          <span>Applied date</span>
+          <input type="date" {...register("appliedDate")} />
         </label>
 
-        <label className="field field-full">
+        <label className="field">
+          <span>Deadline</span>
+          <input type="date" {...register("deadline")} />
+        </label>
+
+        <label className="field">
           <span>Job URL</span>
-          <input
-            type="url"
-            value={values.jobUrl ?? ""}
-            onChange={(event) => updateField("jobUrl", event.target.value)}
-          />
+          <input type="url" {...register("jobUrl")} />
+          {errors.jobUrl && (
+            <small className="field-error">{errors.jobUrl.message}</small>
+          )}
+        </label>
+
+        <label className="field">
+          <span>Location</span>
+          <input {...register("location")} />
         </label>
 
         <label className="field">
           <span>Source</span>
-          <input
-            value={values.source ?? ""}
-            onChange={(event) => updateField("source", event.target.value)}
-          />
+          <input {...register("source")} />
         </label>
 
         <label className="field">
           <span>Salary</span>
-          <input
-            value={values.salaryRange ?? ""}
-            onChange={(event) => updateField("salaryRange", event.target.value)}
-          />
+          <input {...register("salaryRange")} />
         </label>
 
         <label className="field field-full">
           <span>Notes</span>
-          <textarea
-            rows={3}
-            value={values.notes ?? ""}
-            onChange={(event) => updateField("notes", event.target.value)}
-          />
+          <textarea rows={3} {...register("notes")} />
         </label>
 
         <label className="field field-full">
           <span>Job Description</span>
-          <textarea
-            rows={5}
-            value={values.jobDescription ?? ""}
-            onChange={(event) =>
-              updateField("jobDescription", event.target.value)
-            }
-          />
+          <textarea rows={5} {...register("jobDescription")} />
         </label>
       </div>
 

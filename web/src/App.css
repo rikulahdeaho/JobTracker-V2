@@ -179,6 +179,29 @@
   text-decoration: underline;
 }
 
+.application-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.application-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.next-action-chip {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .details-shell {
   padding: 8px 0;
 }
@@ -214,6 +237,11 @@
 .field span {
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 0.85rem;
 }
 
 .field input,
@@ -281,6 +309,19 @@
   margin-top: 12px;
 }
 
+.list-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
 @media (max-width: 720px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -310,5 +351,10 @@
   .quick-links-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .application-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

@@ -9,6 +9,7 @@ import {
 } from "../api/applicationsApi";
 import type { CreateJobApplicationInput } from "../types/application";
 import { getStatusLabel, getStatusValue } from "../utils/applicationStatus";
+import { getNextAction } from "../utils/nextAction";
 
 export function ApplicationDetailsPage() {
   const navigate = useNavigate();
@@ -54,10 +55,13 @@ export function ApplicationDetailsPage() {
     location: data.location ?? "",
     source: data.source ?? "",
     status: getStatusValue(data.status),
+    appliedDate: data.appliedDate?.slice(0, 10) ?? "",
+    deadline: data.deadline?.slice(0, 10) ?? "",
     salaryRange: data.salaryRange ?? "",
     notes: data.notes ?? "",
     jobDescription: data.jobDescription ?? "",
   };
+  const nextAction = getNextAction(data);
 
   return (
     <main className="applications-page">
@@ -115,6 +119,10 @@ export function ApplicationDetailsPage() {
 
         <div className="details-list">
           <p>
+            <strong>Next action:</strong> {nextAction.label}
+          </p>
+
+          <p>
             <strong>Status:</strong> {getStatusLabel(data.status)}
           </p>
 
@@ -127,6 +135,18 @@ export function ApplicationDetailsPage() {
           {data.source && (
             <p>
               <strong>Source:</strong> {data.source}
+            </p>
+          )}
+
+          {data.appliedDate && (
+            <p>
+              <strong>Applied:</strong> {data.appliedDate.slice(0, 10)}
+            </p>
+          )}
+
+          {data.deadline && (
+            <p>
+              <strong>Deadline:</strong> {data.deadline.slice(0, 10)}
             </p>
           )}
 

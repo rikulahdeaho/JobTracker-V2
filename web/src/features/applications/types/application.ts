@@ -34,6 +34,8 @@ export type CreateJobApplicationInput = {
   location?: string | null;
   source?: string | null;
   status: ApplicationStatus;
+  appliedDate?: string | null;
+  deadline?: string | null;
   salaryRange?: string | null;
   notes?: string | null;
   jobDescription?: string | null;
