@@ -1,0 +1,51 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Vite / TypeScript
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# .NET / C#
+bin/
+obj/
+.vs/
+TestResults/
+
+# Local app settings
+appsettings.Development.json
+appsettings.Local.json
+
+# SQLite / local databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Tooling caches
+.cache/
+.eslintcache
+
+# Keep generated workspace internals out of git
+.codex/
+.agents/

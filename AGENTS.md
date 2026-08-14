@@ -4,7 +4,9 @@
 
 JobTracker is a fullstack job application tracking app.
 
-The current product is a desktop-first React web app connected to an ASP.NET Core Web API. The API owns the business logic and stores data in a relational database.
+The first product milestone is a desktop-first React web app built with hardcoded/mock data. The goal is to validate the UI structure, application flow, and core product logic before connecting the backend.
+
+After the web flow works, the app will use an ASP.NET Core Web API connected to a relational database. The API owns the business logic and stores data through Entity Framework Core.
 
 A mobile app may be added later using Expo React Native. The mobile app should use the same API, the same authentication model, and the same database.
 
@@ -16,11 +18,11 @@ React Web ───────┐
 Expo Mobile ─────┘
 ```
 
-Auth target: Clerk
-ORM: Entity Framework Core
-Frontend hosting later: Vercel
-API hosting later: Railway
-Database hosting later: Neon PostgreSQL
+Auth target: Clerk  
+ORM: Entity Framework Core  
+Frontend hosting later: Vercel  
+API hosting later: Railway  
+Database hosting later: Neon PostgreSQL  
 
 ## Repository Structure
 
@@ -41,35 +43,67 @@ jobtracker/
 - TypeScript
 - Vite
 - React Router
-- TanStack Query
-- Axios
-- React Hook Form
-- Zod
+- MUI
+- TanStack Query later for API server state
+- React Hook Form later for forms
+- Zod later for validation
 
 ### API
 
 - ASP.NET Core Web API
 - C#
 - Entity Framework Core
-- SQLite locally at first
-- PostgreSQL later
+- SQLite or PostgreSQL locally
+- PostgreSQL later in production
 
 ### Auth
 
 - Clerk later
-- Do not implement auth until the basic CRUD flow works
+- Do not implement auth until the basic web flow and backend CRUD flow work
 
 ## Current Development Priority
 
-Build the app in small vertical slices.
+Build the app in small, clear slices.
 
 Current target flow:
 
 ```text
-React -> ASP.NET Core API -> SQLite DB
+React + MUI Web prototype -> hardcoded/mock data
 ```
 
-Do not jump ahead to advanced features before the current slice works.
+Do not implement API integration, authentication, deployment, mobile, or advanced features until the mock-data web flow works.
+
+The first real milestone is:
+
+```text
+A clean React + MUI JobTracker prototype that works with mock data.
+```
+
+The second real milestone is:
+
+```text
+The same UI connected to ASP.NET Core API and database.
+```
+
+## Build Order
+
+1. Clean project foundation
+2. React Web foundation with MUI
+3. Web app with hardcoded/mock data
+4. Web CRUD flow with local state
+5. Next Action logic in frontend
+6. API and database foundation
+7. Applications CRUD API
+8. Connect Web App to API
+9. Clean up data flow
+10. Clerk authentication
+11. Timeline
+12. Reminders and Schedule
+13. Dashboard
+14. Search, filters, and sorting
+15. Polish and documentation
+16. Deploy
+17. Mobile later
 
 ## MVP Features
 
@@ -111,6 +145,7 @@ Do not implement these unless explicitly asked:
 - Make minimal changes to accomplish the task.
 - Preserve existing patterns in the codebase.
 - If something fails after 2-3 attempts, stop and explain the issue instead of trying random fixes.
+- Keep the current task focused on the scope defined in `docs/current-feature.md`.
 
 ## Git Rules
 
@@ -122,7 +157,7 @@ Do not implement these unless explicitly asked:
   - `docs:`
   - `refactor:`
 - Keep commits focused.
-- Never include "Generated with Claude", "Generated with Codex", or similar text in commits.
+- Never include "Generated with Claude", "Generated with Codex", or similar text in commit messages.
 
 ## Code Quality
 
@@ -131,31 +166,47 @@ Do not implement these unless explicitly asked:
 - Prefer small focused functions.
 - Keep components focused on one responsibility.
 - Avoid unrelated refactoring.
+- Do not add “nice to have” features unless explicitly requested.
 
 ## TypeScript Rules
 
 - Use strict TypeScript.
 - Do not use `any`; use proper types or `unknown`.
-- Define types for API responses and important data models.
+- Define types for important data models.
+- Define types for API responses once API integration begins.
 - Use type inference when obvious.
 
 ## React Rules
 
 - Functional components only.
 - Use hooks for state and side effects.
-- Use TanStack Query for API server state.
-- Keep API calls inside feature-level API modules.
+- Use MUI as the primary UI component library.
+- Keep page components thin when logic starts to grow.
 - Keep reusable UI pieces as components.
+- Extract reusable calculations into utilities.
+- During the mock-data phase, keep data in feature-level `data/` files.
+- When API integration begins, keep API calls inside feature-level API modules.
 - Do not mix large API logic directly into page components.
+- Use TanStack Query only when real API integration begins.
+
+## MUI Rules
+
+- Use MUI components for layout, navigation, cards, lists, tables, dialogs, forms, chips, and buttons.
+- Keep styling simple until the feature works.
+- Prefer readable layout over heavy visual polish.
+- Do not over-engineer the theme in the first phase.
+- Add a basic theme only when needed for consistent spacing, colors, and typography.
 
 ## ASP.NET Core API Rules
 
+- Do not implement the API until the mock-data web flow is working.
 - Use controllers for REST endpoints.
 - Keep business logic out of controllers when it grows.
 - Use DTOs for create and update requests.
 - Do not expose unnecessary internal fields from API responses.
 - Use async EF Core methods.
 - Keep user-specific data ready through `UserId`, even before Clerk is implemented.
+- Use `dev-user` temporarily until Clerk JWT validation is implemented.
 - Validate input before saving.
 - Return appropriate HTTP status codes.
 
@@ -166,6 +217,7 @@ Do not implement these unless explicitly asked:
 - SQLite is acceptable for early local development.
 - PostgreSQL is the target production database.
 - Keep `CreatedAt` and `UpdatedAt` fields updated consistently.
+- Do not add advanced database models before the core `JobApplication` flow works.
 
 ## Commands
 
@@ -194,7 +246,9 @@ dotnet ef database update
 Before saying a task is complete:
 
 - Web should build without TypeScript errors.
-- API should build without C# errors.
+- If web routes changed, verify navigation in the browser.
+- If frontend state/data flow changed, verify it in the browser.
+- API should build without C# errors when API work begins.
 - If API endpoints changed, verify them in Swagger or with HTTP requests.
 - If frontend API calls changed, verify the browser can load the data.
 - Fix build errors before moving on.
@@ -204,11 +258,16 @@ Before saying a task is complete:
 The first milestone is complete when:
 
 - React app starts
-- ASP.NET Core API starts
-- SQLite database exists
-- Swagger CRUD works
-- React lists job applications from the API
+- MUI is installed and used
+- App layout exists
+- Sidebar/topbar navigation works
+- Applications page shows mock job applications
+- Application details page opens from the list
+- Status labels display correctly
+- No API, auth, database, or deployment work has been added yet
 
 ## Related Docs
 
 Keep longer product and architecture notes in `docs/` and reference them from here when needed.
+
+Use `docs/current-feature.md` as the source of truth for the current task.

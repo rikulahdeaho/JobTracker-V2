@@ -1,0 +1,106 @@
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
+import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
+import {
+  Box,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import { NavLink } from "react-router-dom";
+
+type SidebarProps = {
+  drawerWidth: number;
+  isDesktop: boolean;
+  mobileOpen: boolean;
+  onClose: () => void;
+};
+
+const navigationItems = [
+  { label: "Dashboard", to: "/dashboard", icon: <DashboardOutlinedIcon /> },
+  { label: "Applications", to: "/applications", icon: <WorkOutlineOutlinedIcon /> },
+  { label: "Schedule", to: "/schedule", icon: <TodayOutlinedIcon /> },
+  { label: "Insights", to: "/insights", icon: <InsightsOutlinedIcon /> },
+  { label: "Settings", to: "/settings", icon: <SettingsOutlinedIcon /> },
+];
+
+export function Sidebar({
+  drawerWidth,
+  isDesktop,
+  mobileOpen,
+  onClose,
+}: SidebarProps) {
+  const drawerContent = (
+    <Box sx={{ height: "100%", bgcolor: "#0f172a", color: "#e2e8f0" }}>
+      <Toolbar sx={{ px: 3 }}>
+        <Box>
+          <Typography variant="overline" sx={{ color: "#93c5fd", letterSpacing: 1.5 }}>
+            Job Search OS
+          </Typography>
+          <Typography variant="h6">JobTracker</Typography>
+        </Box>
+      </Toolbar>
+      <List sx={{ px: 1.5 }}>
+        {navigationItems.map((item) => (
+          <ListItemButton
+            key={item.to}
+            component={NavLink}
+            to={item.to}
+            onClick={onClose}
+            sx={{
+              borderRadius: 2,
+              mb: 0.5,
+              color: "#cbd5e1",
+              "&.active": {
+                bgcolor: "rgba(147, 197, 253, 0.16)",
+                color: "#ffffff",
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItemButton>
+        ))}
+      </List>
+    </Box>
+  );
+
+  return (
+    <>
+      <Drawer
+        variant="temporary"
+        open={!isDesktop && mobileOpen}
+        onClose={onClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", lg: "none" },
+          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth, border: 0 },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+      <Drawer
+        variant="permanent"
+        open={isDesktop}
+        sx={{
+          display: { xs: "none", lg: "block" },
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            border: 0,
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+    </>
+  );
+}
