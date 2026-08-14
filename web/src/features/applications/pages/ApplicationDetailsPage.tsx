@@ -1,22 +1,37 @@
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LaunchOutlinedIcon from "@mui/icons-material/LaunchOutlined";
 import {
   Alert,
   Button,
   Card,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Link,
   Stack,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink, useParams } from "react-router-dom";
-import { mockApplications } from "../data/mockApplications";
+import { useState } from "react";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { StatusChip } from "../components/StatusChip";
+import { useApplications } from "../context/ApplicationsContext";
+import type { JobApplicationFormValues } from "../types/application";
+import { toApplicationFormValues } from "../utils/applicationForm";
 
 export function ApplicationDetailsPage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const application = mockApplications.find((item) => item.id === id);
+  const { getApplicationById, updateApplication, deleteApplication } = useApplications();
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const application = id ? getApplicationById(id) : undefined;
 
   if (!application) {
     return (
@@ -34,6 +49,19 @@ export function ApplicationDetailsPage() {
     );
   }
 
+  const handleUpdateApplication = (values: JobApplicationFormValues) => {
+    updateApplication(application.id, values);
+    setEditOpen(false);
+  };
+
+  const handleDeleteApplication = () => {
+    const deleted = deleteApplication(application.id);
+
+    if (deleted) {
+      navigate("/applications");
+    }
+  };
+
   return (
     <Stack gap={3}>
       <Button
@@ -44,6 +72,19 @@ export function ApplicationDetailsPage() {
       >
         Back to applications
       </Button>
+      <Stack direction="row" gap={1.5} flexWrap="wrap">
+        <Button variant="outlined" startIcon={<EditOutlinedIcon />} onClick={() => setEditOpen(true)}>
+          Edit
+        </Button>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<DeleteOutlineOutlinedIcon />}
+          onClick={() => setDeleteOpen(true)}
+        >
+          Delete
+        </Button>
+      </Stack>
 
       <Card>
         <CardContent>
@@ -63,6 +104,7 @@ export function ApplicationDetailsPage() {
             <Stack direction={{ xs: "column", md: "row" }} gap={4} flexWrap="wrap">
               <DetailItem label="Location" value={application.location} />
               <DetailItem label="Source" value={application.source} />
+              <DetailItem label="Salary range" value={application.salaryRange || "Not specified"} />
               <DetailItem label="Applied date" value={application.appliedDate ?? "Not applied yet"} />
               <DetailItem label="Deadline" value={application.deadline ?? "No deadline"} />
               <DetailItem label="Created" value={application.createdAt.slice(0, 10)} />
@@ -99,6 +141,27 @@ export function ApplicationDetailsPage() {
           </Stack>
         </CardContent>
       </Card>
+      <ApplicationFormDialog
+        mode="edit"
+        open={editOpen}
+        initialValues={toApplicationFormValues(application)}
+        onClose={() => setEditOpen(false)}
+        onSubmit={handleUpdateApplication}
+      />
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        <DialogTitle>Delete application?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This removes {application.companyName} - {application.jobTitle} from the current local state.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDeleteApplication}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

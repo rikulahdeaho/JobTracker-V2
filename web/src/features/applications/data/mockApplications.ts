@@ -11,6 +11,7 @@ export const mockApplications: JobApplication[] = [
     location: "Helsinki, Finland",
     source: "Company site",
     jobUrl: "https://www.reaktor.com/careers/senior-frontend-engineer",
+    salaryRange: "EUR 5,500 - 6,500 / month",
     notes: "First recruiter chat went well. Need to review case study examples before the technical interview.",
     jobDescription:
       "Build product interfaces for international clients, collaborate across design and engineering, and lead frontend quality improvements.",
@@ -27,6 +28,7 @@ export const mockApplications: JobApplication[] = [
     location: "Helsinki, Finland",
     source: "LinkedIn",
     jobUrl: "https://careers.wolt.com/en/jobs/product-engineer",
+    salaryRange: "EUR 5,200 - 6,200 / month",
     notes: "Application submitted with portfolio link and project write-up.",
     jobDescription:
       "Own end-to-end product features, work closely with product and design, and ship polished user experiences in a fast-moving team.",
@@ -43,6 +45,7 @@ export const mockApplications: JobApplication[] = [
     location: "Espoo, Finland",
     source: "Referral",
     jobUrl: "https://www.nitor.com/careers/ui-engineer",
+    salaryRange: "EUR 4,800 - 5,800 / month",
     notes: "Referral contact recommended tailoring the intro around design systems and accessibility work.",
     jobDescription:
       "Create accessible web applications, contribute to client design systems, and support modern frontend delivery across consulting projects.",
@@ -59,6 +62,7 @@ export const mockApplications: JobApplication[] = [
     location: "Tampere, Finland",
     source: "Company site",
     jobUrl: "https://www.solita.fi/en/careers/full-stack-consultant",
+    salaryRange: "EUR 5,000 - 6,000 / month",
     notes: "Take-home assignment is due Friday. Scope the time box carefully and send questions early.",
     jobDescription:
       "Consult on digital products, deliver full stack solutions, and communicate clearly with client teams across discovery and implementation.",
@@ -75,6 +79,7 @@ export const mockApplications: JobApplication[] = [
     location: "Remote, Finland",
     source: "Oikotie",
     jobUrl: "https://www.vincit.com/careers/software-developer",
+    salaryRange: "EUR 4,700 - 5,700 / month",
     notes: "Need to finish cover letter and align examples with consultancy experience.",
     jobDescription:
       "Work on customer-facing software products, collaborate across disciplines, and help teams build maintainable digital services.",
@@ -91,6 +96,7 @@ export const mockApplications: JobApplication[] = [
     location: "Helsinki, Finland",
     source: "Company site",
     jobUrl: "https://www.futurice.com/careers/senior-react-developer",
+    salaryRange: "EUR 5,300 - 6,300 / month",
     notes: "No response after follow-up sent two weeks ago. Leave in pipeline for now.",
     jobDescription:
       "Develop high-quality digital products with React, mentor teammates, and contribute to modern engineering practices.",
@@ -107,6 +113,7 @@ export const mockApplications: JobApplication[] = [
     location: "Helsinki, Finland",
     source: "Recruiter outreach",
     jobUrl: "https://www.smartly.io/open-positions/senior-product-engineer",
+    salaryRange: "EUR 6,000 - 7,000 / month",
     notes: "Offer expires tomorrow. Need to compare compensation and growth path against other active processes.",
     jobDescription:
       "Build performant product experiences for marketing teams, work across product areas, and partner closely with design and data teams.",

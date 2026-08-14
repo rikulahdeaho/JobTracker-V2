@@ -19,8 +19,23 @@ export type JobApplication = {
   location: string;
   source: string;
   jobUrl: string;
+  salaryRange: string;
   notes: string;
   jobDescription: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type JobApplicationFormValues = {
+  companyName: string;
+  jobTitle: string;
+  jobUrl: string;
+  status: ApplicationStatus;
+  appliedDate: string;
+  deadline: string;
+  location: string;
+  source: string;
+  salaryRange: string;
+  notes: string;
+  jobDescription: string;
 };

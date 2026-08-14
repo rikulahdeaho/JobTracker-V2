@@ -9,34 +9,40 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { mockApplications } from "../applications/data/mockApplications";
-
-const dashboardStats = [
-  {
-    label: "Total applications",
-    value: mockApplications.length,
-    icon: <BusinessCenterOutlinedIcon color="primary" />,
-  },
-  {
-    label: "Active processes",
-    value: mockApplications.filter((application) =>
-      ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
-    ).length,
-    icon: <PendingActionsOutlinedIcon color="primary" />,
-  },
-  {
-    label: "Interviews",
-    value: mockApplications.filter((application) => application.status === "Interviewing").length,
-    icon: <RecordVoiceOverOutlinedIcon color="primary" />,
-  },
-  {
-    label: "Offers",
-    value: mockApplications.filter((application) => application.status === "Offer").length,
-    icon: <AssignmentTurnedInOutlinedIcon color="primary" />,
-  },
-];
+import { useApplications } from "../applications/context/ApplicationsContext";
 
 export function DashboardPage() {
+  const { applications } = useApplications();
+  const dashboardStats = [
+    {
+      label: "Total applications",
+      value: applications.length,
+      icon: <BusinessCenterOutlinedIcon color="primary" />,
+    },
+    {
+      label: "Active processes",
+      value: applications.filter((application) =>
+        ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
+      ).length,
+      icon: <PendingActionsOutlinedIcon color="primary" />,
+    },
+    {
+      label: "Interviews",
+      value: applications.filter((application) => application.status === "Interviewing").length,
+      icon: <RecordVoiceOverOutlinedIcon color="primary" />,
+    },
+    {
+      label: "Offers",
+      value: applications.filter((application) => application.status === "Offer").length,
+      icon: <AssignmentTurnedInOutlinedIcon color="primary" />,
+    },
+  ];
+  const upcomingDeadlines = applications
+    .filter((application) => application.deadline)
+    .sort((left, right) => left.deadline!.localeCompare(right.deadline!))
+    .slice(0, 2)
+    .map((application) => `${application.companyName} (${application.deadline})`);
+
   return (
     <Stack gap={3}>
       <div>
@@ -72,7 +78,9 @@ export function DashboardPage() {
             Current focus
           </Typography>
           <Typography color="text.secondary">
-            Smartly.io has an offer deadline on 2026-08-14, and Solita has an assignment due on 2026-08-15.
+            {upcomingDeadlines.length > 0
+              ? `Nearest deadlines: ${upcomingDeadlines.join(" and ")}.`
+              : "Add applications with deadlines to surface the next priorities here."}
           </Typography>
         </CardContent>
       </Card>

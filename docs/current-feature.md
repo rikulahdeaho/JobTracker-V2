@@ -2,11 +2,11 @@
 
 ## Feature Name
 
-Web App Mock Data Foundation
+Web CRUD Flow with Local State
 
 ## Status
 
-In Progress
+Completed
 
 ## Scope
 
@@ -14,28 +14,57 @@ Work only inside `web/`.
 
 ## Goals
 
+- Add local state for job applications
+- Create Add Application flow
+- Create Edit Application flow
+- Create Delete Application flow
+- Add status dropdown
+- Add basic form validation
+- Keep data local/mock-only for now
 
 ## Not Included
 
 - API integration
 - Authentication
 - Database
-- Final UI polish
+- TanStack Query
+- Backend code
+- Deployment
 - Mobile app
+- Final UI polish
+
+## Form Fields
+
+- Company
+- Job title
+- Job URL
+- Status
+- Applied date
+- Deadline
+- Location
+- Source
+- Salary range
+- Notes
+- Job description
 
 ## Validation
 
 - `npm run build` passes
 - App runs locally
-- Navigation works
-- Applications page shows mock data
-- Details page opens from application list
+- User can add an application
+- User can edit an application
+- User can delete an application
+- Application details update from local state
+- No API/auth/database code was added
 
 ## History
 
-- Started clean React + MUI web prototype
-- Added React Router navigation
-- Added MUI app layout
-- Added mock job application data
-- Added Applications page
-- Added Application Details page
+- Completed Web App Mock Data Foundation
+- Started Web CRUD Flow with Local State
+- Added local state for applications
+- Added add application flow
+- Added edit application flow
+- Added delete application flow
+- Added status dropdown
+- Added basic form validation
+- Completed Web CRUD Flow with Local State
