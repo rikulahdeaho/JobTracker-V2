@@ -2,11 +2,11 @@
 
 ## Feature Name
 
-Web CRUD Flow with Local State
+Next Action Logic in Frontend
 
 ## Status
 
-Completed
+In Progress
 
 ## Scope
 
@@ -14,13 +14,12 @@ Work only inside `web/`.
 
 ## Goals
 
-- Add local state for job applications
-- Create Add Application flow
-- Create Edit Application flow
-- Create Delete Application flow
-- Add status dropdown
-- Add basic form validation
-- Keep data local/mock-only for now
+- Create Next Action helper for job applications
+- Show Next Action in Applications list
+- Show Next Action on Application Details page
+- Add Needs Follow-up logic
+- Add Ghosted logic
+- Add simple dashboard summary from local/mock data
 
 ## Not Included
 
@@ -33,38 +32,30 @@ Work only inside `web/`.
 - Mobile app
 - Final UI polish
 
-## Form Fields
+## Example Rules
 
-- Company
-- Job title
-- Job URL
-- Status
-- Applied date
-- Deadline
-- Location
-- Source
-- Salary range
-- Notes
-- Job description
+- Draft → Finish application
+- ToApply → Apply
+- Applied + 14 days without activity → Follow up
+- Applied + 30 days without activity → Consider ghosted
+- Interviewing → Prepare interview
+- Assignment → Submit assignment
+- Offer → Respond to offer
+- Rejected → No action
+- Ghosted → No action
+- Withdrawn → No action
 
 ## Validation
 
 - `npm run build` passes
 - App runs locally
-- User can add an application
-- User can edit an application
-- User can delete an application
-- Application details update from local state
+- Applications list shows next action for each application
+- Details page shows next action
+- Dashboard shows basic summary from local data
 - No API/auth/database code was added
 
 ## History
 
 - Completed Web App Mock Data Foundation
-- Started Web CRUD Flow with Local State
-- Added local state for applications
-- Added add application flow
-- Added edit application flow
-- Added delete application flow
-- Added status dropdown
-- Added basic form validation
 - Completed Web CRUD Flow with Local State
+- Started Next Action Logic in Frontend

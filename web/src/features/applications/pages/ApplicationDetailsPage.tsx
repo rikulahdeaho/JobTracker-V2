@@ -14,16 +14,21 @@ import {
   DialogTitle,
   Divider,
   Link,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
+import { NextActionChip } from "../components/NextActionChip";
 import { StatusChip } from "../components/StatusChip";
 import { useApplications } from "../context/ApplicationsContext";
 import type { JobApplicationFormValues } from "../types/application";
 import { toApplicationFormValues } from "../utils/applicationForm";
+import { getApplicationNextAction } from "../utils/applicationNextAction";
 
 export function ApplicationDetailsPage() {
   const navigate = useNavigate();
@@ -48,6 +53,8 @@ export function ApplicationDetailsPage() {
       </Stack>
     );
   }
+
+  const nextAction = getApplicationNextAction(application);
 
   const handleUpdateApplication = (values: JobApplicationFormValues) => {
     updateApplication(application.id, values);
@@ -98,8 +105,35 @@ export function ApplicationDetailsPage() {
                   {application.companyName}
                 </Typography>
               </div>
-              <StatusChip status={application.status} />
+              <Stack direction="row" gap={1} flexWrap="wrap">
+                <StatusChip status={application.status} />
+                <NextActionChip application={application} />
+              </Stack>
             </Stack>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Stack gap={1.5}>
+                  <Typography variant="h6">Next action</Typography>
+                  <Typography fontWeight={600}>{nextAction.title}</Typography>
+                  <Typography color="text.secondary">{nextAction.description}</Typography>
+                  {(nextAction.isNeedsFollowUp || nextAction.isGhostedRisk) ? (
+                    <List dense disablePadding>
+                      {nextAction.isNeedsFollowUp ? (
+                        <ListItem disableGutters>
+                          <ListItemText primary="Needs follow-up attention" />
+                        </ListItem>
+                      ) : null}
+                      {nextAction.isGhostedRisk ? (
+                        <ListItem disableGutters>
+                          <ListItemText primary="Older than 30 days without activity" />
+                        </ListItem>
+                      ) : null}
+                    </List>
+                  ) : null}
+                </Stack>
+              </CardContent>
+            </Card>
 
             <Stack direction={{ xs: "column", md: "row" }} gap={4} flexWrap="wrap">
               <DetailItem label="Location" value={application.location} />

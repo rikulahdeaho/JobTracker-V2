@@ -23,7 +23,7 @@ export const mockApplications: JobApplication[] = [
     companyName: "Wolt",
     jobTitle: "Product Engineer",
     status: "Applied",
-    appliedDate: "2026-08-09",
+    appliedDate: "2026-07-10",
     deadline: "2026-08-16",
     location: "Helsinki, Finland",
     source: "LinkedIn",
@@ -32,8 +32,8 @@ export const mockApplications: JobApplication[] = [
     notes: "Application submitted with portfolio link and project write-up.",
     jobDescription:
       "Own end-to-end product features, work closely with product and design, and ship polished user experiences in a fast-moving team.",
-    createdAt: "2026-08-02T10:30:00Z",
-    updatedAt: "2026-08-09T18:45:00Z",
+    createdAt: "2026-07-10T10:30:00Z",
+    updatedAt: "2026-07-10T18:45:00Z",
   },
   {
     id: "nitor-ui-engineer",

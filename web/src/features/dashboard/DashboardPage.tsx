@@ -1,18 +1,49 @@
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
+import WatchLaterOutlinedIcon from "@mui/icons-material/WatchLaterOutlined";
 import {
   Card,
   CardContent,
   Grid,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import {
+  getApplicationNextAction,
+  getApplicationsNeedingFollowUp,
+  getGhostedRiskApplications,
+} from "../applications/utils/applicationNextAction";
 
 export function DashboardPage() {
   const { applications } = useApplications();
+  const followUpApplications = getApplicationsNeedingFollowUp(applications);
+  const ghostedRiskApplications = getGhostedRiskApplications(applications);
+  const topActionItems = applications
+    .map((application) => ({
+      application,
+      nextAction: getApplicationNextAction(application),
+    }))
+    .filter(({ nextAction }) => nextAction.title !== "No action")
+    .sort((left, right) => {
+      if (left.nextAction.isGhostedRisk !== right.nextAction.isGhostedRisk) {
+        return left.nextAction.isGhostedRisk ? -1 : 1;
+      }
+
+      if (left.nextAction.isNeedsFollowUp !== right.nextAction.isNeedsFollowUp) {
+        return left.nextAction.isNeedsFollowUp ? -1 : 1;
+      }
+
+      return left.application.companyName.localeCompare(right.application.companyName);
+    })
+    .slice(0, 4);
+
   const dashboardStats = [
     {
       label: "Total applications",
@@ -35,6 +66,16 @@ export function DashboardPage() {
       label: "Offers",
       value: applications.filter((application) => application.status === "Offer").length,
       icon: <AssignmentTurnedInOutlinedIcon color="primary" />,
+    },
+    {
+      label: "Needs follow-up",
+      value: followUpApplications.length,
+      icon: <MarkEmailUnreadOutlinedIcon color="primary" />,
+    },
+    {
+      label: "Ghosted risk",
+      value: ghostedRiskApplications.length,
+      icon: <WatchLaterOutlinedIcon color="primary" />,
     },
   ];
   const upcomingDeadlines = applications
@@ -72,18 +113,52 @@ export function DashboardPage() {
           </Grid>
         ))}
       </Grid>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Current focus
-          </Typography>
-          <Typography color="text.secondary">
-            {upcomingDeadlines.length > 0
-              ? `Nearest deadlines: ${upcomingDeadlines.join(" and ")}.`
-              : "Add applications with deadlines to surface the next priorities here."}
-          </Typography>
-        </CardContent>
-      </Card>
+      <Grid container spacing={2.5}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Current focus
+              </Typography>
+              <Typography color="text.secondary">
+                {upcomingDeadlines.length > 0
+                  ? `Nearest deadlines: ${upcomingDeadlines.join(" and ")}.`
+                  : "Add applications with deadlines to surface the next priorities here."}
+              </Typography>
+              <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+                {followUpApplications.length > 0
+                  ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up as of August 14, 2026.`
+                  : "No follow-ups are overdue right now."}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Next actions
+              </Typography>
+              {topActionItems.length > 0 ? (
+                <List disablePadding>
+                  {topActionItems.map(({ application, nextAction }) => (
+                    <ListItem key={application.id} disableGutters>
+                      <ListItemText
+                        primary={`${application.companyName} - ${nextAction.title}`}
+                        secondary={nextAction.description}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography color="text.secondary">
+                  Add applications to see suggested next steps here.
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Stack>
   );
 }
