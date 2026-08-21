@@ -28,6 +28,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { PageShell } from "../../../components/ui/PageSection";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { NextActionChip } from "../components/NextActionChip";
 import { StatusChip } from "../components/StatusChip";
@@ -46,7 +47,8 @@ export function ApplicationDetailsPage() {
 
   if (!application) {
     return (
-      <Stack gap={2}>
+      <PageShell maxWidth={1120}>
+        <Stack gap={2}>
         <Button
           component={RouterLink}
           to="/applications"
@@ -56,7 +58,8 @@ export function ApplicationDetailsPage() {
           Back to applications
         </Button>
         <Alert severity="warning">Application not found in the current mock dataset.</Alert>
-      </Stack>
+        </Stack>
+      </PageShell>
     );
   }
 
@@ -76,6 +79,7 @@ export function ApplicationDetailsPage() {
   };
 
   return (
+    <PageShell maxWidth={1120}>
     <Stack gap={3}>
       <Button
         component={RouterLink}
@@ -262,6 +266,7 @@ export function ApplicationDetailsPage() {
         </DialogActions>
       </Dialog>
     </Stack>
+    </PageShell>
   );
 }
 

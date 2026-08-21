@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { PageHeader, PageShell } from "../../../components/ui/PageSection";
 import { ApplicationList } from "../components/ApplicationList";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { useApplications } from "../context/ApplicationsContext";
@@ -66,27 +67,16 @@ export function ApplicationsPage() {
   };
 
   return (
-    <Stack gap={3}>
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", md: "center" }}
-        gap={2}
-      >
-        <Box>
-          <Typography variant="h4" gutterBottom>
-            Applications
-          </Typography>
-          <Typography color="text.secondary">
-            Review the current pipeline, track local changes across refreshes, and open any application for full details.
-          </Typography>
-        </Box>
-        <Stack direction="row" gap={1.5} flexWrap="wrap">
+    <PageShell>
+      <PageHeader
+        title="Applications"
+        description="Review the current pipeline, track local changes across refreshes, and open any application for full details."
+        actions={
           <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => setDialogOpen(true)}>
             Add Application
           </Button>
-        </Stack>
-      </Stack>
+        }
+      />
 
       {applications.length > 0 ? (
         <Card>
@@ -218,6 +208,6 @@ export function ApplicationsPage() {
         onClose={() => setDialogOpen(false)}
         onSubmit={handleAddApplication}
       />
-    </Stack>
+    </PageShell>
   );
 }

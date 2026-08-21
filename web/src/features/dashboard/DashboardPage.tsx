@@ -1,20 +1,30 @@
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import WatchLaterOutlinedIcon from "@mui/icons-material/WatchLaterOutlined";
 import {
+  Avatar,
+  Box,
   Card,
   CardContent,
+  Chip,
+  Divider,
   Grid,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import { StatusChip } from "../applications/components/StatusChip";
+import { formatApplicationDate, getUpcomingApplications } from "../applications/utils/applicationPresentation";
 import {
   getApplicationNextAction,
   getApplicationsNeedingFollowUp,
@@ -25,6 +35,7 @@ export function DashboardPage() {
   const { applications } = useApplications();
   const followUpApplications = getApplicationsNeedingFollowUp(applications);
   const ghostedRiskApplications = getGhostedRiskApplications(applications);
+  const upcomingDeadlines = getUpcomingApplications(applications).slice(0, 3);
   const topActionItems = applications
     .map((application) => ({
       application,
@@ -78,35 +89,29 @@ export function DashboardPage() {
       icon: <WatchLaterOutlinedIcon color="primary" />,
     },
   ];
-  const upcomingDeadlines = applications
-    .filter((application) => application.deadline)
-    .sort((left, right) => left.deadline!.localeCompare(right.deadline!))
-    .slice(0, 2)
-    .map((application) => `${application.companyName} (${application.deadline})`);
+  const latestUpdatedApplication = [...applications].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
 
   return (
-    <Stack gap={3}>
-      <div>
-        <Typography variant="h4" gutterBottom>
-          Job search at a glance
-        </Typography>
-        <Typography color="text.secondary">
-          This first prototype keeps the dashboard lightweight and powered entirely by hardcoded application data.
-        </Typography>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Job search at a glance"
+        description="A polished local-first dashboard powered entirely by your current mock application data."
+      />
       <Grid container spacing={2.5}>
         {dashboardStats.map((stat) => (
-          <Grid key={stat.label} size={{ xs: 12, sm: 6, xl: 3 }}>
-            <Card>
-              <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                  <div>
+          <Grid key={stat.label} size={{ xs: 12, sm: 6, xl: 4 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardContent sx={{ p: 3 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
+                  <Box>
                     <Typography color="text.secondary" gutterBottom>
                       {stat.label}
                     </Typography>
                     <Typography variant="h4">{stat.value}</Typography>
-                  </div>
-                  {stat.icon}
+                  </Box>
+                  <Avatar sx={{ bgcolor: "primary.50", color: "primary.main", width: 44, height: 44 }}>
+                    {stat.icon}
+                  </Avatar>
                 </Stack>
               </CardContent>
             </Card>
@@ -114,51 +119,109 @@ export function DashboardPage() {
         ))}
       </Grid>
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <Card sx={{ height: "100%" }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Current focus
-              </Typography>
-              <Typography color="text.secondary">
-                {upcomingDeadlines.length > 0
-                  ? `Nearest deadlines: ${upcomingDeadlines.join(" and ")}.`
-                  : "Add applications with deadlines to surface the next priorities here."}
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1.5 }}>
-                {followUpApplications.length > 0
-                  ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up based on the current local activity dates.`
-                  : "No follow-ups are overdue right now."}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <Card sx={{ height: "100%" }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Next actions
-              </Typography>
-              {topActionItems.length > 0 ? (
-                <List disablePadding>
-                  {topActionItems.map(({ application, nextAction }) => (
-                    <ListItem key={application.id} disableGutters>
-                      <ListItemText
-                        primary={`${application.companyName} - ${nextAction.title}`}
-                        secondary={nextAction.description}
-                      />
-                    </ListItem>
+        <Grid size={{ xs: 12, xl: 5 }}>
+          <SectionCard
+            title="Current focus"
+            description="Use deadlines and follow-up signals to decide where to spend your next block of time."
+          >
+            <Stack gap={2}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: "primary.50",
+                  border: 1,
+                  borderColor: "primary.100",
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Priority signal
+                </Typography>
+                <Typography variant="h6" sx={{ mt: 0.5 }}>
+                  {followUpApplications.length > 0
+                    ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up`
+                    : "No overdue follow-ups right now"}
+                </Typography>
+                <Typography color="text.secondary" sx={{ mt: 1 }}>
+                  {latestUpdatedApplication
+                    ? `Most recent change: ${latestUpdatedApplication.companyName} was updated ${formatApplicationDate(
+                        latestUpdatedApplication.updatedAt,
+                        "recently",
+                      )}.`
+                    : "Add applications to start building a useful activity snapshot."}
+                </Typography>
+              </Box>
+              <Divider />
+              {upcomingDeadlines.length > 0 ? (
+                <Stack gap={1.5}>
+                  {upcomingDeadlines.map((application) => (
+                    <Stack
+                      key={application.id}
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      gap={2}
+                    >
+                      <Box>
+                        <Typography fontWeight={600}>{application.companyName}</Typography>
+                        <Typography color="text.secondary">
+                          {application.jobTitle} • due {formatApplicationDate(application.deadline, "No deadline")}
+                        </Typography>
+                      </Box>
+                      <StatusChip status={application.status} />
+                    </Stack>
                   ))}
-                </List>
+                </Stack>
               ) : (
                 <Typography color="text.secondary">
-                  Add applications to see suggested next steps here.
+                  Add applications with deadlines to surface the next priorities here.
                 </Typography>
               )}
-            </CardContent>
-          </Card>
+            </Stack>
+          </SectionCard>
+        </Grid>
+        <Grid size={{ xs: 12, xl: 7 }}>
+          <SectionCard
+            title="Next actions"
+            description="Suggested actions are still generated locally from the existing next-action rules."
+          >
+            {topActionItems.length > 0 ? (
+              <List disablePadding>
+                {topActionItems.map(({ application, nextAction }, index) => (
+                  <ListItem
+                    key={application.id}
+                    disableGutters
+                    component={RouterLink}
+                    to={`/applications/${application.id}`}
+                    sx={{
+                      py: 1.25,
+                      textDecoration: "none",
+                      color: "inherit",
+                      borderTop: index === 0 ? 0 : 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar sx={{ bgcolor: "secondary.50", color: "secondary.main", width: 40, height: 40 }}>
+                        <ChevronRightOutlinedIcon />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={`${application.companyName} - ${nextAction.title}`}
+                      secondary={nextAction.description}
+                    />
+                    <Chip label={application.status} size="small" variant="outlined" />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography color="text.secondary">
+                Add applications to see suggested next steps here.
+              </Typography>
+            )}
+          </SectionCard>
         </Grid>
       </Grid>
-    </Stack>
+    </PageShell>
   );
 }
