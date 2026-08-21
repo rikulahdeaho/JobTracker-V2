@@ -22,6 +22,9 @@ pnpm-debug.log*
 # Node / Vite / TypeScript
 node_modules/
 dist/
+**/dist/
+build/
+**/build/
 coverage/
 *.tsbuildinfo
 
