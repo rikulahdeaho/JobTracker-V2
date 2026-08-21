@@ -127,7 +127,7 @@ export function DashboardPage() {
               </Typography>
               <Typography color="text.secondary" sx={{ mt: 1.5 }}>
                 {followUpApplications.length > 0
-                  ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up as of August 14, 2026.`
+                  ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up based on the current local activity dates.`
                   : "No follow-ups are overdue right now."}
               </Typography>
             </CardContent>

@@ -2,6 +2,7 @@ import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
 import {
+  Divider,
   Card,
   CardActionArea,
   CardContent,
@@ -28,6 +29,14 @@ function formatKeyDate(application: JobApplication) {
   }
 
   return "Date pending";
+}
+
+function formatUpdatedDate(updatedAt: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(updatedAt));
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
@@ -69,10 +78,16 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
               {nextAction.description}
             </Typography>
           </Stack>
+          <Divider />
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
-            <Typography variant="body2" color="text.secondary">
-              Source: {application.source}
-            </Typography>
+            <div>
+              <Typography variant="body2" color="text.secondary">
+                Source: {application.source}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Updated {formatUpdatedDate(application.updatedAt)}
+              </Typography>
+            </div>
             <Stack direction="row" gap={0.5} alignItems="center" color="primary.main">
               <Typography variant="body2" fontWeight={600}>
                 Open details

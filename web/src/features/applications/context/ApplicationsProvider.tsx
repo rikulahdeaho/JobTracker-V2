@@ -1,13 +1,17 @@
 import type { PropsWithChildren } from "react";
-import { useMemo, useState } from "react";
-import { mockApplications } from "../data/mockApplications";
+import { useEffect, useMemo, useState } from "react";
 import type { JobApplication } from "../types/application";
 import { createApplicationFromValues, updateApplicationFromValues } from "../utils/applicationCrud";
+import { loadStoredApplications, saveApplications } from "../utils/applicationStorage";
 import { ApplicationsContext } from "./ApplicationsContext";
 import type { ApplicationsContextValue } from "./ApplicationsContext";
 
 export function ApplicationsProvider({ children }: PropsWithChildren) {
-  const [applications, setApplications] = useState<JobApplication[]>(mockApplications);
+  const [applications, setApplications] = useState<JobApplication[]>(() => loadStoredApplications());
+
+  useEffect(() => {
+    saveApplications(applications);
+  }, [applications]);
 
   const value = useMemo<ApplicationsContextValue>(
     () => ({

@@ -20,13 +20,12 @@ export type ApplicationNextAction = {
   isGhostedRisk: boolean;
 };
 
-const TODAY_ISO = "2026-08-14T00:00:00Z";
 const FOLLOW_UP_THRESHOLD_DAYS = 14;
 const GHOSTED_THRESHOLD_DAYS = 30;
 
 export function getApplicationNextAction(
   application: JobApplication,
-  referenceDate = new Date(TODAY_ISO),
+  referenceDate = new Date(),
 ): ApplicationNextAction {
   switch (application.status) {
     case "Draft":
