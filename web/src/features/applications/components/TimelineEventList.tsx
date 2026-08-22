@@ -6,6 +6,7 @@ import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 import { Avatar, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { TimelineEvent } from "../types/workflow";
 import { formatApplicationDate } from "../utils/applicationPresentation";
 
@@ -23,7 +24,14 @@ export function TimelineEventList({ events }: TimelineEventListProps) {
           sx={{ py: 1.5, borderTop: index === 0 ? 0 : 1, borderColor: "divider", alignItems: "flex-start" }}
         >
           <ListItemAvatar>
-            <Avatar sx={{ width: 40, height: 40, bgcolor: "primary.50", color: "primary.main" }}>
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
+                color: "primary.main",
+              }}
+            >
               {getTimelineEventIcon(event.type)}
             </Avatar>
           </ListItemAvatar>

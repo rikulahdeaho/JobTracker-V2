@@ -13,7 +13,9 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { NavLink } from "react-router-dom";
+import { getSidebarColors } from "../../app/theme";
 
 type SidebarProps = {
   drawerWidth: number;
@@ -36,11 +38,13 @@ export function Sidebar({
   mobileOpen,
   onClose,
 }: SidebarProps) {
+  const theme = useTheme();
+  const sidebarColors = getSidebarColors(theme.palette.mode);
   const drawerContent = (
-    <Box sx={{ height: "100%", bgcolor: "#0f172a", color: "#e2e8f0" }}>
+    <Box sx={{ height: "100%", bgcolor: sidebarColors.background, color: sidebarColors.text }}>
       <Toolbar sx={{ px: 3 }}>
         <Box>
-          <Typography variant="overline" sx={{ color: "#93c5fd", letterSpacing: 1.5 }}>
+          <Typography variant="overline" sx={{ color: sidebarColors.eyebrow, letterSpacing: 1.5 }}>
             Job Search OS
           </Typography>
           <Typography variant="h6">JobTracker</Typography>
@@ -56,10 +60,13 @@ export function Sidebar({
             sx={{
               borderRadius: 2,
               mb: 0.5,
-              color: "#cbd5e1",
+              color: sidebarColors.text,
               "&.active": {
-                bgcolor: "rgba(147, 197, 253, 0.16)",
-                color: "#ffffff",
+                bgcolor: sidebarColors.activeBackground,
+                color: sidebarColors.activeText,
+              },
+              "&:hover": {
+                bgcolor: sidebarColors.activeBackground,
               },
             }}
           >

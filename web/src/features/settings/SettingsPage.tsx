@@ -1,4 +1,6 @@
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
 import {
@@ -12,9 +14,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useThemeMode } from "../../app/useThemeMode";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 
 export function SettingsPage() {
+  const { mode, toggleMode } = useThemeMode();
+  const isDark = mode === "dark";
+
   return (
     <PageShell maxWidth={1120}>
       <PageHeader
@@ -37,14 +43,25 @@ export function SettingsPage() {
         </Grid>
         <Grid size={{ xs: 12, lg: 6 }}>
           <SectionCard
-            title="Preferences placeholder"
-            description="Prototype toggles for how the app could behave during the local-first phase."
-            action={<TuneOutlinedIcon color="action" />}
+            title="Preferences"
+            description="Prototype controls for the local-first app experience."
+            action={isDark ? <DarkModeOutlinedIcon color="action" /> : <LightModeOutlinedIcon color="action" />}
           >
-            <Stack gap={1}>
+            <Stack gap={1.25}>
+              <FormControlLabel
+                control={<Switch checked={isDark} onChange={toggleMode} />}
+                label={`${isDark ? "Dark" : "Light"} mode`}
+              />
               <FormControlLabel control={<Switch defaultChecked />} label="Highlight applications needing follow-up" />
               <FormControlLabel control={<Switch defaultChecked />} label="Show deadlines prominently on dashboard cards" />
               <FormControlLabel control={<Switch />} label="Compact application cards" />
+              <Chip
+                icon={<TuneOutlinedIcon />}
+                label="Theme mode is saved locally"
+                color="secondary"
+                variant="outlined"
+                sx={{ alignSelf: "flex-start", mt: 1 }}
+              />
             </Stack>
           </SectionCard>
         </Grid>

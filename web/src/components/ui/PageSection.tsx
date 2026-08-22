@@ -20,7 +20,7 @@ type SectionCardProps = PropsWithChildren<{
 export function PageShell({ children, maxWidth = 1536 }: PageShellProps) {
   return (
     <Box sx={{ width: "100%", maxWidth, mx: "auto" }}>
-      <Stack gap={3}>{children}</Stack>
+      <Stack gap={{ xs: 2.5, md: 3 }}>{children}</Stack>
     </Box>
   );
 }
@@ -47,7 +47,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
 export function SectionCard({ title, description, action, children }: SectionCardProps) {
   return (
     <Card sx={{ height: "100%" }}>
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Stack gap={2.5} sx={{ height: "100%" }}>
           <Stack
             direction={{ xs: "column", sm: "row" }}

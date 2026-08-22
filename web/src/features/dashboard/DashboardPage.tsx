@@ -21,6 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { alpha } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ReminderListItem } from "../applications/components/ReminderListItem";
@@ -112,7 +113,14 @@ export function DashboardPage() {
                     </Typography>
                     <Typography variant="h4">{stat.value}</Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: "primary.50", color: "primary.main", width: 44, height: 44 }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
+                      color: "primary.main",
+                      width: 44,
+                      height: 44,
+                    }}
+                  >
                     {stat.icon}
                   </Avatar>
                 </Stack>
@@ -132,9 +140,9 @@ export function DashboardPage() {
                 sx={{
                   p: 2,
                   borderRadius: 3,
-                  bgcolor: "primary.50",
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.14 : 0.07),
                   border: 1,
-                  borderColor: "primary.100",
+                  borderColor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.28 : 0.16),
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
@@ -205,7 +213,15 @@ export function DashboardPage() {
                     }}
                   >
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: "secondary.50", color: "secondary.main", width: 40, height: 40 }}>
+                      <Avatar
+                        sx={{
+                          bgcolor: (theme) =>
+                            alpha(theme.palette.secondary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
+                          color: "secondary.main",
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
                         <ChevronRightOutlinedIcon />
                       </Avatar>
                     </ListItemAvatar>

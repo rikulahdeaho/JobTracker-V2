@@ -1,11 +1,22 @@
 import { Chip } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { getStatusChipStyles } from "../../../app/theme";
 import type { ApplicationStatus } from "../types/application";
-import { applicationStatusColor, applicationStatusLabel } from "../utils/applicationStatus";
+import { applicationStatusHexColor, applicationStatusLabel } from "../utils/applicationStatus";
 
 type StatusChipProps = {
   status: ApplicationStatus;
 };
 
 export function StatusChip({ status }: StatusChipProps) {
-  return <Chip color={applicationStatusColor[status]} label={applicationStatusLabel[status]} size="small" />;
+  const theme = useTheme();
+
+  return (
+    <Chip
+      label={applicationStatusLabel[status]}
+      size="small"
+      variant="outlined"
+      sx={getStatusChipStyles(applicationStatusHexColor[status], theme.palette.mode)}
+    />
+  );
 }
