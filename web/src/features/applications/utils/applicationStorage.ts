@@ -35,6 +35,16 @@ export function saveApplications(applications: JobApplication[]) {
   window.localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(applications));
 }
 
+export function resetStoredApplications(): JobApplication[] {
+  const seededApplications = [...mockApplications];
+
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(seededApplications));
+  }
+
+  return seededApplications;
+}
+
 function isJobApplicationArray(value: unknown): value is JobApplication[] {
   return Array.isArray(value) && value.every(isJobApplication);
 }

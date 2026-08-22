@@ -6,6 +6,7 @@ export type ApplicationsContextValue = {
   addApplication: (values: JobApplicationFormValues) => JobApplication;
   updateApplication: (id: string, values: JobApplicationFormValues) => JobApplication | null;
   deleteApplication: (id: string) => boolean;
+  resetApplications: () => JobApplication[];
   getApplicationById: (id: string) => JobApplication | undefined;
 };
 

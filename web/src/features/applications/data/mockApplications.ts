@@ -1,39 +1,41 @@
 import type { JobApplication } from "../types/application";
 
+const today = new Date();
+
 export const mockApplications: JobApplication[] = [
   {
     id: "reaktor-senior-frontend-engineer",
     companyName: "Reaktor",
     jobTitle: "Senior Frontend Engineer",
     status: "Interviewing",
-    appliedDate: "2026-08-04",
-    deadline: "2026-08-18",
+    appliedDate: daysAgoDate(12),
+    deadline: daysFromNowDate(3),
     location: "Helsinki, Finland",
     source: "Company site",
     jobUrl: "https://www.reaktor.com/careers/senior-frontend-engineer",
     salaryRange: "EUR 5,500 - 6,500 / month",
-    notes: "First recruiter chat went well. Need to review case study examples before the technical interview.",
+    notes: "Recruiter chat went well. Technical interview is coming up, so prep product case examples and accessibility decisions.",
     jobDescription:
       "Build product interfaces for international clients, collaborate across design and engineering, and lead frontend quality improvements.",
-    createdAt: "2026-07-29T09:00:00Z",
-    updatedAt: "2026-08-11T13:15:00Z",
+    createdAt: daysAgoIso(16, 9),
+    updatedAt: daysAgoIso(2, 13),
   },
   {
     id: "wolt-product-designer-engineer",
     companyName: "Wolt",
     jobTitle: "Product Engineer",
     status: "Applied",
-    appliedDate: "2026-07-10",
-    deadline: "2026-08-16",
+    appliedDate: daysAgoDate(15),
+    deadline: daysFromNowDate(10),
     location: "Helsinki, Finland",
     source: "LinkedIn",
     jobUrl: "https://careers.wolt.com/en/jobs/product-engineer",
     salaryRange: "EUR 5,200 - 6,200 / month",
-    notes: "Application submitted with portfolio link and project write-up.",
+    notes: "Application submitted with portfolio link and project write-up. No response yet, so this is ready for a polite follow-up.",
     jobDescription:
       "Own end-to-end product features, work closely with product and design, and ship polished user experiences in a fast-moving team.",
-    createdAt: "2026-07-10T10:30:00Z",
-    updatedAt: "2026-07-10T18:45:00Z",
+    createdAt: daysAgoIso(17, 10),
+    updatedAt: daysAgoIso(15, 18),
   },
   {
     id: "nitor-ui-engineer",
@@ -41,33 +43,33 @@ export const mockApplications: JobApplication[] = [
     jobTitle: "UI Engineer",
     status: "ToApply",
     appliedDate: null,
-    deadline: "2026-08-20",
+    deadline: todayDate(),
     location: "Espoo, Finland",
     source: "Referral",
     jobUrl: "https://www.nitor.com/careers/ui-engineer",
     salaryRange: "EUR 4,800 - 5,800 / month",
-    notes: "Referral contact recommended tailoring the intro around design systems and accessibility work.",
+    notes: "Referral contact recommended tailoring the intro around design systems and accessibility work. Deadline is today.",
     jobDescription:
       "Create accessible web applications, contribute to client design systems, and support modern frontend delivery across consulting projects.",
-    createdAt: "2026-08-08T08:20:00Z",
-    updatedAt: "2026-08-12T12:00:00Z",
+    createdAt: daysAgoIso(4, 8),
+    updatedAt: daysAgoIso(1, 12),
   },
   {
     id: "solita-fullstack-consultant",
     companyName: "Solita",
     jobTitle: "Full Stack Consultant",
     status: "Assignment",
-    appliedDate: "2026-07-30",
-    deadline: "2026-08-15",
+    appliedDate: daysAgoDate(10),
+    deadline: daysFromNowDate(1),
     location: "Tampere, Finland",
     source: "Company site",
     jobUrl: "https://www.solita.fi/en/careers/full-stack-consultant",
     salaryRange: "EUR 5,000 - 6,000 / month",
-    notes: "Take-home assignment is due Friday. Scope the time box carefully and send questions early.",
+    notes: "Take-home assignment is due tomorrow. Scope the final polish, review edge cases, and send questions early if anything is unclear.",
     jobDescription:
       "Consult on digital products, deliver full stack solutions, and communicate clearly with client teams across discovery and implementation.",
-    createdAt: "2026-07-24T14:10:00Z",
-    updatedAt: "2026-08-10T16:40:00Z",
+    createdAt: daysAgoIso(13, 14),
+    updatedAt: daysAgoIso(3, 16),
   },
   {
     id: "vincit-software-developer",
@@ -75,49 +77,77 @@ export const mockApplications: JobApplication[] = [
     jobTitle: "Software Developer",
     status: "Draft",
     appliedDate: null,
-    deadline: "2026-08-22",
+    deadline: daysFromNowDate(7),
     location: "Remote, Finland",
     source: "Oikotie",
     jobUrl: "https://www.vincit.com/careers/software-developer",
     salaryRange: "EUR 4,700 - 5,700 / month",
-    notes: "Need to finish cover letter and align examples with consultancy experience.",
+    notes: "Need to finish the cover letter and align examples with consultancy experience before submitting.",
     jobDescription:
       "Work on customer-facing software products, collaborate across disciplines, and help teams build maintainable digital services.",
-    createdAt: "2026-08-10T09:45:00Z",
-    updatedAt: "2026-08-12T09:45:00Z",
+    createdAt: daysAgoIso(1, 9),
+    updatedAt: daysAgoIso(1, 9),
   },
   {
     id: "futurice-senior-react-developer",
     companyName: "Futurice",
     jobTitle: "Senior React Developer",
     status: "Ghosted",
-    appliedDate: "2026-07-10",
+    appliedDate: daysAgoDate(45),
     deadline: null,
     location: "Helsinki, Finland",
     source: "Company site",
     jobUrl: "https://www.futurice.com/careers/senior-react-developer",
     salaryRange: "EUR 5,300 - 6,300 / month",
-    notes: "No response after follow-up sent two weeks ago. Leave in pipeline for now.",
+    notes: "No response after follow-up. Keep as historical context, but no active action is needed.",
     jobDescription:
       "Develop high-quality digital products with React, mentor teammates, and contribute to modern engineering practices.",
-    createdAt: "2026-07-05T11:00:00Z",
-    updatedAt: "2026-08-01T08:30:00Z",
+    createdAt: daysAgoIso(50, 11),
+    updatedAt: daysAgoIso(31, 8),
   },
   {
     id: "smartly-senior-product-engineer",
     companyName: "Smartly.io",
     jobTitle: "Senior Product Engineer",
     status: "Offer",
-    appliedDate: "2026-07-22",
-    deadline: "2026-08-14",
+    appliedDate: daysAgoDate(20),
+    deadline: daysFromNowDate(4),
     location: "Helsinki, Finland",
     source: "Recruiter outreach",
     jobUrl: "https://www.smartly.io/open-positions/senior-product-engineer",
     salaryRange: "EUR 6,000 - 7,000 / month",
-    notes: "Offer expires tomorrow. Need to compare compensation and growth path against other active processes.",
+    notes: "Offer received yesterday. Compare compensation, role scope, and growth path before responding.",
     jobDescription:
       "Build performant product experiences for marketing teams, work across product areas, and partner closely with design and data teams.",
-    createdAt: "2026-07-18T15:25:00Z",
-    updatedAt: "2026-08-12T17:20:00Z",
+    createdAt: daysAgoIso(24, 15),
+    updatedAt: daysAgoIso(1, 17),
   },
 ];
+
+function todayDate(): string {
+  return formatDate(today);
+}
+
+function daysAgoDate(days: number): string {
+  return formatDate(addDays(today, -days));
+}
+
+function daysFromNowDate(days: number): string {
+  return formatDate(addDays(today, days));
+}
+
+function daysAgoIso(days: number, hour: number): string {
+  const date = addDays(today, -days);
+  date.setHours(hour, 0, 0, 0);
+  return date.toISOString();
+}
+
+function addDays(value: Date, days: number): Date {
+  const nextDate = new Date(value);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+function formatDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}

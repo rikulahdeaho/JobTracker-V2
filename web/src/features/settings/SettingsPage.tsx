@@ -1,6 +1,7 @@
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
 import {
@@ -16,9 +17,11 @@ import {
 } from "@mui/material";
 import { useThemeMode } from "../../app/useThemeMode";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
+import { useApplications } from "../applications/context/ApplicationsContext";
 
 export function SettingsPage() {
   const { mode, toggleMode } = useThemeMode();
+  const { resetApplications } = useApplications();
   const isDark = mode === "dark";
 
   return (
@@ -85,6 +88,15 @@ export function SettingsPage() {
                 <Chip label="No account required" variant="outlined" />
                 <Chip label="Local storage enabled" color="secondary" variant="outlined" />
               </Stack>
+              <Button
+                variant="contained"
+                color="warning"
+                startIcon={<RestartAltOutlinedIcon />}
+                onClick={resetApplications}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Reset demo data
+              </Button>
             </Stack>
           </SectionCard>
         </Grid>

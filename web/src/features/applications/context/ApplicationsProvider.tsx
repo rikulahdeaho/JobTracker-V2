@@ -2,7 +2,7 @@ import type { PropsWithChildren } from "react";
 import { useEffect, useMemo, useState } from "react";
 import type { JobApplication } from "../types/application";
 import { createApplicationFromValues, updateApplicationFromValues } from "../utils/applicationCrud";
-import { loadStoredApplications, saveApplications } from "../utils/applicationStorage";
+import { loadStoredApplications, resetStoredApplications, saveApplications } from "../utils/applicationStorage";
 import { ApplicationsContext } from "./ApplicationsContext";
 import type { ApplicationsContextValue } from "./ApplicationsContext";
 
@@ -45,6 +45,11 @@ export function ApplicationsProvider({ children }: PropsWithChildren) {
           currentApplications.filter((application) => application.id !== id),
         );
         return true;
+      },
+      resetApplications: () => {
+        const seededApplications = resetStoredApplications();
+        setApplications(seededApplications);
+        return seededApplications;
       },
       getApplicationById: (id) => applications.find((application) => application.id === id),
     }),
