@@ -10,7 +10,6 @@ import {
   Box,
   Card,
   CardContent,
-  Chip,
   Divider,
   Grid,
   List,
@@ -229,7 +228,7 @@ export function DashboardPage() {
                       primary={`${application.companyName} - ${nextAction.title}`}
                       secondary={nextAction.description}
                     />
-                    <Chip label={application.status} size="small" variant="outlined" />
+                    <StatusChip status={application.status} />
                   </ListItem>
                 ))}
               </List>

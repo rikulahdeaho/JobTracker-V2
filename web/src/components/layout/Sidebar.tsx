@@ -42,12 +42,14 @@ export function Sidebar({
   const sidebarColors = getSidebarColors(theme.palette.mode);
   const drawerContent = (
     <Box sx={{ height: "100%", bgcolor: sidebarColors.background, color: sidebarColors.text }}>
-      <Toolbar sx={{ px: 3 }}>
+      <Toolbar sx={{ px: 3, minHeight: { xs: 64, md: 72 } }}>
         <Box>
-          <Typography variant="overline" sx={{ color: sidebarColors.eyebrow, letterSpacing: 1.5 }}>
+          <Typography variant="overline" sx={{ color: sidebarColors.eyebrow, letterSpacing: 1.2 }}>
             Job Search OS
           </Typography>
-          <Typography variant="h6">JobTracker</Typography>
+          <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+            JobTracker
+          </Typography>
         </Box>
       </Toolbar>
       <List sx={{ px: 1.5 }}>

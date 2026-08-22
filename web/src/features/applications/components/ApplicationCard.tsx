@@ -43,16 +43,27 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const nextAction = getApplicationNextAction(application);
 
   return (
-    <Card sx={{ height: "100%" }}>
+    <Card
+      sx={{
+        height: "100%",
+        transition: "border-color 160ms ease, transform 160ms ease",
+        "&:hover": {
+          borderColor: "primary.main",
+          transform: "translateY(-1px)",
+        },
+      }}
+    >
       <CardActionArea
         component={RouterLink}
         to={`/applications/${application.id}`}
         sx={{ height: "100%", alignItems: "stretch" }}
       >
-        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2, height: "100%" }}>
+        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2.25, height: "100%", p: 3 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
             <div>
-              <Typography variant="h6">{application.jobTitle}</Typography>
+              <Typography variant="h6" sx={{ lineHeight: 1.25 }}>
+                {application.jobTitle}
+              </Typography>
               <Typography color="text.secondary">{application.companyName}</Typography>
             </div>
             <StatusChip status={application.status} />

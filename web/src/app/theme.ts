@@ -10,16 +10,17 @@ const palette = {
   warning: "#D97706",
   error: "#DC2626",
   light: {
-    background: "#F8FAFC",
+    background: "#F5F7FB",
     paper: "#FFFFFF",
-    textPrimary: "#0F172A",
-    textSecondary: "#64748B",
-    border: "#E2E8F0",
+    mutedSurface: "#EEF2F8",
+    textPrimary: "#111827",
+    textSecondary: "#4B5563",
+    border: "#D8DEE9",
   },
   dark: {
     background: "#0B1120",
     paper: "#111827",
-    elevatedPaper: "#1E293B",
+    mutedSurface: "#1E293B",
     textPrimary: "#E5E7EB",
     textSecondary: "#94A3B8",
     border: "#334155",
@@ -29,7 +30,8 @@ const palette = {
 export function createAppTheme(mode: ThemeMode) {
   const isDark = mode === "dark";
   const modePalette = isDark ? palette.dark : palette.light;
-  const paperColor = isDark ? palette.dark.elevatedPaper : palette.light.paper;
+  const paperColor = modePalette.paper;
+  const mutedSurfaceColor = modePalette.mutedSurface;
 
   return createTheme({
     palette: {
@@ -108,6 +110,7 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           body: {
             backgroundColor: modePalette.background,
+            color: modePalette.textPrimary,
           },
         },
       },
@@ -125,8 +128,19 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             border: `1px solid ${modePalette.border}`,
+            borderRadius: 10,
+            backgroundColor: paperColor,
             backgroundImage: "none",
-            boxShadow: isDark ? "none" : `0 1px 2px ${alpha("#0F172A", 0.04)}`,
+            boxShadow: isDark ? "none" : `0 1px 2px ${alpha("#111827", 0.04)}`,
+          },
+        },
+      },
+      MuiCardActionArea: {
+        styleOverrides: {
+          root: {
+            "&:hover .MuiCardActionArea-focusHighlight": {
+              opacity: isDark ? 0.08 : 0.04,
+            },
           },
         },
       },
@@ -141,6 +155,10 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             fontWeight: 700,
+            borderRadius: 999,
+          },
+          outlined: {
+            backgroundColor: isDark ? alpha("#FFFFFF", 0.03) : alpha("#111827", 0.02),
           },
         },
       },
@@ -153,9 +171,25 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             backgroundColor: isDark ? alpha("#FFFFFF", 0.03) : "#FFFFFF",
+            borderRadius: 8,
           },
           notchedOutline: {
             borderColor: modePalette.border,
+          },
+        },
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            backgroundColor: mutedSurfaceColor,
+          },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            border: `1px solid ${modePalette.border}`,
           },
         },
       },
@@ -173,11 +207,11 @@ export function createAppTheme(mode: ThemeMode) {
 export const theme = createAppTheme("light");
 
 export function getSurfaceColor(mode: ThemeMode) {
-  return mode === "dark" ? palette.dark.elevatedPaper : palette.light.paper;
+  return mode === "dark" ? palette.dark.paper : palette.light.paper;
 }
 
 export function getMutedSurfaceColor(mode: ThemeMode) {
-  return mode === "dark" ? alpha("#FFFFFF", 0.04) : alpha(palette.primary, 0.06);
+  return mode === "dark" ? palette.dark.mutedSurface : palette.light.mutedSurface;
 }
 
 export function getBorderColor(mode: ThemeMode) {
@@ -206,11 +240,19 @@ export function getSidebarColors(mode: ThemeMode) {
 
 export function getStatusChipStyles(statusColor: string, mode: ThemeMode) {
   return {
-    bgcolor: alpha(statusColor, mode === "dark" ? 0.22 : 0.12),
+    bgcolor: alpha(statusColor, mode === "dark" ? 0.2 : 0.1),
     color: mode === "dark" ? "#F8FAFC" : statusColor,
-    borderColor: alpha(statusColor, mode === "dark" ? 0.5 : 0.32),
+    borderColor: alpha(statusColor, mode === "dark" ? 0.46 : 0.28),
     "& .MuiChip-label": {
       px: 1,
     },
+  };
+}
+
+export function getSemanticChipStyles(color: string, mode: ThemeMode) {
+  return {
+    bgcolor: alpha(color, mode === "dark" ? 0.18 : 0.08),
+    color: mode === "dark" ? "#F8FAFC" : color,
+    borderColor: alpha(color, mode === "dark" ? 0.42 : 0.24),
   };
 }

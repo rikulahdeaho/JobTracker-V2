@@ -39,11 +39,13 @@ export function Topbar({ children }: PropsWithChildren) {
         backdropFilter: "blur(10px)",
       }}
     >
-      <Toolbar sx={{ gap: 2 }}>
+      <Toolbar sx={{ gap: { xs: 1.25, md: 2 }, minHeight: { xs: 64, md: 72 } }}>
         {children}
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Typography variant="h6">{title}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h6" sx={{ lineHeight: 1.25 }}>
+            {title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
             Track your pipeline with mock application data.
           </Typography>
         </Box>
@@ -59,16 +61,17 @@ export function Topbar({ children }: PropsWithChildren) {
             border: 1,
             borderColor: "divider",
             minWidth: 220,
+            color: "text.secondary",
           }}
         >
           <SearchOutlinedIcon fontSize="small" color="action" />
           <InputBase placeholder="Search later" sx={{ fontSize: 14, width: "100%" }} />
         </Box>
-        <IconButton color="inherit">
+        <IconButton color="inherit" sx={{ border: 1, borderColor: "divider" }}>
           <NotificationsNoneOutlinedIcon />
         </IconButton>
         <Tooltip title={`Switch to ${isDark ? "light" : "dark"} mode`}>
-          <IconButton color="inherit" onClick={toggleMode} aria-label="Toggle color mode">
+          <IconButton color="inherit" onClick={toggleMode} aria-label="Toggle color mode" sx={{ border: 1, borderColor: "divider" }}>
             {isDark ? <WbSunnyOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </IconButton>
         </Tooltip>

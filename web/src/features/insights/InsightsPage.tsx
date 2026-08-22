@@ -1,4 +1,5 @@
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
+import { alpha } from "@mui/material/styles";
 import { Chip, Grid, LinearProgress, Stack, Typography } from "@mui/material";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
@@ -87,7 +88,19 @@ export function InsightsPage() {
 
                 return (
                   <Grid key={item.status} size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <Stack gap={1.25} sx={{ p: 2, borderRadius: 3, bgcolor: "background.default" }}>
+                    <Stack
+                      gap={1.25}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? alpha(theme.palette.common.white, 0.03)
+                            : alpha(theme.palette.primary.main, 0.04),
+                        border: 1,
+                        borderColor: "divider",
+                      }}
+                    >
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Typography fontWeight={600}>{item.label}</Typography>
                         <Chip label={item.count} size="small" />
