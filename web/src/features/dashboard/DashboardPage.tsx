@@ -23,6 +23,7 @@ import {
 import { Link as RouterLink } from "react-router-dom";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
 import { formatApplicationDate, getUpcomingApplications } from "../applications/utils/applicationPresentation";
 import {
@@ -30,12 +31,14 @@ import {
   getApplicationsNeedingFollowUp,
   getGhostedRiskApplications,
 } from "../applications/utils/applicationNextAction";
+import { getUpcomingReminders } from "../applications/utils/applicationWorkflow";
 
 export function DashboardPage() {
   const { applications } = useApplications();
   const followUpApplications = getApplicationsNeedingFollowUp(applications);
   const ghostedRiskApplications = getGhostedRiskApplications(applications);
   const upcomingDeadlines = getUpcomingApplications(applications).slice(0, 3);
+  const upcomingReminders = getUpcomingReminders(applications, 3);
   const topActionItems = applications
     .map((application) => ({
       application,
@@ -217,6 +220,24 @@ export function DashboardPage() {
             ) : (
               <Typography color="text.secondary">
                 Add applications to see suggested next steps here.
+              </Typography>
+            )}
+          </SectionCard>
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <SectionCard
+            title="Upcoming reminders"
+            description="A small preview of the local reminder queue derived from deadlines, follow-ups, and active stages."
+          >
+            {upcomingReminders.length > 0 ? (
+              <List disablePadding>
+                {upcomingReminders.map((reminder, index) => (
+                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
+                ))}
+              </List>
+            ) : (
+              <Typography color="text.secondary">
+                Reminders will appear here as applications pick up deadlines, interviews, and follow-up needs.
               </Typography>
             )}
           </SectionCard>
