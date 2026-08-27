@@ -2,11 +2,11 @@
 
 ## Feature Name
 
-Web Visual Alignment and Theme Polish
+Dashboard Information Hierarchy Cleanup
 
 ## Status
 
-In Progress
+Completed
 
 ## Scope
 
@@ -14,15 +14,15 @@ Work only inside `web/`.
 
 ## Goals
 
-- Make the current React + MUI prototype feel more like a polished MVP
-- Improve the MUI theme for both light and dark mode
-- Make light mode and dark mode both usable and visually consistent
-- Improve color palette, typography, spacing, cards and layout rhythm
-- Align Dashboard, Applications, Application Details, Schedule, Insights and Settings visually
-- Improve status chips and action chips across light and dark mode
-- Create reusable UI/layout components where useful
-- Keep the current frontend-only/local-data architecture
-- Keep all existing functionality working
+- Reduce duplicated information on the Dashboard
+- Make Dashboard feel like a focused overview page instead of another Schedule page
+- Keep the top metric cards
+- Replace Current Focus with a clearer single priority section
+- Limit Next Actions to the most important 3–4 actions
+- Replace the long Upcoming Reminders list with a compact summary
+- Add a clear link or button to Schedule for full reminder details
+- Add a small Pipeline Snapshot section if useful
+- Keep the current visual style, theme and layout direction
 
 ## Not Included
 
@@ -32,142 +32,83 @@ Work only inside `web/`.
 - TanStack Query
 - Backend code
 - New business features
-- Real reminders model
-- Real timeline model
+- New reminder model
+- New timeline model
 - Calendar/email integrations
 - Deployment
 - Mobile app
-- Full redesign from scratch
+- Major redesign
 
-## Visual Direction
+## Dashboard Purpose
 
-The UI should feel like a clean productivity / career manager SaaS app.
+The Dashboard should answer three questions:
 
-Light mode should be the best default for portfolio screenshots.  
-Dark mode should also be usable, readable and visually consistent.
+- How is my job search going?
+- What needs attention now?
+- Where do I go for full schedule details?
 
-Use the existing layout ideas as direction, but do not try to copy screenshots pixel-perfectly.
+It should not repeat all Schedule page information.
 
-## Theme Requirements
+## Requirements
 
-- Use MUI ThemeProvider and CssBaseline
-- Keep the existing light/dark mode toggle working
-- Persist selected theme mode to localStorage
-- Improve palette tokens for:
-  - background
-  - paper/card surfaces
-  - elevated surfaces
-  - text primary
-  - text secondary
-  - borders
-  - primary action
-  - success
-  - warning
-  - error
-- Make status chips readable in both light and dark mode
-- Make action chips readable in both light and dark mode
-- Avoid excessive shadows, gradients or visual noise
+### Metrics
 
-## Suggested Palette Direction
+Keep the existing top metric cards:
 
-Primary:
+- Total applications
+- Active processes
+- Interviews
+- Offers
+- Needs follow-up
+- Ghosted risk
 
-- `#0B6BCB` or `#2563EB`
+Small visual adjustments are allowed if needed.
 
-Secondary:
+### Priority Focus
 
-- `#7C3AED`
+Replace or simplify the current `Current Focus` section.
 
-Success:
+It should highlight only the single most important current priority, for example:
 
-- `#16A34A`
+- Wolt needs follow-up
+- Nitor deadline is today
+- Reaktor interview prep is next
+- Solita assignment deadline is close
 
-Warning:
+Show a short explanation and a clear action.
 
-- `#D97706`
+### Next Actions
 
-Error:
+Keep the Next Actions section, but limit it to the top 3–4 actions.
 
-- `#DC2626`
+It should not duplicate the full Schedule or Reminder list.
 
-Light mode:
+### Upcoming Reminders
 
-- Background: `#F5F7FB`
-- Surface: `#FFFFFF`
-- Muted surface: `#EEF2F8`
-- Text primary: `#111827`
-- Text secondary: `#4B5563`
-- Border: `#D8DEE9`
+Remove the long Upcoming Reminders list from Dashboard or replace it with a compact summary card.
 
-Dark mode:
+Example:
 
-- Background: `#0B1120`
-- Surface: `#111827`
-- Muted surface: `#1E293B`
-- Text primary: `#E5E7EB`
-- Text secondary: `#94A3B8`
-- Border: `#334155`
+- 3 reminders due this week
+- 1 overdue
+- Next: Nitor deadline today
+- Button/link: View schedule
 
-## Layout Requirements
+The full reminder/deadline list should stay on the Schedule page.
 
-- Use consistent page max-width where appropriate
-- Prevent pages from stretching too much on ultra-wide screens
-- Keep sidebar and topbar visually consistent
-- Make page headers consistent
-- Make cards and sections use consistent padding, radius and borders
-- Make empty states consistent
-- Keep responsive behavior reasonable
+### Pipeline Snapshot
 
-## Page Requirements
+Add a small Pipeline Snapshot section if it fits naturally.
 
-### Dashboard
+It can show a compact status distribution using existing local/mock data, for example:
 
-- Keep existing summary metrics
-- Keep Current Focus
-- Keep Next Actions
-- Keep Upcoming Reminders
-- Improve spacing, hierarchy and card consistency
-- Use local/mock data only
+- Applied
+- Interviewing
+- Assignment
+- Offer
+- Ghosted
 
-### Applications
-
-- Keep search, filters and sorting working
-- Keep application cards working
-- Keep add/edit/delete working
-- Improve spacing and card hierarchy only if needed
-- Do not rewrite the whole page unnecessarily
-
-### Application Details
-
-- Keep edit/delete working
-- Keep timeline visible
-- Make the page easier to scan
-- Keep title/header, next action, quick facts, notes, job description and timeline
-- Improve spacing and visual grouping
-
-### Schedule
-
-- Keep reminder/deadline groups
-- Keep Overdue, Today, Upcoming and Active Queue sections
-- Improve layout consistency with the rest of the app
-- Use local/mock data only
-
-### Insights
-
-- Keep local/mock metrics
-- Keep Response Momentum, Pipeline Pressure, Coverage and Status Breakdown
-- Improve visual consistency and readability
-- Do not add advanced analytics or chart libraries
-
-### Settings
-
-- Keep it as a simple prototype settings screen
-- Include simple placeholder sections if useful:
-  - Appearance
-  - Profile placeholder
-  - Preferences placeholder
-  - Data management placeholder
-- Do not implement real account/auth features
+Do not add chart libraries.
 
 ## Existing Functionality That Must Keep Working
 
@@ -185,8 +126,7 @@ Dark mode:
 - Sorting
 - Status chips
 - Next Action logic
-- Dashboard summary
-- Schedule reminders/deadlines
+- Schedule reminder/deadline groups
 - Insights metrics
 - Timeline on details page
 
@@ -194,21 +134,17 @@ Dark mode:
 
 - `npm run build` passes
 - App runs locally
-- Light mode works
-- Dark mode works
-- Theme selection persists after refresh
-- Dashboard still works
+- Dashboard has less repeated information
+- Dashboard has a clearer information hierarchy
+- Schedule still shows full reminder/deadline groups
 - Applications page still works
 - Application Details page still works
-- Schedule still works
-- Insights still works
-- Settings still works
 - Add/edit/delete still work
 - localStorage application persistence still works
 - Search, filters and sorting still work
 - Next Action logic still works
-- Timeline still appears on details page
-- Reminder/deadline groups still appear on Schedule
+- Light mode still works
+- Dark mode still works
 - No API/auth/database code was added
 
 ## History
@@ -219,4 +155,5 @@ Dark mode:
 - Completed Web UX Polish and Local Persistence
 - Completed Web UI Refinement Pass
 - Completed Mock Timeline and Reminders UI
-- Started Web Visual Alignment and Theme Polish
+- Completed Web Visual Alignment and Theme Polish
+- Started Dashboard Information Hierarchy Cleanup

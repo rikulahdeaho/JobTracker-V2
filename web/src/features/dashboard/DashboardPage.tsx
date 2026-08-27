@@ -8,10 +8,12 @@ import WatchLaterOutlinedIcon from "@mui/icons-material/WatchLaterOutlined";
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   Divider,
   Grid,
+  LinearProgress,
   List,
   ListItem,
   ListItemAvatar,
@@ -23,22 +25,23 @@ import { Link as RouterLink } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
-import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
-import { formatApplicationDate, getUpcomingApplications } from "../applications/utils/applicationPresentation";
+import type { ApplicationStatus } from "../applications/types/application";
+import { formatApplicationDate } from "../applications/utils/applicationPresentation";
+import { applicationStatusLabel } from "../applications/utils/applicationStatus";
 import {
   getApplicationNextAction,
   getApplicationsNeedingFollowUp,
   getGhostedRiskApplications,
 } from "../applications/utils/applicationNextAction";
-import { getUpcomingReminders } from "../applications/utils/applicationWorkflow";
+import { getAllReminders, getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function DashboardPage() {
   const { applications } = useApplications();
   const followUpApplications = getApplicationsNeedingFollowUp(applications);
   const ghostedRiskApplications = getGhostedRiskApplications(applications);
-  const upcomingDeadlines = getUpcomingApplications(applications).slice(0, 3);
-  const upcomingReminders = getUpcomingReminders(applications, 3);
+  const reminderGroups = getGroupedReminders(applications);
+  const reminders = getAllReminders(applications);
   const topActionItems = applications
     .map((application) => ({
       application,
@@ -55,8 +58,10 @@ export function DashboardPage() {
       }
 
       return left.application.companyName.localeCompare(right.application.companyName);
-    })
-    .slice(0, 4);
+    });
+  const priorityItem = topActionItems[0];
+  const nextActionItems = topActionItems.slice(1, 4);
+  const nextReminder = [...reminders].sort((left, right) => left.dueDate.localeCompare(right.dueDate))[0];
 
   const dashboardStats = [
     {
@@ -92,7 +97,11 @@ export function DashboardPage() {
       icon: <WatchLaterOutlinedIcon color="primary" />,
     },
   ];
-  const latestUpdatedApplication = [...applications].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+  const pipelineStatuses: ApplicationStatus[] = ["Applied", "Interviewing", "Assignment", "Offer", "Ghosted"];
+  const pipelineSnapshot = pipelineStatuses.map((status) => ({
+    status,
+    count: applications.filter((application) => application.status === status).length,
+  }));
 
   return (
     <PageShell>
@@ -131,63 +140,45 @@ export function DashboardPage() {
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, xl: 5 }}>
           <SectionCard
-            title="Current focus"
-            description="Use deadlines and follow-up signals to decide where to spend your next block of time."
+            title="Priority focus"
+            description="The one thing most worth acting on before you scan the rest of the pipeline."
           >
-            <Stack gap={2}>
+            {priorityItem ? (
               <Box
                 sx={{
-                  p: 2,
-                  borderRadius: 3,
+                  p: 2.5,
+                  borderRadius: 2,
                   bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.14 : 0.07),
                   border: 1,
                   borderColor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.28 : 0.16),
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  Priority signal
+                  {priorityItem.application.companyName}
                 </Typography>
-                <Typography variant="h6" sx={{ mt: 0.5 }}>
-                  {followUpApplications.length > 0
-                    ? `${followUpApplications.length} application${followUpApplications.length === 1 ? "" : "s"} need follow-up`
-                    : "No overdue follow-ups right now"}
+                <Typography variant="h5" sx={{ mt: 0.75 }}>
+                  {priorityItem.nextAction.title}
                 </Typography>
                 <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  {latestUpdatedApplication
-                    ? `Most recent change: ${latestUpdatedApplication.companyName} was updated ${formatApplicationDate(
-                        latestUpdatedApplication.updatedAt,
-                        "recently",
-                      )}.`
-                    : "Add applications to start building a useful activity snapshot."}
+                  {priorityItem.nextAction.description}
                 </Typography>
-              </Box>
-              <Divider />
-              {upcomingDeadlines.length > 0 ? (
-                <Stack gap={1.5}>
-                  {upcomingDeadlines.map((application) => (
-                    <Stack
-                      key={application.id}
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      gap={2}
-                    >
-                      <Box>
-                        <Typography fontWeight={600}>{application.companyName}</Typography>
-                        <Typography color="text.secondary">
-                          {application.jobTitle} • due {formatApplicationDate(application.deadline, "No deadline")}
-                        </Typography>
-                      </Box>
-                      <StatusChip status={application.status} />
-                    </Stack>
-                  ))}
+                <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center" sx={{ mt: 2 }}>
+                  <StatusChip status={priorityItem.application.status} />
+                  <Button
+                    component={RouterLink}
+                    to={`/applications/${priorityItem.application.id}`}
+                    variant="contained"
+                    endIcon={<ChevronRightOutlinedIcon />}
+                  >
+                    Open application
+                  </Button>
                 </Stack>
-              ) : (
-                <Typography color="text.secondary">
-                  Add applications with deadlines to surface the next priorities here.
-                </Typography>
-              )}
-            </Stack>
+              </Box>
+            ) : (
+              <Typography color="text.secondary">
+                Add applications to surface the most important next step here.
+              </Typography>
+            )}
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, xl: 7 }}>
@@ -195,9 +186,9 @@ export function DashboardPage() {
             title="Next actions"
             description="Suggested actions are still generated locally from the existing next-action rules."
           >
-            {topActionItems.length > 0 ? (
+            {nextActionItems.length > 0 ? (
               <List disablePadding>
-                {topActionItems.map(({ application, nextAction }, index) => (
+                {nextActionItems.map(({ application, nextAction }, index) => (
                   <ListItem
                     key={application.id}
                     disableGutters
@@ -234,27 +225,80 @@ export function DashboardPage() {
               </List>
             ) : (
               <Typography color="text.secondary">
-                Add applications to see suggested next steps here.
+                No additional next actions are queued behind the current priority.
               </Typography>
             )}
           </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, xl: 5 }}>
           <SectionCard
-            title="Upcoming reminders"
-            description="A small preview of the local reminder queue derived from deadlines, follow-ups, and active stages."
+            title="Schedule summary"
+            description="A compact reminder snapshot. Schedule keeps the full grouped view."
+            action={
+              <Button component={RouterLink} to="/schedule" variant="outlined" endIcon={<ChevronRightOutlinedIcon />}>
+                View schedule
+              </Button>
+            }
           >
-            {upcomingReminders.length > 0 ? (
-              <List disablePadding>
-                {upcomingReminders.map((reminder, index) => (
-                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
-                ))}
-              </List>
+            {reminders.length > 0 ? (
+              <Stack gap={2}>
+                <Grid container spacing={1.5}>
+                  {reminderGroups.map((group) => (
+                    <Grid key={group.key} size={{ xs: 4 }}>
+                      <Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+                        <Typography variant="h5">{group.reminders.length}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {group.title}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Divider />
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Next reminder
+                  </Typography>
+                  <Typography fontWeight={700} sx={{ mt: 0.5 }}>
+                    {nextReminder
+                      ? `${nextReminder.title}: ${nextReminder.companyName}`
+                      : "No reminder queued"}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    {nextReminder ? formatApplicationDate(nextReminder.dueDate, "No due date") : "Add a deadline to create one."}
+                  </Typography>
+                </Box>
+              </Stack>
             ) : (
               <Typography color="text.secondary">
                 Reminders will appear here as applications pick up deadlines, interviews, and follow-up needs.
               </Typography>
             )}
+          </SectionCard>
+        </Grid>
+        <Grid size={{ xs: 12, xl: 7 }}>
+          <SectionCard
+            title="Pipeline snapshot"
+            description="A quick read on where applications sit without turning the dashboard into the Insights page."
+          >
+            <Stack gap={1.75}>
+              {pipelineSnapshot.map(({ status, count }) => {
+                const percentage = applications.length > 0 ? Math.round((count / applications.length) * 100) : 0;
+
+                return (
+                  <Stack key={status} gap={0.75}>
+                    <Stack direction="row" justifyContent="space-between" gap={2} alignItems="center">
+                      <Stack direction="row" gap={1} alignItems="center">
+                        <StatusChip status={status} />
+                        <Typography color="text.secondary">{applicationStatusLabel[status]}</Typography>
+                      </Stack>
+                      <Typography fontWeight={700}>{count}</Typography>
+                    </Stack>
+                    <LinearProgress variant="determinate" value={percentage} sx={{ height: 8, borderRadius: 999 }} />
+                  </Stack>
+                );
+              })}
+            </Stack>
           </SectionCard>
         </Grid>
       </Grid>
