@@ -23,6 +23,10 @@ export function Topbar({ children }: PropsWithChildren) {
     ? "Application Details"
     : titleByPath[location.pathname] ?? "JobTracker";
   const isDark = mode === "dark";
+  const helperText = location.pathname === "/applications"
+    ? "Use filters and search to manage your local pipeline."
+    : "Career Co-pilot workspace powered by local mock data.";
+  const showSearch = location.pathname === "/applications";
 
   return (
     <AppBar
@@ -46,27 +50,33 @@ export function Topbar({ children }: PropsWithChildren) {
             {title}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
-            Track your pipeline with mock application data.
+            {helperText}
           </Typography>
         </Box>
-        <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            gap: 1,
-            px: 1.5,
-            py: 0.75,
-            borderRadius: 999,
-            bgcolor: (theme) => alpha(theme.palette.primary.main, isDark ? 0.16 : 0.08),
-            border: 1,
-            borderColor: "divider",
-            minWidth: 220,
-            color: "text.secondary",
-          }}
-        >
-          <SearchOutlinedIcon fontSize="small" color="action" />
-          <InputBase placeholder="Search later" sx={{ fontSize: 14, width: "100%" }} />
-        </Box>
+        {showSearch ? (
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 1,
+              px: 1.5,
+              py: 0.75,
+              borderRadius: 999,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, isDark ? 0.16 : 0.08),
+              border: 1,
+              borderColor: "divider",
+              minWidth: 220,
+              color: "text.secondary",
+            }}
+          >
+            <SearchOutlinedIcon fontSize="small" color="action" />
+            <InputBase
+              placeholder="Search applications..."
+              readOnly
+              sx={{ fontSize: 14, width: "100%" }}
+            />
+          </Box>
+        ) : null}
         <IconButton color="inherit" sx={{ border: 1, borderColor: "divider" }}>
           <NotificationsNoneOutlinedIcon />
         </IconButton>

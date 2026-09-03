@@ -12,12 +12,11 @@ import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSect
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
-import { formatApplicationDate, getUpcomingApplications } from "../applications/utils/applicationPresentation";
+import { formatApplicationDate } from "../applications/utils/applicationPresentation";
 import { getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function SchedulePage() {
   const { applications } = useApplications();
-  const upcomingDeadlines = getUpcomingApplications(applications).slice(0, 3);
   const reminderGroups = getGroupedReminders(applications);
   const activePipeline = applications
     .filter((application) => ["Interviewing", "Assignment", "Offer"].includes(application.status))
@@ -31,33 +30,6 @@ export function SchedulePage() {
         description="A lightweight planning view generated from application deadlines, current statuses, and follow-up signals."
       />
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Upcoming deadlines" description="Closest application deadlines from the current local data.">
-            {upcomingDeadlines.length > 0 ? (
-              <List disablePadding>
-                {upcomingDeadlines.map((application, index) => (
-                  <ReminderListItem
-                    key={`${application.id}-deadline-preview`}
-                    borderTop={index > 0}
-                    reminder={{
-                      id: `${application.id}-deadline-preview`,
-                      applicationId: application.id,
-                      type: "checkDeadline",
-                      status: "open",
-                      title: "Check deadline",
-                      description: `Keep the deadline visible while you plan the next step for ${application.companyName}.`,
-                      companyName: application.companyName,
-                      jobTitle: application.jobTitle,
-                      dueDate: application.deadline ?? application.updatedAt.slice(0, 10),
-                    }}
-                  />
-                ))}
-              </List>
-            ) : (
-              <Typography color="text.secondary">No future deadlines are saved yet.</Typography>
-            )}
-          </SectionCard>
-        </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <SectionCard title="Overdue" description="Reminder items that are already past their due date.">
             {reminderGroups[0].reminders.length > 0 ? (
@@ -84,20 +56,7 @@ export function SchedulePage() {
             )}
           </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12, lg: 7 }}>
-          <SectionCard title="Upcoming" description="Reminders that are coming up next in your pipeline.">
-            {reminderGroups[2].reminders.length > 0 ? (
-              <List disablePadding>
-                {reminderGroups[2].reminders.map((reminder, index) => (
-                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
-                ))}
-              </List>
-            ) : (
-              <Typography color="text.secondary">No upcoming reminders are queued yet.</Typography>
-            )}
-          </SectionCard>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 5 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <SectionCard title="Active queue" description="Keep the most time-sensitive active processes visible in one place.">
             {activePipeline.length > 0 ? (
               <Stack gap={1.5}>
@@ -120,6 +79,19 @@ export function SchedulePage() {
               </Stack>
             ) : (
               <Typography color="text.secondary">Active interview, assignment, or offer stages will appear here.</Typography>
+            )}
+          </SectionCard>
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <SectionCard title="Upcoming deadlines & tasks" description="The full upcoming queue generated from deadlines, follow-ups, interviews, assignments, and offers.">
+            {reminderGroups[2].reminders.length > 0 ? (
+              <List disablePadding>
+                {reminderGroups[2].reminders.map((reminder, index) => (
+                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
+                ))}
+              </List>
+            ) : (
+              <Typography color="text.secondary">No upcoming reminders are queued yet.</Typography>
             )}
           </SectionCard>
         </Grid>

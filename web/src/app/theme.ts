@@ -1,5 +1,6 @@
 import type { PaletteMode } from "@mui/material";
 import { alpha, createTheme } from "@mui/material/styles";
+import interUrl from "../assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 
 export type ThemeMode = PaletteMode;
 
@@ -10,18 +11,18 @@ const palette = {
   warning: "#D97706",
   error: "#DC2626",
   light: {
-    background: "#F5F7FB",
+    background: "#F8FAFC",
     paper: "#FFFFFF",
     mutedSurface: "#EEF2F8",
-    textPrimary: "#111827",
-    textSecondary: "#4B5563",
-    border: "#D8DEE9",
+    textPrimary: "#0F172A",
+    textSecondary: "#64748B",
+    border: "#E2E8F0",
   },
   dark: {
-    background: "#0B1120",
+    background: "#020617",
     paper: "#111827",
     mutedSurface: "#1E293B",
-    textPrimary: "#E5E7EB",
+    textPrimary: "#F1F5F9",
     textSecondary: "#94A3B8",
     border: "#334155",
   },
@@ -87,18 +88,22 @@ export function createAppTheme(mode: ThemeMode) {
     },
     spacing: 8,
     typography: {
-      fontFamily: '"Segoe UI", "Helvetica Neue", sans-serif',
+      fontFamily: '"Inter", "Segoe UI", "Helvetica Neue", sans-serif',
       h4: {
         fontWeight: 750,
-        letterSpacing: 0,
+        letterSpacing: "-0.02em",
       },
       h5: {
         fontWeight: 750,
-        letterSpacing: 0,
+        letterSpacing: "-0.015em",
       },
       h6: {
         fontWeight: 700,
-        letterSpacing: 0,
+        letterSpacing: "-0.01em",
+      },
+      overline: {
+        fontWeight: 800,
+        letterSpacing: "0.08em",
       },
       button: {
         fontWeight: 700,
@@ -108,9 +113,17 @@ export function createAppTheme(mode: ThemeMode) {
     components: {
       MuiCssBaseline: {
         styleOverrides: {
+          "@font-face": {
+            fontFamily: "Inter",
+            fontStyle: "normal",
+            fontWeight: "100 900",
+            fontDisplay: "swap",
+            src: `url(${interUrl}) format("truetype")`,
+          },
           body: {
             backgroundColor: modePalette.background,
             color: modePalette.textPrimary,
+            fontFeatureSettings: '"cv02", "cv03", "cv04", "cv11"',
           },
         },
       },
@@ -131,7 +144,7 @@ export function createAppTheme(mode: ThemeMode) {
             borderRadius: 10,
             backgroundColor: paperColor,
             backgroundImage: "none",
-            boxShadow: isDark ? "none" : `0 1px 2px ${alpha("#111827", 0.04)}`,
+            boxShadow: isDark ? "none" : `0 1px 2px ${alpha("#0F172A", 0.035)}`,
           },
         },
       },
@@ -148,6 +161,12 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             borderRadius: 8,
+            boxShadow: "none",
+          },
+          contained: {
+            "&:hover": {
+              boxShadow: isDark ? "none" : `0 8px 18px ${alpha(palette.primary, 0.16)}`,
+            },
           },
         },
       },
@@ -172,6 +191,10 @@ export function createAppTheme(mode: ThemeMode) {
           root: {
             backgroundColor: isDark ? alpha("#FFFFFF", 0.03) : "#FFFFFF",
             borderRadius: 8,
+            transition: "box-shadow 160ms ease, border-color 160ms ease",
+            "&.Mui-focused": {
+              boxShadow: `0 0 0 3px ${alpha(palette.primary, isDark ? 0.18 : 0.12)}`,
+            },
           },
           notchedOutline: {
             borderColor: modePalette.border,
@@ -224,17 +247,21 @@ export function getSidebarColors(mode: ThemeMode) {
       background: "#020617",
       text: "#CBD5E1",
       eyebrow: "#93C5FD",
+      border: "#1E293B",
       activeBackground: alpha(palette.primary, 0.24),
       activeText: "#FFFFFF",
+      muted: "#64748B",
     };
   }
 
   return {
-    background: "#0F172A",
-    text: "#CBD5E1",
-    eyebrow: "#93C5FD",
-    activeBackground: alpha("#93C5FD", 0.16),
-    activeText: "#FFFFFF",
+    background: "#FFFFFF",
+    text: "#475569",
+    eyebrow: palette.primary,
+    border: "#E2E8F0",
+    activeBackground: alpha(palette.primary, 0.12),
+    activeText: palette.primary,
+    muted: "#94A3B8",
   };
 }
 

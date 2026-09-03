@@ -14,6 +14,8 @@ import {
   MenuItem,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -82,7 +84,63 @@ export function ApplicationsPage() {
         <Card>
           <CardContent>
             <Stack gap={2.5}>
-              <Stack direction={{ xs: "column", xl: "row" }} gap={2}>
+              <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" gap={2}>
+                <ToggleButtonGroup
+                  exclusive
+                  value={listFilter}
+                  onChange={(_, nextFilter: ApplicationListFilter | null) => {
+                    if (nextFilter) {
+                      setListFilter(nextFilter);
+                    }
+                  }}
+                  aria-label="Application view filter"
+                  size="small"
+                  sx={{
+                    flexWrap: "wrap",
+                    gap: 1,
+                    "& .MuiToggleButtonGroup-grouped": {
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 999,
+                      px: 2,
+                      py: 0.75,
+                    },
+                  }}
+                >
+                  <ToggleButton value="all">All</ToggleButton>
+                  <ToggleButton value="active">Active</ToggleButton>
+                  <ToggleButton value="archived">Archived</ToggleButton>
+                  <ToggleButton value="needsFollowUp">Needs follow-up</ToggleButton>
+                </ToggleButtonGroup>
+                <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
+                  <TextField
+                    select
+                    label="Status"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value as "all" | ApplicationStatus)}
+                    sx={{ minWidth: { xs: "100%", sm: 180 } }}
+                  >
+                    <MenuItem value="all">All statuses</MenuItem>
+                    {(Object.keys(applicationStatusLabel) as ApplicationStatus[]).map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {applicationStatusLabel[status]}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    select
+                    label="Sort by"
+                    value={sortOption}
+                    onChange={(event) => setSortOption(event.target.value as ApplicationSortOption)}
+                    sx={{ minWidth: { xs: "100%", sm: 200 } }}
+                  >
+                    <MenuItem value="updatedDesc">Recently updated</MenuItem>
+                    <MenuItem value="appliedDesc">Applied date</MenuItem>
+                    <MenuItem value="deadlineAsc">Deadline</MenuItem>
+                  </TextField>
+                </Stack>
+              </Stack>
+              <Stack direction={{ xs: "column", md: "row" }} gap={2}>
                 <TextField
                   label="Search applications"
                   placeholder="Search company or job title"
@@ -97,41 +155,6 @@ export function ApplicationsPage() {
                     ),
                   }}
                 />
-                <TextField
-                  select
-                  label="Status"
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value as "all" | ApplicationStatus)}
-                  sx={{ minWidth: { xs: "100%", sm: 180 } }}
-                >
-                  <MenuItem value="all">All statuses</MenuItem>
-                  {(Object.keys(applicationStatusLabel) as ApplicationStatus[]).map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {applicationStatusLabel[status]}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  label="View"
-                  value={listFilter}
-                  onChange={(event) => setListFilter(event.target.value as ApplicationListFilter)}
-                  sx={{ minWidth: { xs: "100%", sm: 220 } }}
-                >
-                  <MenuItem value="all">All applications</MenuItem>
-                  <MenuItem value="needsFollowUp">Needs follow-up</MenuItem>
-                </TextField>
-                <TextField
-                  select
-                  label="Sort by"
-                  value={sortOption}
-                  onChange={(event) => setSortOption(event.target.value as ApplicationSortOption)}
-                  sx={{ minWidth: { xs: "100%", sm: 200 } }}
-                >
-                  <MenuItem value="updatedDesc">Recently updated</MenuItem>
-                  <MenuItem value="appliedDesc">Applied date</MenuItem>
-                  <MenuItem value="deadlineAsc">Deadline</MenuItem>
-                </TextField>
               </Stack>
 
               <Stack direction={{ xs: "column", md: "row" }} gap={1.5} justifyContent="space-between">
@@ -143,6 +166,12 @@ export function ApplicationsPage() {
                   ) : null}
                   {listFilter === "needsFollowUp" ? (
                     <Chip label="Needs follow-up only" color="secondary" variant="outlined" />
+                  ) : null}
+                  {listFilter === "active" ? (
+                    <Chip label="Active pipeline" color="primary" variant="outlined" />
+                  ) : null}
+                  {listFilter === "archived" ? (
+                    <Chip label="Archived outcomes" variant="outlined" />
                   ) : null}
                 </Stack>
                 {hasActiveFilters ? (

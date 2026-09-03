@@ -2,7 +2,7 @@
 
 ## Feature Name
 
-Dashboard Information Hierarchy Cleanup
+Web MVP Layout Implementation
 
 ## Status
 
@@ -14,15 +14,18 @@ Work only inside `web/`.
 
 ## Goals
 
-- Reduce duplicated information on the Dashboard
-- Make Dashboard feel like a focused overview page instead of another Schedule page
-- Keep the top metric cards
-- Replace Current Focus with a clearer single priority section
-- Limit Next Actions to the most important 3–4 actions
-- Replace the long Upcoming Reminders list with a compact summary
-- Add a clear link or button to Schedule for full reminder details
-- Add a small Pipeline Snapshot section if useful
-- Keep the current visual style, theme and layout direction
+- Implement the new MVP layout direction for the existing React + MUI prototype
+- Align the UI with `docs/DESIGN.md`
+- Make the app feel like a polished Career Co-pilot / Career Manager product
+- Keep light mode and dark mode both usable
+- Make light mode the best default for portfolio screenshots
+- Improve Dashboard layout
+- Improve Applications layout
+- Improve Application Details layout
+- Improve Schedule layout
+- Improve Insights layout
+- Improve Settings layout
+- Keep all existing frontend functionality working
 
 ## Not Included
 
@@ -31,84 +34,152 @@ Work only inside `web/`.
 - Database
 - TanStack Query
 - Backend code
-- New business features
-- New reminder model
-- New timeline model
-- Calendar/email integrations
+- Real account/profile functionality
+- Real contacts functionality
+- Real global search beyond applications
+- Real reminder completion
+- Real calendar/email integrations
 - Deployment
 - Mobile app
-- Major redesign
 
-## Dashboard Purpose
+## Design Direction
 
-The Dashboard should answer three questions:
+Use `docs/DESIGN.md` as the main design reference.
 
-- How is my job search going?
-- What needs attention now?
-- Where do I go for full schedule details?
+The UI should feel like:
 
-It should not repeat all Schedule page information.
+- Professional
+- Clear
+- Calm
+- Productive
+- Career-focused
+- Portfolio-ready
 
-## Requirements
+Do not copy screenshots pixel-perfectly. Use them as layout direction.
 
-### Metrics
+## Global Layout Requirements
 
-Keep the existing top metric cards:
+- Use fixed sidebar / fluid content layout
+- Use a max content width around 1280px where appropriate
+- Keep sidebar width around 260px
+- Keep spacing consistent
+- Use MUI components
+- Use tonal layering and low-contrast borders instead of heavy shadows
+- Keep light and dark modes visually consistent
+- Avoid flashy effects or decorative clutter
 
-- Total applications
-- Active processes
-- Interviews
-- Offers
-- Needs follow-up
-- Ghosted risk
+## Branding Requirements
 
-Small visual adjustments are allowed if needed.
+Use:
 
-### Priority Focus
+- Product name: `JobTracker`
+- Subtitle: `Career Co-pilot` or `Career Manager`
 
-Replace or simplify the current `Current Focus` section.
+Prefer one subtitle consistently across the app.
 
-It should highlight only the single most important current priority, for example:
+## Dashboard Requirements
 
-- Wolt needs follow-up
-- Nitor deadline is today
-- Reaktor interview prep is next
-- Solita assignment deadline is close
+Dashboard should be a focused overview page.
 
-Show a short explanation and a clear action.
+It should include:
 
-### Next Actions
+- Priority Action card
+- Summary metric cards
+- Next Actions card
+- Compact Schedule summary
+- Pipeline Snapshot
 
-Keep the Next Actions section, but limit it to the top 3–4 actions.
+It should not duplicate the full Schedule page.
 
-It should not duplicate the full Schedule or Reminder list.
+## Applications Requirements
 
-### Upcoming Reminders
+Applications should be the main job application management page.
 
-Remove the long Upcoming Reminders list from Dashboard or replace it with a compact summary card.
+It should include:
 
-Example:
+- Page title and subtitle
+- Add Application button
+- Search applications
+- Filters:
+  - All
+  - Active
+  - Archived
+  - Needs follow-up
+- Application cards
+- Status chips
+- Next action / deadline / updated info
+- Open details behavior
 
-- 3 reminders due this week
-- 1 overdue
-- Next: Nitor deadline today
-- Button/link: View schedule
+Keep existing search, filters, sorting, CRUD and localStorage behavior working.
 
-The full reminder/deadline list should stay on the Schedule page.
+## Application Details Requirements
 
-### Pipeline Snapshot
+Application Details should feel like a real workspace for one application.
 
-Add a small Pipeline Snapshot section if it fits naturally.
+It should include:
 
-It can show a compact status distribution using existing local/mock data, for example:
+- Back to applications
+- Job title and company
+- Status chip
+- Next action chip
+- Edit button
+- Delete button
+- Prominent next action banner
+- Description and notes section
+- Quick facts card
+- Open job ad button/link
+- Timeline card
 
-- Applied
-- Interviewing
-- Assignment
-- Offer
-- Ghosted
+Keep existing edit/delete/timeline behavior working.
 
-Do not add chart libraries.
+## Schedule Requirements
+
+Schedule should answer:
+
+- What is overdue?
+- What should be handled today?
+- What is upcoming?
+- Which applications are active?
+
+It should include:
+
+- Overdue section
+- Today section
+- Upcoming deadlines/tasks section
+- Active queue section
+
+Do not implement real reminder completion or calendar integration.
+
+## Insights Requirements
+
+Insights should show simple local-only metrics.
+
+It should include:
+
+- Response Momentum
+- Pipeline Pressure
+- Data Coverage
+- Status Breakdown
+
+Do not add chart libraries. Use MUI cards, progress bars and simple visual indicators.
+
+## Settings Requirements
+
+Settings should feel intentional even without auth/backend.
+
+It should include:
+
+- Appearance section with theme toggle
+- Tracking Preferences placeholders
+  - Default follow-up days
+  - Ghosted risk days
+- Profile placeholder
+- Data Management placeholder
+
+Do not implement real account/auth features.
+
+Optional:
+- Reset local data only if it already fits the existing localStorage flow and can be implemented safely.
 
 ## Existing Functionality That Must Keep Working
 
@@ -126,6 +197,7 @@ Do not add chart libraries.
 - Sorting
 - Status chips
 - Next Action logic
+- Dashboard summary
 - Schedule reminder/deadline groups
 - Insights metrics
 - Timeline on details page
@@ -134,17 +206,19 @@ Do not add chart libraries.
 
 - `npm run build` passes
 - App runs locally
-- Dashboard has less repeated information
-- Dashboard has a clearer information hierarchy
-- Schedule still shows full reminder/deadline groups
+- Light mode works
+- Dark mode works
+- Dashboard has the new focused layout
 - Applications page still works
 - Application Details page still works
+- Schedule still works
+- Insights still works
+- Settings still works
 - Add/edit/delete still work
 - localStorage application persistence still works
 - Search, filters and sorting still work
 - Next Action logic still works
-- Light mode still works
-- Dark mode still works
+- Timeline still appears on details page
 - No API/auth/database code was added
 
 ## History
@@ -156,4 +230,4 @@ Do not add chart libraries.
 - Completed Web UI Refinement Pass
 - Completed Mock Timeline and Reminders UI
 - Completed Web Visual Alignment and Theme Polish
-- Started Dashboard Information Hierarchy Cleanup
+- Started Web MVP Layout Implementation

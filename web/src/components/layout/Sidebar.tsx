@@ -41,18 +41,28 @@ export function Sidebar({
   const theme = useTheme();
   const sidebarColors = getSidebarColors(theme.palette.mode);
   const drawerContent = (
-    <Box sx={{ height: "100%", bgcolor: sidebarColors.background, color: sidebarColors.text }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        bgcolor: sidebarColors.background,
+        color: sidebarColors.text,
+        borderRight: 1,
+        borderColor: sidebarColors.border,
+      }}
+    >
       <Toolbar sx={{ px: 3, minHeight: { xs: 64, md: 72 } }}>
         <Box>
-          <Typography variant="overline" sx={{ color: sidebarColors.eyebrow, letterSpacing: 1.2 }}>
-            Job Search OS
-          </Typography>
-          <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+          <Typography variant="h5" sx={{ color: sidebarColors.eyebrow, lineHeight: 1.05 }}>
             JobTracker
+          </Typography>
+          <Typography variant="body2" sx={{ color: sidebarColors.text, mt: 0.5 }}>
+            Career Co-pilot
           </Typography>
         </Box>
       </Toolbar>
-      <List sx={{ px: 1.5 }}>
+      <List sx={{ px: 1.5, pt: 4 }}>
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.to}
@@ -66,6 +76,8 @@ export function Sidebar({
               "&.active": {
                 bgcolor: sidebarColors.activeBackground,
                 color: sidebarColors.activeText,
+                borderRight: 3,
+                borderColor: "primary.main",
               },
               "&:hover": {
                 bgcolor: sidebarColors.activeBackground,
@@ -77,6 +89,11 @@ export function Sidebar({
           </ListItemButton>
         ))}
       </List>
+      <Box sx={{ mt: "auto", p: 3 }}>
+        <Typography variant="caption" sx={{ color: sidebarColors.muted, fontWeight: 700 }}>
+          Local mock workspace
+        </Typography>
+      </Box>
     </Box>
   );
 

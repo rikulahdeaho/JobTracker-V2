@@ -35,7 +35,7 @@ export function InsightsPage() {
         description="Simple local-only metrics that help the prototype feel more like a real product dashboard."
       />
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, lg: 7 }}>
           <SectionCard title="Response momentum" description="A quick signal for how many active processes are moving.">
             <Stack gap={2}>
               <Stack direction="row" gap={1.5} alignItems="center">
@@ -49,7 +49,7 @@ export function InsightsPage() {
             </Stack>
           </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <SectionCard title="Pipeline pressure" description="Where your attention is most likely needed next.">
             <Stack gap={1.5}>
               <Chip label={`${followUps.length} need follow-up`} color="secondary" variant="outlined" sx={{ width: "fit-content" }} />
@@ -65,8 +65,8 @@ export function InsightsPage() {
             </Stack>
           </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Coverage" description="A simple summary of how much real context is already stored locally.">
+        <Grid size={{ xs: 12, lg: 5 }}>
+          <SectionCard title="Data coverage" description="A simple summary of how much real context is already stored locally.">
             <Stack gap={1}>
               <Typography color="text.secondary">
                 {applications.filter((application) => application.jobUrl).length} applications include a job URL.
@@ -80,7 +80,7 @@ export function InsightsPage() {
             </Stack>
           </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, lg: 7 }}>
           <SectionCard title="Status breakdown" description="Current distribution of applications across the mock pipeline.">
             <Grid container spacing={2}>
               {statusCounts.map((item) => {

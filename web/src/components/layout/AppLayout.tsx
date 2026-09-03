@@ -33,7 +33,7 @@ export function AppLayout() {
       />
       <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
         <Toolbar />
-        <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3.5 } }}>
+        <Box sx={{ px: { xs: 2, md: 3, xl: 4 }, py: { xs: 2, md: 3.5 } }}>
           <Outlet />
         </Box>
       </Box>
