@@ -107,7 +107,11 @@ export function getApplicationReminders(application: JobApplication): Reminder[]
       break;
   }
 
-  if (application.deadline) {
+  const alreadyHasDeadlineReminder = reminders.some(
+    (reminder) => reminder.dueDate === application.deadline,
+  );
+
+  if (application.deadline && !alreadyHasDeadlineReminder) {
     reminders.push(
       createReminder(
         application,

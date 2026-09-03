@@ -1,6 +1,7 @@
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
@@ -16,13 +17,14 @@ import {
   Grid,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
+import type { ChipProps } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { StatusChip } from "../applications/components/StatusChip";
@@ -93,13 +95,13 @@ export function DashboardPage() {
     {
       label: "Needs follow-up",
       value: followUpApplications.length,
-      helper: "Action suggested",
+      helper: followUpApplications.length > 0 ? "Action suggested" : "No action needed",
       icon: <MarkEmailUnreadOutlinedIcon color="primary" />,
     },
     {
       label: "Ghosted risk",
       value: ghostedRiskApplications.length,
-      helper: "Long silence",
+      helper: ghostedRiskApplications.length > 0 ? "Long silence" : "No risk",
       icon: <WatchLaterOutlinedIcon color="primary" />,
     },
   ];
@@ -118,12 +120,26 @@ export function DashboardPage() {
       <PageHeader
         title="Job search at a glance"
         description="A polished local-first dashboard powered entirely by your current mock application data."
+        actions={
+          <Stack direction="row" gap={1.25} alignItems="center" flexWrap="wrap">
+            <Chip
+              icon={<CheckCircleOutlineOutlinedIcon />}
+              label="Local storage: Up to date"
+              color="success"
+              variant="outlined"
+            />
+            <Button component={RouterLink} to="/applications" variant="contained">
+              Manage applications
+            </Button>
+          </Stack>
+        }
       />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, xl: 8 }}>
           <SectionCard
             title="Priority action"
             description="Start here. This is the highest-signal next step from the current local pipeline."
+            action={<Chip label="High priority" color="warning" variant="outlined" />}
           >
             {priorityItem ? (
               <Stack
@@ -134,7 +150,10 @@ export function DashboardPage() {
                 sx={(theme) => ({
                   p: { xs: 2.5, md: 3.5 },
                   borderRadius: 2,
-                  bgcolor: alpha(theme.palette.warning.main, theme.palette.mode === "dark" ? 0.14 : 0.08),
+                  background:
+                    theme.palette.mode === "dark"
+                      ? alpha(theme.palette.warning.main, 0.14)
+                      : `linear-gradient(90deg, ${alpha(theme.palette.warning.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
                   border: 1,
                   borderColor: alpha(theme.palette.warning.main, theme.palette.mode === "dark" ? 0.32 : 0.22),
                 })}
@@ -175,6 +194,7 @@ export function DashboardPage() {
                   to={`/applications/${priorityItem.application.id}`}
                   variant="contained"
                   endIcon={<ChevronRightOutlinedIcon />}
+                  sx={{ minWidth: 180 }}
                 >
                   Open application
                 </Button>
@@ -199,10 +219,27 @@ export function DashboardPage() {
             {reminders.length > 0 ? (
               <Stack gap={2}>
                 <Grid container spacing={1.25}>
-                  {reminderGroups.map((group) => (
+                  {reminderGroups.map((group, index) => (
                     <Grid key={group.key} size={{ xs: 4 }}>
-                      <Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
-                        <Typography variant="h5">{group.reminders.length}</Typography>
+                      <Box
+                        sx={(theme) => ({
+                          p: 1.5,
+                          textAlign: "center",
+                          border: 1,
+                          borderColor:
+                            index === 0
+                              ? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.42 : 0.2)
+                              : "divider",
+                          borderRadius: 2,
+                          bgcolor:
+                            index === 0
+                              ? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.12 : 0.04)
+                              : alpha(theme.palette.background.default, theme.palette.mode === "dark" ? 0.42 : 0.7),
+                        })}
+                      >
+                        <Typography variant="h5" color={index === 0 ? "error.main" : "text.primary"}>
+                          {group.reminders.length}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
                           {group.title}
                         </Typography>
@@ -270,32 +307,37 @@ export function DashboardPage() {
             title="Pipeline snapshot"
             description="A compact health check. Insights keeps the deeper breakdown."
           >
-            <Stack gap={2}>
-              <Stack direction={{ xs: "column", sm: "row" }} gap={1.5}>
-                <Box sx={{ flex: 1, p: 2, border: 1, borderColor: "divider", borderRadius: 2 }}>
+            <Stack gap={1.5}>
+              <Stack direction={{ xs: "column", sm: "row" }} gap={1.25}>
+                <Box sx={{ flex: 1, p: 1.75, border: 1, borderColor: "divider", borderRadius: 2 }}>
                   <Typography variant="overline" color="text.secondary">
                     Active
                   </Typography>
                   <Typography variant="h4">{activeCount}</Typography>
-                  <Typography color="text.secondary">Processes still worth tracking closely.</Typography>
+                  <Typography variant="body2" color="text.secondary">Processes still worth tracking closely.</Typography>
                 </Box>
-                <Box sx={{ flex: 1, p: 2, border: 1, borderColor: "divider", borderRadius: 2 }}>
+                <Box sx={{ flex: 1, p: 1.75, border: 1, borderColor: "divider", borderRadius: 2 }}>
                   <Typography variant="overline" color="text.secondary">
                     Closed
                   </Typography>
                   <Typography variant="h4">{closedCount}</Typography>
-                  <Typography color="text.secondary">Rejected, ghosted, or withdrawn applications.</Typography>
+                  <Typography variant="body2" color="text.secondary">Rejected, ghosted, or withdrawn applications.</Typography>
                 </Box>
               </Stack>
               <Divider />
-              <Stack direction="row" gap={1} flexWrap="wrap">
+              <Typography variant="overline" color="text.secondary">
+                Current active funnel
+              </Typography>
+              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                 {pipelineSnapshot.map(({ status, count }) => (
-                  <Chip
-                    key={status}
-                    label={`${applicationStatusLabel[status]}: ${count}`}
-                    variant="outlined"
-                    size="small"
-                  />
+                  <Stack key={status} direction="row" gap={1} alignItems="center">
+                    <Chip
+                      label={`${applicationStatusLabel[status]}: ${count}`}
+                      variant="outlined"
+                      size="small"
+                    />
+                    {status !== "Offer" ? <ChevronRightOutlinedIcon fontSize="small" color="action" /> : null}
+                  </Stack>
                 ))}
               </Stack>
             </Stack>
@@ -312,31 +354,32 @@ export function DashboardPage() {
                   <ListItem
                     key={application.id}
                     disableGutters
-                    component={RouterLink}
-                    to={`/applications/${application.id}`}
                     sx={{
                       py: 1.25,
-                      textDecoration: "none",
                       color: "inherit",
                       borderTop: index === 0 ? 0 : 1,
                       borderColor: "divider",
+                      gap: 1.5,
                     }}
                   >
-                    <ListItemAvatar>
-                      <Avatar
-                        sx={{
-                          bgcolor: (theme) =>
-                            alpha(theme.palette.secondary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
-                          color: "secondary.main",
-                          width: 40,
-                          height: 40,
-                        }}
-                      >
-                        <ChevronRightOutlinedIcon />
-                      </Avatar>
-                    </ListItemAvatar>
+                    <Box
+                      sx={(theme) => ({
+                        width: 8,
+                        height: 8,
+                        borderRadius: 999,
+                        bgcolor: getActionAccentColor(nextAction.color, theme),
+                        flexShrink: 0,
+                        mt: 1,
+                      })}
+                    />
                     <ListItemText
-                      primary={`${application.companyName} - ${nextAction.title}`}
+                      primary={
+                        <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+                          <Typography fontWeight={800}>{application.companyName}</Typography>
+                          <Typography color="text.secondary">·</Typography>
+                          <Typography fontWeight={700}>{nextAction.title}</Typography>
+                        </Stack>
+                      }
                       secondary={
                         <Stack gap={1} sx={{ mt: 0.5 }}>
                           <Typography variant="body2" color="text.secondary">
@@ -349,6 +392,16 @@ export function DashboardPage() {
                         </Stack>
                       }
                     />
+                    <Button
+                      component={RouterLink}
+                      to={`/applications/${application.id}`}
+                      variant="text"
+                      size="small"
+                      endIcon={<ChevronRightOutlinedIcon />}
+                      sx={{ flexShrink: 0, display: { xs: "none", sm: "inline-flex" } }}
+                    >
+                      Open
+                    </Button>
                   </ListItem>
                 ))}
               </List>
@@ -374,4 +427,24 @@ function getApplicationDateContext(application: JobApplication): string {
   }
 
   return `Updated ${formatApplicationDate(application.updatedAt, "recently")}`;
+}
+
+function getActionAccentColor(color: ChipProps["color"], theme: Theme): string {
+  switch (color) {
+    case "primary":
+      return theme.palette.primary.main;
+    case "secondary":
+      return theme.palette.secondary.main;
+    case "success":
+      return theme.palette.success.main;
+    case "warning":
+      return theme.palette.warning.main;
+    case "error":
+      return theme.palette.error.main;
+    case "info":
+      return theme.palette.info.main;
+    case "default":
+    case undefined:
+      return theme.palette.text.secondary;
+  }
 }

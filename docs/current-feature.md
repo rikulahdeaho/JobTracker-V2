@@ -2,7 +2,7 @@
 
 ## Feature Name
 
-Web MVP Layout Implementation
+Dashboard Layout Balance Pass
 
 ## Status
 
@@ -14,18 +14,16 @@ Work only inside `web/`.
 
 ## Goals
 
-- Implement the new MVP layout direction for the existing React + MUI prototype
-- Align the UI with `docs/DESIGN.md`
-- Make the app feel like a polished Career Co-pilot / Career Manager product
-- Keep light mode and dark mode both usable
-- Make light mode the best default for portfolio screenshots
-- Improve Dashboard layout
-- Improve Applications layout
-- Improve Application Details layout
-- Improve Schedule layout
-- Improve Insights layout
-- Improve Settings layout
-- Keep all existing frontend functionality working
+- Improve Dashboard layout hierarchy
+- Make Dashboard feel like a focused job search command center
+- Use the new dashboard reference image as visual direction
+- Make Priority Action the strongest visual element
+- Keep Schedule Summary compact
+- Keep all 6 metric cards
+- Make Pipeline Snapshot compact
+- Keep Next Actions limited to top 3
+- Reduce repeated information
+- Keep light and dark mode working
 
 ## Not Included
 
@@ -34,152 +32,94 @@ Work only inside `web/`.
 - Database
 - TanStack Query
 - Backend code
-- Real account/profile functionality
-- Real contacts functionality
-- Real global search beyond applications
+- New business logic
+- Charts or chart libraries
 - Real reminder completion
-- Real calendar/email integrations
-- Deployment
-- Mobile app
+- Changes to Schedule, Insights, Applications or Details unless required by shared components
 
-## Design Direction
+## Required Dashboard Layout Order
 
-Use `docs/DESIGN.md` as the main design reference.
+1. Page header
+2. Priority Action + Schedule Summary
+3. Metric cards row
+4. Pipeline Snapshot + Next Actions
 
-The UI should feel like:
+## Dashboard Sections
 
-- Professional
-- Clear
-- Calm
-- Productive
-- Career-focused
-- Portfolio-ready
+### Page Header
 
-Do not copy screenshots pixel-perfectly. Use them as layout direction.
+Show:
 
-## Global Layout Requirements
+- Job search at a glance
+- Short local-first dashboard subtitle
+- Optional local storage status
+- Optional New Application button if it already fits existing functionality
 
-- Use fixed sidebar / fluid content layout
-- Use a max content width around 1280px where appropriate
-- Keep sidebar width around 260px
-- Keep spacing consistent
-- Use MUI components
-- Use tonal layering and low-contrast borders instead of heavy shadows
-- Keep light and dark modes visually consistent
-- Avoid flashy effects or decorative clutter
+### Priority Action
 
-## Branding Requirements
-
-Use:
-
-- Product name: `JobTracker`
-- Subtitle: `Career Co-pilot` or `Career Manager`
-
-Prefer one subtitle consistently across the app.
-
-## Dashboard Requirements
-
-Dashboard should be a focused overview page.
+Show the single highest-priority action.
 
 It should include:
 
-- Priority Action card
-- Summary metric cards
-- Next Actions card
-- Compact Schedule summary
-- Pipeline Snapshot
-
-It should not duplicate the full Schedule page.
-
-## Applications Requirements
-
-Applications should be the main job application management page.
-
-It should include:
-
-- Page title and subtitle
-- Add Application button
-- Search applications
-- Filters:
-  - All
-  - Active
-  - Archived
-  - Needs follow-up
-- Application cards
-- Status chips
-- Next action / deadline / updated info
-- Open details behavior
-
-Keep existing search, filters, sorting, CRUD and localStorage behavior working.
-
-## Application Details Requirements
-
-Application Details should feel like a real workspace for one application.
-
-It should include:
-
-- Back to applications
-- Job title and company
+- Company
+- Action title
+- Short explanation
 - Status chip
-- Next action chip
-- Edit button
-- Delete button
-- Prominent next action banner
-- Description and notes section
-- Quick facts card
-- Open job ad button/link
-- Timeline card
+- Due date chip if available
+- Open application button
 
-Keep existing edit/delete/timeline behavior working.
+### Schedule Summary
 
-## Schedule Requirements
-
-Schedule should answer:
-
-- What is overdue?
-- What should be handled today?
-- What is upcoming?
-- Which applications are active?
+Show a compact reminder snapshot.
 
 It should include:
 
-- Overdue section
-- Today section
-- Upcoming deadlines/tasks section
-- Active queue section
+- Overdue count
+- Today count
+- Upcoming count
+- Next reminder
+- View schedule button/link
 
-Do not implement real reminder completion or calendar integration.
+### Metrics
 
-## Insights Requirements
+Keep all 6 metrics:
 
-Insights should show simple local-only metrics.
+- Total applications
+- Active processes
+- Interviews
+- Offers
+- Needs follow-up
+- Ghosted risk
 
-It should include:
+Metrics should be compact, aligned and visually secondary to Priority Action.
 
-- Response Momentum
-- Pipeline Pressure
-- Data Coverage
-- Status Breakdown
+### Pipeline Snapshot
 
-Do not add chart libraries. Use MUI cards, progress bars and simple visual indicators.
+Show a compact health check.
 
-## Settings Requirements
+It can include:
 
-Settings should feel intentional even without auth/backend.
+- Active count
+- Closed count
+- Compact active funnel:
+  - Applied
+  - Interviewing
+  - Assignment
+  - Offer
 
-It should include:
+Do not duplicate the full Insights page.
 
-- Appearance section with theme toggle
-- Tracking Preferences placeholders
-  - Default follow-up days
-  - Ghosted risk days
-- Profile placeholder
-- Data Management placeholder
+### Next Actions
 
-Do not implement real account/auth features.
+Show only the top 3 actions.
 
-Optional:
-- Reset local data only if it already fits the existing localStorage flow and can be implemented safely.
+Each action should include:
+
+- Company
+- Action
+- Short explanation
+- Due date if available
+- Status chip
 
 ## Existing Functionality That Must Keep Working
 
@@ -197,7 +137,6 @@ Optional:
 - Sorting
 - Status chips
 - Next Action logic
-- Dashboard summary
 - Schedule reminder/deadline groups
 - Insights metrics
 - Timeline on details page
@@ -206,19 +145,18 @@ Optional:
 
 - `npm run build` passes
 - App runs locally
-- Light mode works
-- Dark mode works
-- Dashboard has the new focused layout
+- Dashboard has the new layout order
+- Dashboard feels less repetitive
+- Priority Action is visually strongest
+- Schedule remains the detailed reminder/deadline page
+- Insights remains the deeper metrics page
 - Applications page still works
 - Application Details page still works
 - Schedule still works
 - Insights still works
 - Settings still works
-- Add/edit/delete still work
-- localStorage application persistence still works
-- Search, filters and sorting still work
-- Next Action logic still works
-- Timeline still appears on details page
+- Light mode works
+- Dark mode works
 - No API/auth/database code was added
 
 ## History
@@ -227,7 +165,6 @@ Optional:
 - Completed Web CRUD Flow with Local State
 - Completed Next Action Logic in Frontend
 - Completed Web UX Polish and Local Persistence
-- Completed Web UI Refinement Pass
 - Completed Mock Timeline and Reminders UI
 - Completed Web Visual Alignment and Theme Polish
-- Started Web MVP Layout Implementation
+- Started Dashboard Layout Balance Pass
