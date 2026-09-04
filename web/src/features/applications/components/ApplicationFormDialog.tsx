@@ -2,16 +2,20 @@ import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
   MenuItem,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
+import type { PropsWithChildren } from "react";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import { emptyApplicationFormValues } from "../utils/applicationForm";
 import { applicationStatusLabel } from "../utils/applicationStatus";
@@ -81,132 +85,198 @@ export function ApplicationFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{mode === "add" ? "Add Application" : "Edit Application"}</DialogTitle>
-      <DialogContent dividers>
-        <Stack gap={2.5} sx={{ pt: 1 }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        sx: {
+          maxHeight: "calc(100vh - 48px)",
+        },
+      }}
+    >
+      <DialogTitle sx={{ pb: 1.5 }}>
+        <Typography variant="h5">
+          {mode === "add" ? "Add Application" : "Edit Application"}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Capture the essentials now and refine the details as the process moves.
+        </Typography>
+      </DialogTitle>
+      <DialogContent dividers sx={{ px: { xs: 2.5, md: 3 }, py: 2.5 }}>
+        <Stack gap={2.5}>
           <Alert severity="info">
-            This flow updates local React state only. No API or database changes are made yet.
+            This flow updates local browser data only. No API or database changes are made yet.
           </Alert>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Company"
-                value={values.companyName}
-                onChange={handleFieldChange("companyName")}
-                fullWidth
-                required
-                error={Boolean(errors.companyName)}
-                helperText={errors.companyName}
-              />
+          <FormSection
+            title="Basic info"
+            description="The minimum information needed to create a useful application card."
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Company"
+                  value={values.companyName}
+                  onChange={handleFieldChange("companyName")}
+                  fullWidth
+                  required
+                  error={Boolean(errors.companyName)}
+                  helperText={errors.companyName || "Required"}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Job title"
+                  value={values.jobTitle}
+                  onChange={handleFieldChange("jobTitle")}
+                  fullWidth
+                  required
+                  error={Boolean(errors.jobTitle)}
+                  helperText={errors.jobTitle || "Required"}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Job URL"
+                  value={values.jobUrl}
+                  onChange={handleFieldChange("jobUrl")}
+                  fullWidth
+                  placeholder="https://..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Location"
+                  value={values.location}
+                  onChange={handleFieldChange("location")}
+                  fullWidth
+                  placeholder="Helsinki, remote, hybrid..."
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Job title"
-                value={values.jobTitle}
-                onChange={handleFieldChange("jobTitle")}
-                fullWidth
-                required
-                error={Boolean(errors.jobTitle)}
-                helperText={errors.jobTitle}
-              />
+          </FormSection>
+
+          <FormSection
+            title="Tracking info"
+            description="Status and dates power the local next-action and reminder views."
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  select
+                  label="Status"
+                  value={values.status}
+                  onChange={handleFieldChange("status")}
+                  fullWidth
+                >
+                  {applicationStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {applicationStatusLabel[status]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  label="Applied date"
+                  type="date"
+                  value={values.appliedDate}
+                  onChange={handleFieldChange("appliedDate")}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  label="Deadline"
+                  type="date"
+                  value={values.deadline}
+                  onChange={handleFieldChange("deadline")}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Source"
+                  value={values.source}
+                  onChange={handleFieldChange("source")}
+                  fullWidth
+                  placeholder="LinkedIn, referral, company site..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Salary range"
+                  value={values.salaryRange}
+                  onChange={handleFieldChange("salaryRange")}
+                  fullWidth
+                  placeholder="EUR 5,000 - 6,000 / month"
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Job URL"
-                value={values.jobUrl}
-                onChange={handleFieldChange("jobUrl")}
-                fullWidth
-              />
+          </FormSection>
+
+          <FormSection
+            title="Details"
+            description="Optional context for tailoring follow-ups, interviews and decisions."
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Notes"
+                  value={values.notes}
+                  onChange={handleFieldChange("notes")}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  placeholder="Portfolio angle, recruiter notes, next prep ideas..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Job description"
+                  value={values.jobDescription}
+                  onChange={handleFieldChange("jobDescription")}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Paste the most relevant role details here."
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                select
-                label="Status"
-                value={values.status}
-                onChange={handleFieldChange("status")}
-                fullWidth
-              >
-                {applicationStatuses.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {applicationStatusLabel[status]}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Applied date"
-                type="date"
-                value={values.appliedDate}
-                onChange={handleFieldChange("appliedDate")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Deadline"
-                type="date"
-                value={values.deadline}
-                onChange={handleFieldChange("deadline")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Location"
-                value={values.location}
-                onChange={handleFieldChange("location")}
-                fullWidth
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Source"
-                value={values.source}
-                onChange={handleFieldChange("source")}
-                fullWidth
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Salary range"
-                value={values.salaryRange}
-                onChange={handleFieldChange("salaryRange")}
-                fullWidth
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Notes"
-                value={values.notes}
-                onChange={handleFieldChange("notes")}
-                fullWidth
-                multiline
-                minRows={3}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Job description"
-                value={values.jobDescription}
-                onChange={handleFieldChange("jobDescription")}
-                fullWidth
-                multiline
-                minRows={5}
-              />
-            </Grid>
-          </Grid>
+          </FormSection>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ px: { xs: 2.5, md: 3 }, py: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit}>
           {mode === "add" ? "Add application" : "Save changes"}
         </Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+type FormSectionProps = PropsWithChildren<{
+  title: string;
+  description: string;
+}>;
+
+function FormSection({ title, description, children }: FormSectionProps) {
+  return (
+    <Box>
+      <Stack gap={0.5} sx={{ mb: 1.5 }}>
+        <Typography variant="overline" color="primary.main">
+          {title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      {children}
+    </Box>
   );
 }

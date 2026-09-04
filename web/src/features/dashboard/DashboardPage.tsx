@@ -240,7 +240,7 @@ export function DashboardPage() {
                         <Typography variant="h5" color={index === 0 ? "error.main" : "text.primary"}>
                           {group.reminders.length}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
                           {group.title}
                         </Typography>
                       </Box>
@@ -291,7 +291,7 @@ export function DashboardPage() {
                       {stat.label}
                     </Typography>
                     <Typography variant="h4">{stat.value}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
                       {stat.helper}
                     </Typography>
                   </Box>

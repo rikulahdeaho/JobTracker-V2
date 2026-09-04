@@ -2,7 +2,7 @@
 
 ## Feature Name
 
-Dashboard Layout Balance Pass
+Web Accessibility and Typography Pass
 
 ## Status
 
@@ -14,16 +14,14 @@ Work only inside `web/`.
 
 ## Goals
 
-- Improve Dashboard layout hierarchy
-- Make Dashboard feel like a focused job search command center
-- Use the new dashboard reference image as visual direction
-- Make Priority Action the strongest visual element
-- Keep Schedule Summary compact
-- Keep all 6 metric cards
-- Make Pipeline Snapshot compact
-- Keep Next Actions limited to top 3
-- Reduce repeated information
-- Keep light and dark mode working
+- Improve overall text readability across the React + MUI prototype
+- Define explicit typography sizes in the MUI theme
+- Make small text easier to read in both light and dark mode
+- Improve contrast for secondary and muted text
+- Reduce overuse of caption-sized text
+- Improve metric card readability
+- Improve Dashboard, Applications, Details, Schedule, Insights and Settings text hierarchy
+- Keep the current visual layout and product direction
 
 ## Not Included
 
@@ -32,94 +30,78 @@ Work only inside `web/`.
 - Database
 - TanStack Query
 - Backend code
-- New business logic
-- Charts or chart libraries
-- Real reminder completion
-- Changes to Schedule, Insights, Applications or Details unless required by shared components
+- Major redesign
+- New business features
+- New pages
+- Chart libraries
+- Deployment
+- Mobile app
 
-## Required Dashboard Layout Order
+## Typography Requirements
 
-1. Page header
-2. Priority Action + Schedule Summary
-3. Metric cards row
-4. Pipeline Snapshot + Next Actions
+Use an explicit dashboard-friendly typography scale.
 
-## Dashboard Sections
+Recommended scale:
 
-### Page Header
+- Page title: 30–32px
+- Section title: 18–20px
+- Card title: 16–18px
+- Body text: 15–16px
+- Secondary text: 14–15px
+- Caption/meta text: 12–13px only when appropriate
+- Button text: 14px
+- Chip text: 12–13px
 
-Show:
+Avoid using very small text for important information.
 
-- Job search at a glance
-- Short local-first dashboard subtitle
-- Optional local storage status
-- Optional New Application button if it already fits existing functionality
+## Contrast Requirements
 
-### Priority Action
+Light mode:
 
-Show the single highest-priority action.
+- Primary text should be very readable
+- Secondary text should be darker than before
+- Muted text should still be readable
+- Borders should remain subtle but visible
 
-It should include:
+Dark mode:
 
-- Company
-- Action title
-- Short explanation
-- Status chip
-- Due date chip if available
-- Open application button
+- Primary text should remain clear
+- Secondary text should not be too dim
+- Cards and borders should remain visually separated
 
-### Schedule Summary
+## Page Requirements
 
-Show a compact reminder snapshot.
+### Dashboard
 
-It should include:
+- Make metric labels and helper texts easier to read
+- Make Priority Action text clearly readable
+- Make Schedule Summary labels readable
+- Make Next Actions descriptions readable
+- Keep current Dashboard layout
 
-- Overdue count
-- Today count
-- Upcoming count
-- Next reminder
-- View schedule button/link
+### Applications
 
-### Metrics
+- Make card text, metadata and filters readable
+- Keep search, filters, sorting and CRUD working
 
-Keep all 6 metrics:
+### Application Details
 
-- Total applications
-- Active processes
-- Interviews
-- Offers
-- Needs follow-up
-- Ghosted risk
+- Make quick facts, notes, job description and timeline readable
+- Keep edit/delete and timeline working
 
-Metrics should be compact, aligned and visually secondary to Priority Action.
+### Schedule
 
-### Pipeline Snapshot
+- Make reminder cards and date labels readable
+- Keep grouped reminders working
 
-Show a compact health check.
+### Insights
 
-It can include:
+- Make metrics, descriptions and status breakdown readable
+- Do not add chart libraries
 
-- Active count
-- Closed count
-- Compact active funnel:
-  - Applied
-  - Interviewing
-  - Assignment
-  - Offer
+### Settings
 
-Do not duplicate the full Insights page.
-
-### Next Actions
-
-Show only the top 3 actions.
-
-Each action should include:
-
-- Company
-- Action
-- Short explanation
-- Due date if available
-- Status chip
+- Make settings labels, helper texts and placeholder text readable
 
 ## Existing Functionality That Must Keep Working
 
@@ -137,6 +119,7 @@ Each action should include:
 - Sorting
 - Status chips
 - Next Action logic
+- Dashboard summary
 - Schedule reminder/deadline groups
 - Insights metrics
 - Timeline on details page
@@ -145,18 +128,16 @@ Each action should include:
 
 - `npm run build` passes
 - App runs locally
-- Dashboard has the new layout order
-- Dashboard feels less repetitive
-- Priority Action is visually strongest
-- Schedule remains the detailed reminder/deadline page
-- Insights remains the deeper metrics page
+- Text is easier to read without zooming
+- Light mode remains clean and portfolio-friendly
+- Dark mode remains usable
+- Dashboard layout does not change significantly
 - Applications page still works
 - Application Details page still works
 - Schedule still works
 - Insights still works
 - Settings still works
-- Light mode works
-- Dark mode works
+- Add/edit/delete still work
 - No API/auth/database code was added
 
 ## History
@@ -167,4 +148,5 @@ Each action should include:
 - Completed Web UX Polish and Local Persistence
 - Completed Mock Timeline and Reminders UI
 - Completed Web Visual Alignment and Theme Polish
-- Started Dashboard Layout Balance Pass
+- Completed Dashboard Layout Balance Pass
+- Started Web Accessibility and Typography Pass

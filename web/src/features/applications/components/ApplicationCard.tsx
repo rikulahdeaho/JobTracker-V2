@@ -117,7 +117,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
               <Typography variant="body2" color="text.secondary">
                 Source: {application.source}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 Updated {formatUpdatedDate(application.updatedAt)}
               </Typography>
             </div>

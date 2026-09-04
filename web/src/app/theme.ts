@@ -15,7 +15,7 @@ const palette = {
     paper: "#FFFFFF",
     mutedSurface: "#EEF2F8",
     textPrimary: "#0F172A",
-    textSecondary: "#64748B",
+    textSecondary: "#475569",
     border: "#E2E8F0",
   },
   dark: {
@@ -23,7 +23,7 @@ const palette = {
     paper: "#111827",
     mutedSurface: "#1E293B",
     textPrimary: "#F1F5F9",
-    textSecondary: "#94A3B8",
+    textSecondary: "#B6C2D1",
     border: "#334155",
   },
 };
@@ -89,24 +89,57 @@ export function createAppTheme(mode: ThemeMode) {
     spacing: 8,
     typography: {
       fontFamily: '"Inter", "Segoe UI", "Helvetica Neue", sans-serif',
+      fontSize: 15,
       h4: {
+        fontSize: "2rem",
         fontWeight: 750,
+        lineHeight: 1.18,
         letterSpacing: "-0.02em",
       },
       h5: {
+        fontSize: "1.25rem",
         fontWeight: 750,
+        lineHeight: 1.3,
         letterSpacing: "-0.015em",
       },
       h6: {
+        fontSize: "1.125rem",
         fontWeight: 700,
+        lineHeight: 1.35,
         letterSpacing: "-0.01em",
       },
+      subtitle1: {
+        fontSize: "1rem",
+        fontWeight: 650,
+        lineHeight: 1.5,
+      },
+      subtitle2: {
+        fontSize: "0.9375rem",
+        fontWeight: 650,
+        lineHeight: 1.45,
+      },
+      body1: {
+        fontSize: "1rem",
+        lineHeight: 1.6,
+      },
+      body2: {
+        fontSize: "0.9375rem",
+        lineHeight: 1.55,
+      },
+      caption: {
+        fontSize: "0.8125rem",
+        lineHeight: 1.4,
+      },
       overline: {
+        fontSize: "0.75rem",
         fontWeight: 800,
+        lineHeight: 1.35,
         letterSpacing: "0.08em",
       },
       button: {
+        fontSize: "0.875rem",
         fontWeight: 700,
+        lineHeight: 1.4,
         textTransform: "none",
       },
     },
@@ -173,11 +206,27 @@ export function createAppTheme(mode: ThemeMode) {
       MuiChip: {
         styleOverrides: {
           root: {
+            fontSize: "0.8125rem",
             fontWeight: 700,
             borderRadius: 999,
           },
           outlined: {
             backgroundColor: isDark ? alpha("#FFFFFF", 0.03) : alpha("#111827", 0.02),
+          },
+        },
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            fontSize: "0.875rem",
+          },
+        },
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: {
+            fontSize: "0.8125rem",
+            lineHeight: 1.4,
           },
         },
       },
