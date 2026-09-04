@@ -2,7 +2,7 @@
 
 ## Feature Name
 
-Web Accessibility and Typography Pass
+Web MVP Usability Polish Pass
 
 ## Status
 
@@ -14,14 +14,16 @@ Work only inside `web/`.
 
 ## Goals
 
-- Improve overall text readability across the React + MUI prototype
-- Define explicit typography sizes in the MUI theme
-- Make small text easier to read in both light and dark mode
-- Improve contrast for secondary and muted text
-- Reduce overuse of caption-sized text
-- Improve metric card readability
-- Improve Dashboard, Applications, Details, Schedule, Insights and Settings text hierarchy
-- Keep the current visual layout and product direction
+- Improve readability of small text across the app
+- Make typography and spacing more consistent
+- Make page content width and alignment consistent
+- Improve sidebar readability
+- Clarify topbar/search behavior
+- Improve Schedule visual hierarchy
+- Improve Insights Data Coverage section
+- Make Settings placeholders more honest and intentional
+- Keep the current layout and visual direction
+- Keep all existing frontend functionality working
 
 ## Not Included
 
@@ -30,78 +32,37 @@ Work only inside `web/`.
 - Database
 - TanStack Query
 - Backend code
-- Major redesign
 - New business features
-- New pages
 - Chart libraries
-- Deployment
 - Mobile app
+- Deployment
+- Major redesign
 
-## Typography Requirements
-
-Use an explicit dashboard-friendly typography scale.
-
-Recommended scale:
-
-- Page title: 30–32px
-- Section title: 18–20px
-- Card title: 16–18px
-- Body text: 15–16px
-- Secondary text: 14–15px
-- Caption/meta text: 12–13px only when appropriate
-- Button text: 14px
-- Chip text: 12–13px
-
-Avoid using very small text for important information.
-
-## Contrast Requirements
-
-Light mode:
-
-- Primary text should be very readable
-- Secondary text should be darker than before
-- Muted text should still be readable
-- Borders should remain subtle but visible
-
-Dark mode:
-
-- Primary text should remain clear
-- Secondary text should not be too dim
-- Cards and borders should remain visually separated
-
-## Page Requirements
+## Page Focus
 
 ### Dashboard
 
-- Make metric labels and helper texts easier to read
-- Make Priority Action text clearly readable
-- Make Schedule Summary labels readable
-- Make Next Actions descriptions readable
-- Keep current Dashboard layout
+Keep the current focused dashboard layout. Only make small readability and spacing improvements if needed.
 
 ### Applications
 
-- Make card text, metadata and filters readable
-- Keep search, filters, sorting and CRUD working
+Keep CRUD, search, filters, sorting and application cards working.
 
 ### Application Details
 
-- Make quick facts, notes, job description and timeline readable
-- Keep edit/delete and timeline working
+Keep the current workspace layout, edit/delete, quick facts, next action and timeline working.
 
 ### Schedule
 
-- Make reminder cards and date labels readable
-- Keep grouped reminders working
+Make Overdue, Today, Upcoming and Active Queue easier to scan. Keep it mock-data only.
 
 ### Insights
 
-- Make metrics, descriptions and status breakdown readable
-- Do not add chart libraries
+Improve Data Coverage so it feels intentional and not empty. Use simple rows or progress bars, not chart libraries.
 
 ### Settings
 
-- Make settings labels, helper texts and placeholder text readable
+Make prototype-only settings clear. Keep Appearance/theme toggle working. Do not implement real auth/account/export/import features.
 
 ## Existing Functionality That Must Keep Working
 
@@ -128,16 +89,16 @@ Dark mode:
 
 - `npm run build` passes
 - App runs locally
-- Text is easier to read without zooming
-- Light mode remains clean and portfolio-friendly
-- Dark mode remains usable
-- Dashboard layout does not change significantly
-- Applications page still works
-- Application Details page still works
-- Schedule still works
-- Insights still works
-- Settings still works
-- Add/edit/delete still work
+- Text is easier to read without browser zoom
+- Pages feel consistently aligned
+- Schedule hierarchy is clearer
+- Insights Data Coverage looks intentional
+- Settings placeholders are honest
+- Dashboard still works
+- Applications still work
+- Details still work
+- Light mode works
+- Dark mode works
 - No API/auth/database code was added
 
 ## History
@@ -149,4 +110,4 @@ Dark mode:
 - Completed Mock Timeline and Reminders UI
 - Completed Web Visual Alignment and Theme Polish
 - Completed Dashboard Layout Balance Pass
-- Started Web Accessibility and Typography Pass
+- Started Web MVP Usability Polish Pass

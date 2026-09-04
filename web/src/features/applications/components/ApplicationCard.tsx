@@ -15,6 +15,7 @@ import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 import type { JobApplication } from "../types/application";
 import { getApplicationNextAction } from "../utils/applicationNextAction";
+import { formatApplicationDate } from "../utils/applicationPresentation";
 import { NextActionChip } from "./NextActionChip";
 import { StatusChip } from "./StatusChip";
 
@@ -24,22 +25,14 @@ type ApplicationCardProps = {
 
 function formatKeyDate(application: JobApplication) {
   if (application.appliedDate) {
-    return `Applied ${application.appliedDate}`;
+    return `Applied ${formatApplicationDate(application.appliedDate, "Not applied")}`;
   }
 
   if (application.deadline) {
-    return `Deadline ${application.deadline}`;
+    return `Deadline ${formatApplicationDate(application.deadline, "No deadline")}`;
   }
 
   return "Date pending";
-}
-
-function formatUpdatedDate(updatedAt: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(updatedAt));
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
@@ -118,7 +111,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
                 Source: {application.source}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Updated {formatUpdatedDate(application.updatedAt)}
+                Updated {formatApplicationDate(application.updatedAt, "recently")}
               </Typography>
             </div>
             <Stack direction="row" gap={0.5} alignItems="center" color="primary.main">

@@ -28,7 +28,7 @@ export function SettingsPage() {
   const isDark = mode === "dark";
 
   return (
-    <PageShell maxWidth={1120}>
+    <PageShell>
       <PageHeader
         title="Settings"
         description="A simple prototype settings screen to show how profile, preferences, and local data controls could be organized later."
@@ -91,29 +91,30 @@ export function SettingsPage() {
           <SectionCard
             title="Profile placeholder"
             description="No authentication is implemented yet, but this shows the future account area without adding Clerk."
-            action={<Chip icon={<CheckCircleOutlineOutlinedIcon />} label="Mock only" color="primary" variant="outlined" />}
+            action={<Chip icon={<CheckCircleOutlineOutlinedIcon />} label="Preview only" color="primary" variant="outlined" />}
           >
             <Stack gap={2}>
-              <TextField label="Display name" defaultValue="Riku" fullWidth />
-              <TextField label="Target role" defaultValue="Frontend Engineer" fullWidth />
-              <TextField label="Preferred location" defaultValue="Helsinki or remote" fullWidth />
+              <TextField label="Display name" defaultValue="Riku" fullWidth InputProps={{ readOnly: true }} />
+              <TextField label="Target role" defaultValue="Frontend Engineer" fullWidth InputProps={{ readOnly: true }} />
+              <TextField label="Preferred location" defaultValue="Helsinki or remote" fullWidth InputProps={{ readOnly: true }} />
             </Stack>
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, lg: 7 }}>
           <SectionCard
             title="Tracking preferences"
-            description="Prototype-only defaults for how the local next-action logic should feel later."
+            description="A preview of future controls. These values do not affect the current local next-action logic."
+            action={<Chip label="Prototype only" size="small" variant="outlined" />}
           >
             <Stack gap={2.25}>
               <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
-                <TextField label="Default follow-up" defaultValue="14" fullWidth InputProps={{ endAdornment: "days" }} />
-                <TextField label="Ghosted risk indicator" defaultValue="30" fullWidth InputProps={{ endAdornment: "days" }} />
+                <TextField disabled label="Default follow-up" defaultValue="14" fullWidth InputProps={{ endAdornment: "days" }} />
+                <TextField disabled label="Ghosted risk indicator" defaultValue="30" fullWidth InputProps={{ endAdornment: "days" }} />
               </Stack>
               <Divider />
-              <FormControlLabel control={<Switch defaultChecked />} label="Highlight applications needing follow-up" />
-              <FormControlLabel control={<Switch defaultChecked />} label="Show deadlines prominently on dashboard cards" />
-              <FormControlLabel control={<Switch />} label="Use compact application cards later" />
+              <FormControlLabel disabled control={<Switch defaultChecked />} label="Highlight applications needing follow-up" />
+              <FormControlLabel disabled control={<Switch defaultChecked />} label="Show deadlines prominently on dashboard cards" />
+              <FormControlLabel disabled control={<Switch />} label="Use compact application cards later" />
             </Stack>
           </SectionCard>
         </Grid>
@@ -122,7 +123,7 @@ export function SettingsPage() {
             title="Data management"
             description="The current MVP stores application data in this browser only."
             action={
-              <Button variant="outlined" startIcon={<SaveOutlinedIcon />}>
+              <Button disabled variant="outlined" startIcon={<SaveOutlinedIcon />}>
                 Export later
               </Button>
             }
@@ -132,7 +133,7 @@ export function SettingsPage() {
                 Your application list, edits, deletes, search state, and refinement work remain local to this browser until backend work begins.
               </Typography>
               <Divider />
-              <Stack direction={{ xs: "column", md: "row" }} gap={1.5}>
+              <Stack direction="row" gap={1.5} flexWrap="wrap">
                 <Chip label="No API connected" variant="outlined" />
                 <Chip label="No account required" variant="outlined" />
                 <Chip label="Local storage enabled" color="secondary" variant="outlined" />

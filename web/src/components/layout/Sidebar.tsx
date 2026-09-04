@@ -1,21 +1,27 @@
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
+import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import {
+  Avatar,
   Box,
+  Button,
+  Divider,
   Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
+  Stack,
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { NavLink } from "react-router-dom";
 import { getSidebarColors } from "../../app/theme";
+import { useThemeMode } from "../../app/useThemeMode";
 
 type SidebarProps = {
   drawerWidth: number;
@@ -39,6 +45,7 @@ export function Sidebar({
   onClose,
 }: SidebarProps) {
   const theme = useTheme();
+  const { mode, toggleMode } = useThemeMode();
   const sidebarColors = getSidebarColors(theme.palette.mode);
   const drawerContent = (
     <Box
@@ -52,7 +59,7 @@ export function Sidebar({
         borderColor: sidebarColors.border,
       }}
     >
-      <Toolbar sx={{ px: 3, minHeight: { xs: 64, md: 72 } }}>
+      <Box sx={{ px: 3, pt: 3.5, pb: 2.5 }}>
         <Box>
           <Typography variant="h5" sx={{ color: sidebarColors.eyebrow, lineHeight: 1.05 }}>
             JobTracker
@@ -61,8 +68,14 @@ export function Sidebar({
             Career Co-pilot
           </Typography>
         </Box>
-      </Toolbar>
-      <List sx={{ px: 1.5, pt: 4 }}>
+      </Box>
+      <List sx={{ px: 1.5, pt: 3 }}>
+        <Typography
+          variant="overline"
+          sx={{ display: "block", color: sidebarColors.muted, px: 1.5, mb: 1 }}
+        >
+          Workspace
+        </Typography>
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.to}
@@ -72,6 +85,8 @@ export function Sidebar({
             sx={{
               borderRadius: 2,
               mb: 0.5,
+              minHeight: 48,
+              px: 1.5,
               color: sidebarColors.text,
               "&.active": {
                 bgcolor: sidebarColors.activeBackground,
@@ -80,19 +95,74 @@ export function Sidebar({
                 borderColor: "primary.main",
               },
               "&:hover": {
-                bgcolor: sidebarColors.activeBackground,
+                bgcolor: sidebarColors.hoverBackground,
               },
             }}
           >
-            <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>{item.icon}</ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              primaryTypographyProps={{ variant: "body2", fontWeight: 700 }}
+            />
           </ListItemButton>
         ))}
       </List>
-      <Box sx={{ mt: "auto", p: 3 }}>
-        <Typography variant="caption" sx={{ color: sidebarColors.muted, fontWeight: 700 }}>
-          Local mock workspace
-        </Typography>
+      <Box sx={{ mt: "auto", p: 2.5, borderTop: 1, borderColor: sidebarColors.border }}>
+        <Stack gap={2}>
+          <Stack direction="row" gap={1.25} alignItems="center">
+            <Avatar
+              sx={{
+                width: 34,
+                height: 34,
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                fontSize: "0.8125rem",
+                fontWeight: 800,
+              }}
+            >
+              JT
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" sx={{ color: sidebarColors.text, fontWeight: 700 }}>
+                Account
+              </Typography>
+              <Typography variant="caption" sx={{ display: "block", color: sidebarColors.muted, mt: 0.25 }}>
+                Profile placeholder
+              </Typography>
+            </Box>
+          </Stack>
+          <Divider sx={{ borderColor: sidebarColors.border }} />
+          <Stack direction="row" gap={0.75} alignItems="flex-start">
+            <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: "success.main", flexShrink: 0, mt: 0.75 }} />
+            <Box>
+              <Typography variant="body2" sx={{ color: sidebarColors.text, fontWeight: 700 }}>
+                Local data saved
+              </Typography>
+              <Typography variant="caption" sx={{ display: "block", color: sidebarColors.muted, mt: 0.25 }}>
+                Saved in this browser
+              </Typography>
+            </Box>
+          </Stack>
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            startIcon={mode === "dark" ? <WbSunnyOutlinedIcon /> : <DarkModeOutlinedIcon />}
+            onClick={toggleMode}
+            sx={{
+              justifyContent: "flex-start",
+              color: sidebarColors.text,
+              borderColor: sidebarColors.border,
+              bgcolor: sidebarColors.workspaceBackground,
+              "&:hover": {
+                borderColor: "primary.main",
+                bgcolor: sidebarColors.hoverBackground,
+              },
+            }}
+          >
+            {mode === "dark" ? "Use light mode" : "Use dark mode"}
+          </Button>
+        </Stack>
       </Box>
     </Box>
   );

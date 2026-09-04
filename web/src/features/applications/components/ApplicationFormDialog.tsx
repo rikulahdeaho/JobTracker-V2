@@ -89,22 +89,26 @@ export function ApplicationFormDialog({
       open={open}
       onClose={onClose}
       fullWidth
-      maxWidth="md"
+      maxWidth="xl"
       PaperProps={{
         sx: {
           maxHeight: "calc(100vh - 48px)",
         },
       }}
     >
-      <DialogTitle sx={{ pb: 1.5 }}>
-        <Typography variant="h5">
-          {mode === "add" ? "Add Application" : "Edit Application"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+      <DialogTitle sx={{ pb: 1.5, fontSize: "1.25rem", fontWeight: 750 }}>
+        {mode === "add" ? "Add Application" : "Edit Application"}
+        <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mt: 0.5, fontWeight: 400 }}>
           Capture the essentials now and refine the details as the process moves.
         </Typography>
       </DialogTitle>
-      <DialogContent dividers sx={{ px: { xs: 2.5, md: 3 }, py: 2.5 }}>
+      <DialogContent
+        dividers
+        sx={{
+          px: { xs: 2.5, md: 3 },
+          py: 2.5,
+        }}
+      >
         <Stack gap={2.5}>
           <Alert severity="info">
             This flow updates local browser data only. No API or database changes are made yet.

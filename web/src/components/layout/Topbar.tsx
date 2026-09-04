@@ -1,8 +1,7 @@
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
-import { AppBar, Avatar, Box, IconButton, InputBase, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Avatar, Box, IconButton, Toolbar, Tooltip, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import type { PropsWithChildren } from "react";
 import { useLocation } from "react-router-dom";
@@ -24,9 +23,8 @@ export function Topbar({ children }: PropsWithChildren) {
     : titleByPath[location.pathname] ?? "JobTracker";
   const isDark = mode === "dark";
   const helperText = location.pathname === "/applications"
-    ? "Use filters and search to manage your local pipeline."
+    ? "Search and filters are available in the application workspace below."
     : "Career Co-pilot workspace powered by local mock data.";
-  const showSearch = location.pathname === "/applications";
 
   return (
     <AppBar
@@ -53,33 +51,15 @@ export function Topbar({ children }: PropsWithChildren) {
             {helperText}
           </Typography>
         </Box>
-        {showSearch ? (
-          <Box
-            sx={{
-              display: { xs: "none", md: "flex" },
-              alignItems: "center",
-              gap: 1,
-              px: 1.5,
-              py: 0.75,
-              borderRadius: 999,
-              bgcolor: (theme) => alpha(theme.palette.primary.main, isDark ? 0.16 : 0.08),
-              border: 1,
-              borderColor: "divider",
-              minWidth: 220,
-              color: "text.secondary",
-            }}
+        <Tooltip title="Notifications are not enabled in this prototype">
+          <IconButton
+            color="inherit"
+            aria-label="Notifications are not enabled"
+            sx={{ border: 1, borderColor: "divider" }}
           >
-            <SearchOutlinedIcon fontSize="small" color="action" />
-            <InputBase
-              placeholder="Search applications..."
-              readOnly
-              sx={{ fontSize: 14, width: "100%" }}
-            />
-          </Box>
-        ) : null}
-        <IconButton color="inherit" sx={{ border: 1, borderColor: "divider" }}>
-          <NotificationsNoneOutlinedIcon />
-        </IconButton>
+            <NotificationsNoneOutlinedIcon />
+          </IconButton>
+        </Tooltip>
         <Tooltip title={`Switch to ${isDark ? "light" : "dark"} mode`}>
           <IconButton color="inherit" onClick={toggleMode} aria-label="Toggle color mode" sx={{ border: 1, borderColor: "divider" }}>
             {isDark ? <WbSunnyOutlinedIcon /> : <DarkModeOutlinedIcon />}

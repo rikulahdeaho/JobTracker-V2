@@ -27,6 +27,20 @@ export function InsightsPage() {
   const responseRate = activeApplications.length > 0
     ? Math.round((responseStageApplications.length / activeApplications.length) * 100)
     : 0;
+  const dataCoverage = [
+    {
+      label: "Job URL included",
+      count: applications.filter((application) => application.jobUrl).length,
+    },
+    {
+      label: "Notes included",
+      count: applications.filter((application) => application.notes).length,
+    },
+    {
+      label: "Deadline included",
+      count: applications.filter((application) => application.deadline).length,
+    },
+  ];
 
   return (
     <PageShell>
@@ -67,16 +81,29 @@ export function InsightsPage() {
         </Grid>
         <Grid size={{ xs: 12, lg: 5 }}>
           <SectionCard title="Data coverage" description="A simple summary of how much real context is already stored locally.">
-            <Stack gap={1}>
-              <Typography color="text.secondary">
-                {applications.filter((application) => application.jobUrl).length} applications include a job URL.
-              </Typography>
-              <Typography color="text.secondary">
-                {applications.filter((application) => application.notes).length} applications include notes.
-              </Typography>
-              <Typography color="text.secondary">
-                {applications.filter((application) => application.deadline).length} applications include a deadline.
-              </Typography>
+            <Stack gap={2}>
+              {dataCoverage.map((item) => {
+                const percentage = applications.length > 0
+                  ? Math.round((item.count / applications.length) * 100)
+                  : 0;
+
+                return (
+                  <Stack key={item.label} gap={0.75}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={2}>
+                      <Typography fontWeight={700}>{item.label}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                        {item.count} of {applications.length} · {percentage}%
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={percentage}
+                      aria-label={`${item.label}: ${percentage}%`}
+                      sx={{ height: 8, borderRadius: 999 }}
+                    />
+                  </Stack>
+                );
+              })}
             </Stack>
           </SectionCard>
         </Grid>

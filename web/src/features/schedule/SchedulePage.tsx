@@ -1,6 +1,7 @@
 import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
 import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
 import {
+  Box,
   Chip,
   Divider,
   Grid,
@@ -8,6 +9,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ReminderListItem } from "../applications/components/ReminderListItem";
@@ -31,36 +33,81 @@ export function SchedulePage() {
       />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Overdue" description="Reminder items that are already past their due date.">
-            {reminderGroups[0].reminders.length > 0 ? (
-              <List disablePadding>
-                {reminderGroups[0].reminders.map((reminder, index) => (
-                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
-                ))}
-              </List>
-            ) : (
-              <Typography color="text.secondary">No overdue reminders right now.</Typography>
-            )}
+          <SectionCard
+            title="Overdue"
+            description="Reminder items that are already past their due date."
+            action={
+              <Chip
+                label={reminderGroups[0].reminders.length > 0 ? `${reminderGroups[0].reminders.length} overdue` : "Clear"}
+                color={reminderGroups[0].reminders.length > 0 ? "error" : "success"}
+                size="small"
+                variant="outlined"
+              />
+            }
+          >
+            <Box
+              sx={(theme) => ({
+                px: 1.75,
+                py: 0.5,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.1 : 0.04),
+                borderLeft: 3,
+                borderColor: reminderGroups[0].reminders.length > 0 ? "error.main" : "divider",
+              })}
+            >
+              {reminderGroups[0].reminders.length > 0 ? (
+                <List disablePadding>
+                  {reminderGroups[0].reminders.map((reminder, index) => (
+                    <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
+                  ))}
+                </List>
+              ) : (
+                <Typography color="text.secondary" sx={{ py: 1.25 }}>
+                  No overdue reminders right now.
+                </Typography>
+              )}
+            </Box>
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Today" description="Items that should be handled today in the current mock schedule.">
-            {reminderGroups[1].reminders.length > 0 ? (
-              <List disablePadding>
-                {reminderGroups[1].reminders.map((reminder, index) => (
-                  <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
-                ))}
-              </List>
-            ) : (
-              <Typography color="text.secondary">Nothing is specifically due today.</Typography>
-            )}
+          <SectionCard
+            title="Today"
+            description="Items that should be handled today in the current mock schedule."
+            action={<Chip label={`${reminderGroups[1].reminders.length} today`} color="warning" size="small" variant="outlined" />}
+          >
+            <Box
+              sx={(theme) => ({
+                px: 1.75,
+                py: 0.5,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.warning.main, theme.palette.mode === "dark" ? 0.1 : 0.04),
+                borderLeft: 3,
+                borderColor: "warning.main",
+              })}
+            >
+              {reminderGroups[1].reminders.length > 0 ? (
+                <List disablePadding>
+                  {reminderGroups[1].reminders.map((reminder, index) => (
+                    <ReminderListItem key={reminder.id} reminder={reminder} borderTop={index > 0} />
+                  ))}
+                </List>
+              ) : (
+                <Typography color="text.secondary" sx={{ py: 1.25 }}>
+                  Nothing is specifically due today.
+                </Typography>
+              )}
+            </Box>
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Active queue" description="Keep the most time-sensitive active processes visible in one place.">
+          <SectionCard
+            title="Active queue"
+            description="Keep the most time-sensitive active processes visible in one place."
+            action={<Chip label={`${activePipeline.length} active`} color="primary" size="small" variant="outlined" />}
+          >
             {activePipeline.length > 0 ? (
               <Stack gap={1.5}>
-                {activePipeline.map((application) => (
+                {activePipeline.map((application, index) => (
                   <Stack key={application.id} gap={0.75}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
                       <Typography fontWeight={600}>{application.companyName}</Typography>
@@ -73,7 +120,7 @@ export function SchedulePage() {
                         <Chip icon={<NotificationsActiveOutlinedIcon />} label={`Due ${formatApplicationDate(application.deadline, "No deadline")}`} size="small" variant="outlined" />
                       ) : null}
                     </Stack>
-                    <Divider />
+                    {index < activePipeline.length - 1 ? <Divider /> : null}
                   </Stack>
                 ))}
               </Stack>
@@ -83,7 +130,11 @@ export function SchedulePage() {
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <SectionCard title="Upcoming deadlines & tasks" description="The full upcoming queue generated from deadlines, follow-ups, interviews, assignments, and offers.">
+          <SectionCard
+            title="Upcoming deadlines & tasks"
+            description="The full upcoming queue generated from deadlines, follow-ups, interviews, assignments, and offers."
+            action={<Chip label={`${reminderGroups[2].reminders.length} upcoming`} size="small" variant="outlined" />}
+          >
             {reminderGroups[2].reminders.length > 0 ? (
               <List disablePadding>
                 {reminderGroups[2].reminders.map((reminder, index) => (

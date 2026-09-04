@@ -1,7 +1,6 @@
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
@@ -17,6 +16,7 @@ import {
   Grid,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Stack,
   Typography,
@@ -122,12 +122,6 @@ export function DashboardPage() {
         description="A polished local-first dashboard powered entirely by your current mock application data."
         actions={
           <Stack direction="row" gap={1.25} alignItems="center" flexWrap="wrap">
-            <Chip
-              icon={<CheckCircleOutlineOutlinedIcon />}
-              label="Local storage: Up to date"
-              color="success"
-              variant="outlined"
-            />
             <Button component={RouterLink} to="/applications" variant="contained">
               Manage applications
             </Button>
@@ -211,7 +205,7 @@ export function DashboardPage() {
             title="Schedule summary"
             description="A compact reminder snapshot. Schedule keeps the full grouped view."
             action={
-              <Button component={RouterLink} to="/schedule" variant="outlined" endIcon={<ChevronRightOutlinedIcon />}>
+              <Button component={RouterLink} to="/schedule" variant="contained" endIcon={<ChevronRightOutlinedIcon />}>
                 View schedule
               </Button>
             }
@@ -355,53 +349,57 @@ export function DashboardPage() {
                     key={application.id}
                     disableGutters
                     sx={{
-                      py: 1.25,
                       color: "inherit",
                       borderTop: index === 0 ? 0 : 1,
                       borderColor: "divider",
-                      gap: 1.5,
                     }}
                   >
-                    <Box
-                      sx={(theme) => ({
-                        width: 8,
-                        height: 8,
-                        borderRadius: 999,
-                        bgcolor: getActionAccentColor(nextAction.color, theme),
-                        flexShrink: 0,
-                        mt: 1,
-                      })}
-                    />
-                    <ListItemText
-                      primary={
-                        <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
-                          <Typography fontWeight={800}>{application.companyName}</Typography>
-                          <Typography color="text.secondary">·</Typography>
-                          <Typography fontWeight={700}>{nextAction.title}</Typography>
-                        </Stack>
-                      }
-                      secondary={
-                        <Stack gap={1} sx={{ mt: 0.5 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            {nextAction.description}
-                          </Typography>
-                          <Stack direction="row" gap={1} flexWrap="wrap">
-                            <Chip label={getApplicationDateContext(application)} size="small" variant="outlined" />
-                            <StatusChip status={application.status} />
-                          </Stack>
-                        </Stack>
-                      }
-                    />
-                    <Button
+                    <ListItemButton
                       component={RouterLink}
                       to={`/applications/${application.id}`}
-                      variant="text"
-                      size="small"
-                      endIcon={<ChevronRightOutlinedIcon />}
-                      sx={{ flexShrink: 0, display: { xs: "none", sm: "inline-flex" } }}
+                      sx={{
+                        px: 0,
+                        py: 1.25,
+                        gap: 1.5,
+                        alignItems: "flex-start",
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                        },
+                      }}
                     >
-                      Open
-                    </Button>
+                      <Box
+                        sx={(theme) => ({
+                          width: 8,
+                          height: 8,
+                          borderRadius: 999,
+                          bgcolor: getActionAccentColor(nextAction.color, theme),
+                          flexShrink: 0,
+                          mt: 1,
+                        })}
+                      />
+                      <ListItemText
+                        disableTypography
+                        primary={
+                          <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+                            <Typography fontWeight={800}>{application.companyName}</Typography>
+                            <Typography color="text.secondary">·</Typography>
+                            <Typography fontWeight={700}>{nextAction.title}</Typography>
+                          </Stack>
+                        }
+                        secondary={
+                          <Stack gap={1} sx={{ mt: 0.5 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              {nextAction.description}
+                            </Typography>
+                            <Stack direction="row" gap={1} flexWrap="wrap">
+                              <Chip label={getApplicationDateContext(application)} size="small" variant="outlined" />
+                              <StatusChip status={application.status} />
+                            </Stack>
+                          </Stack>
+                        }
+                      />
+                      <ChevronRightOutlinedIcon color="action" sx={{ flexShrink: 0, mt: 0.75 }} />
+                    </ListItemButton>
                   </ListItem>
                 ))}
               </List>

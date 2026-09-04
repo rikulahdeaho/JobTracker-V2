@@ -31,6 +31,7 @@ export function ReminderListItem({ reminder, borderTop = false }: ReminderListIt
         <NotificationsActiveOutlinedIcon color="primary" />
       </ListItemIcon>
       <ListItemText
+        disableTypography
         primary={
           <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" gap={1.5}>
             <Typography fontWeight={600}>{reminder.title}</Typography>

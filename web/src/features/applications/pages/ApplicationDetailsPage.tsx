@@ -35,6 +35,7 @@ import { useApplications } from "../context/ApplicationsContext";
 import type { JobApplicationFormValues } from "../types/application";
 import { toApplicationFormValues } from "../utils/applicationForm";
 import { getApplicationNextAction } from "../utils/applicationNextAction";
+import { formatApplicationDate } from "../utils/applicationPresentation";
 import { getApplicationTimelineEvents } from "../utils/applicationWorkflow";
 
 export function ApplicationDetailsPage() {
@@ -47,7 +48,7 @@ export function ApplicationDetailsPage() {
 
   if (!application) {
     return (
-      <PageShell maxWidth={1120}>
+      <PageShell>
         <Stack gap={2}>
           <Button
             component={RouterLink}
@@ -81,7 +82,7 @@ export function ApplicationDetailsPage() {
   };
 
   return (
-    <PageShell maxWidth={1180}>
+    <PageShell>
       <Stack gap={2.5}>
         <Button
           component={RouterLink}
@@ -175,17 +176,6 @@ export function ApplicationDetailsPage() {
                   ) : null}
                 </Stack>
               </Box>
-              {application.jobUrl ? (
-                <Button
-                  href={application.jobUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="contained"
-                  endIcon={<LaunchOutlinedIcon />}
-                >
-                  Open job ad
-                </Button>
-              ) : null}
             </Stack>
           </CardContent>
         </Card>
@@ -202,7 +192,7 @@ export function ApplicationDetailsPage() {
                       <Typography variant="overline" color="text.secondary">
                         Job description
                       </Typography>
-                      <Typography color="text.secondary" sx={{ mt: 0.75, whiteSpace: "pre-line", lineHeight: 1.7 }}>
+                      <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 760, whiteSpace: "pre-line", lineHeight: 1.7 }}>
                         {application.jobDescription || "No job description saved for this application yet."}
                       </Typography>
                     </Box>
@@ -242,16 +232,20 @@ export function ApplicationDetailsPage() {
             <Stack gap={2.5}>
               <Card>
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                  <Stack gap={2}>
+                  <Stack gap={1.75}>
                     <Typography variant="h6">Quick facts</Typography>
                     <Divider />
                     <FactRow icon={<PlaceOutlinedIcon fontSize="small" />} label="Location" value={application.location || "Location not specified"} />
                     <FactRow icon={<SourceOutlinedIcon fontSize="small" />} label="Source" value={application.source || "Source not specified"} />
-                    <FactRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Deadline" value={application.deadline ?? "No deadline"} />
+                    <FactRow
+                      icon={<CalendarTodayOutlinedIcon fontSize="small" />}
+                      label="Deadline"
+                      value={formatApplicationDate(application.deadline, "No deadline")}
+                    />
                     <DetailCard label="Salary range" value={application.salaryRange || "Not specified"} />
-                    <DetailCard label="Applied date" value={application.appliedDate ?? "Not applied yet"} />
-                    <DetailCard label="Created" value={application.createdAt.slice(0, 10)} />
-                    <DetailCard label="Updated" value={application.updatedAt.slice(0, 10)} />
+                    <DetailCard label="Applied date" value={formatApplicationDate(application.appliedDate, "Not applied yet")} />
+                    <DetailCard label="Created" value={formatApplicationDate(application.createdAt, "Unknown")} />
+                    <DetailCard label="Updated" value={formatApplicationDate(application.updatedAt, "Unknown")} />
                     {application.jobUrl ? (
                       <Button
                         href={application.jobUrl}
@@ -305,14 +299,20 @@ type DetailItemProps = {
 
 function DetailCard({ label, value }: DetailItemProps) {
   return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: 1.75, "&:last-child": { pb: 1.75 } }}>
+    <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="flex-start"
+      gap={2}
+      sx={{ py: 0.75, borderTop: 1, borderColor: "divider" }}
+    >
+      <Box>
         <Typography variant="overline" color="text.secondary">
           {label}
         </Typography>
-        <Typography>{value}</Typography>
-      </CardContent>
-    </Card>
+      </Box>
+      <Typography sx={{ textAlign: "right", maxWidth: "60%" }}>{value}</Typography>
+    </Stack>
   );
 }
 
