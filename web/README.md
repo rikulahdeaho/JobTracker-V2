@@ -1,5 +1,8 @@
 # JobTracker web
 
+See [Miten sovellus toimii nyt](../docs/how-it-works.md) for a Finnish guide to
+the current pages, data flow, application rules and test commands.
+
 ## Local setup
 
 Run the existing API in one terminal:
@@ -59,7 +62,7 @@ updates and refreshes the list, then navigates back from Details.
 In-flight reads are canceled before cache updates to avoid older responses
 overwriting successful writes.
 
-The database owns IDs and UTC timestamps. The frontend response type matches
+The API owns IDs and UTC timestamps. The frontend response type matches
 the backend DTO, including nullable strings and dates; UserId is intentionally
 absent because the response DTO does not expose it. Forms convert empty
 optional values to null and API nulls to empty input values.
@@ -82,8 +85,25 @@ failed saves, and delete failures keep the confirmation open.
 ## Checks
 
 ```powershell
+npm run test
 npm run build
 npm run lint
 ```
+
+Vitest runs once (no watch mode) with React Testing Library and jsdom. The suite
+covers Next Action status rules and 14/30-day boundaries, combined filtering,
+sorting with missing dates, non-mutating list helpers, and nullable/date-only
+form mapping.
+
+Component tests use a fresh QueryClient and mock only the Axios transport.
+They run the real API module, ApplicationsProvider, pages and mutations:
+loading-to-empty, failure-and-retry, API records/search, successful create
+and list refresh, failed create preserving values, and detail 404 navigation.
+No running API, browser storage, or development database is required.
+
+Intentionally outside this small suite: visual/MUI internals, snapshots,
+full browser end-to-end tests, native date-picker interaction, theme persistence,
+frontend edit/delete interactions, and exhaustive Dashboard/Schedule/Insights
+UI coverage. Backend update/delete behavior is covered in the xUnit suite.
 
 See `docs/current-feature.md` for the feature acceptance checklist.

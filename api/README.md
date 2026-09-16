@@ -1,7 +1,8 @@
 # JobTracker API
 
 ASP.NET Core 10 controller API with EF Core 10 and local SQLite persistence.
-The React application is still independent and uses its existing local data.
+The React application uses this API for Applications CRUD through TanStack Query.
+See [Miten sovellus toimii nyt](../docs/how-it-works.md) for the current application behavior.
 
 ## Run locally
 
@@ -23,7 +24,7 @@ dotnet run
 
 The launch profile selects Development. Swagger and CORS for
 `http://localhost:5173` and `http://127.0.0.1:5173` are enabled only in Development.
-No frontend integration or authentication is implemented. All requests use the
+Authentication is not implemented. All requests use the
 same temporary `dev-user`; this is a local development API.
 
 ## Database
@@ -96,6 +97,23 @@ Example POST or PUT body:
 - Validation errors use ASP.NET Core ValidationProblemDetails with HTTP 400.
 
 ## Verification
+
+Run the isolated automated suite from `api/` (the solution includes API and tests):
+
+```powershell
+dotnet test
+dotnet build
+```
+
+`JobTracker.Api.Tests` uses xUnit and WebApplicationFactory. Each test owns an
+open SQLite `:memory:` connection and applies the real EF migrations. The
+development DbContext registration is replaced before the host handles requests.
+No development database is read or written, and no running API is required.
+
+The suite covers CRUD HTTP responses, validation without unintended writes,
+UTC timestamps, all nine statuses stored as strings, and user ownership filtering.
+It deliberately does not test private helpers, authentication, deployment,
+or every possible malformed request.
 
 With the API running, use a second PowerShell 7 terminal from the repository root:
 

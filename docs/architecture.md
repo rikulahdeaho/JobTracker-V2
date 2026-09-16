@@ -1,5 +1,9 @@
 # JobTracker Architecture
 
+This document describes the target architecture and staged implementation plan.
+For the current API-connected web app, local SQLite persistence and testing,
+see [Miten sovellus toimii nyt](how-it-works.md).
+
 ## Overview
 
 JobTracker is a fullstack job application tracking app.
