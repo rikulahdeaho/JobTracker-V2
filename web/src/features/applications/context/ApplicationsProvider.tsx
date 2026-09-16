@@ -1,60 +1,72 @@
 import type { PropsWithChildren } from "react";
-import { useEffect, useMemo, useState } from "react";
-import type { JobApplication } from "../types/application";
-import { createApplicationFromValues, updateApplicationFromValues } from "../utils/applicationCrud";
-import { loadStoredApplications, resetStoredApplications, saveApplications } from "../utils/applicationStorage";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as applicationsApi from "../api/applicationsApi";
+import { applicationQueryKey, applicationsQueryKey } from "../api/applicationQueries";
+import type { JobApplication, JobApplicationFormValues } from "../types/application";
+import { toApplicationRequest } from "../utils/applicationForm";
 import { ApplicationsContext } from "./ApplicationsContext";
-import type { ApplicationsContextValue } from "./ApplicationsContext";
 
 export function ApplicationsProvider({ children }: PropsWithChildren) {
-  const [applications, setApplications] = useState<JobApplication[]>(() => loadStoredApplications());
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: applicationsQueryKey,
+    queryFn: ({ signal }) => applicationsApi.getApplications(signal),
+  });
 
-  useEffect(() => {
-    saveApplications(applications);
-  }, [applications]);
+  const refreshApplications = () =>
+    queryClient.invalidateQueries({ queryKey: applicationsQueryKey, exact: true });
 
-  const value = useMemo<ApplicationsContextValue>(
-    () => ({
-      applications,
-      addApplication: (values) => {
-        const createdApplication = createApplicationFromValues(values);
-        setApplications((currentApplications) => [createdApplication, ...currentApplications]);
-        return createdApplication;
-      },
-      updateApplication: (id, values) => {
-        const currentApplication = applications.find((application) => application.id === id);
+  const createMutation = useMutation({
+    mutationFn: (values: JobApplicationFormValues) =>
+      applicationsApi.createApplication(toApplicationRequest(values)),
+    onSuccess: async (application) => {
+      await queryClient.cancelQueries({ queryKey: applicationsQueryKey, exact: true });
+      queryClient.setQueryData<JobApplication[]>(applicationsQueryKey, (current) =>
+        current ? [application, ...current] : undefined,
+      );
+      await refreshApplications();
+    },
+  });
 
-        if (!currentApplication) {
-          return null;
-        }
+  const updateMutation = useMutation({
+    mutationFn: ({ id, values }: { id: string; values: JobApplicationFormValues }) =>
+      applicationsApi.updateApplication(id, toApplicationRequest(values)),
+    onSuccess: async (application) => {
+      await queryClient.cancelQueries({ queryKey: applicationsQueryKey });
+      queryClient.setQueryData(applicationQueryKey(application.id), application);
+      queryClient.setQueryData<JobApplication[]>(applicationsQueryKey, (current) =>
+        current?.map((item) => item.id === application.id ? application : item),
+      );
+      await Promise.all([
+        refreshApplications(),
+        queryClient.invalidateQueries({ queryKey: applicationQueryKey(application.id), exact: true }),
+      ]);
+    },
+  });
 
-        const updatedApplication = updateApplicationFromValues(currentApplication, values);
-        setApplications((currentApplications) =>
-          currentApplications.map((application) => (application.id === id ? updatedApplication : application)),
-        );
-        return updatedApplication;
-      },
-      deleteApplication: (id) => {
-        const exists = applications.some((application) => application.id === id);
+  const deleteMutation = useMutation({
+    mutationFn: applicationsApi.deleteApplication,
+    onSuccess: async (_, id) => {
+      await queryClient.cancelQueries({ queryKey: applicationsQueryKey });
+      queryClient.removeQueries({ queryKey: applicationQueryKey(id), exact: true });
+      queryClient.setQueryData<JobApplication[]>(applicationsQueryKey, (current) =>
+        current?.filter((application) => application.id !== id),
+      );
+      await refreshApplications();
+    },
+  });
 
-        if (!exists) {
-          return false;
-        }
-
-        setApplications((currentApplications) =>
-          currentApplications.filter((application) => application.id !== id),
-        );
-        return true;
-      },
-      resetApplications: () => {
-        const seededApplications = resetStoredApplications();
-        setApplications(seededApplications);
-        return seededApplications;
-      },
-      getApplicationById: (id) => applications.find((application) => application.id === id),
-    }),
-    [applications],
+  return (
+    <ApplicationsContext.Provider value={{
+      applications: query.data ?? [],
+      isPending: query.isPending,
+      error: query.error,
+      refetch: () => { void query.refetch(); },
+      addApplication: createMutation.mutateAsync,
+      updateApplication: (id, values) => updateMutation.mutateAsync({ id, values }),
+      deleteApplication: deleteMutation.mutateAsync,
+    }}>
+      {children}
+    </ApplicationsContext.Provider>
   );
-
-  return <ApplicationsContext.Provider value={value}>{children}</ApplicationsContext.Provider>;
 }

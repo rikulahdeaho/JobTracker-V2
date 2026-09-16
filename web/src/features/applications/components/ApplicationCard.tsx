@@ -86,7 +86,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           <Stack direction={{ xs: "column", sm: "row" }} gap={2} color="text.secondary">
             <Stack direction="row" gap={0.75} alignItems="center">
               <LocationOnOutlinedIcon fontSize="small" />
-              <Typography variant="body2">{application.location}</Typography>
+              <Typography variant="body2">{application.location || "Location not specified"}</Typography>
             </Stack>
             <Stack direction="row" gap={0.75} alignItems="center">
               <TodayOutlinedIcon fontSize="small" />
@@ -108,7 +108,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
             <div>
               <Typography variant="body2" color="text.secondary">
-                Source: {application.source}
+                Source: {application.source || "Not specified"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Updated {formatApplicationDate(application.updatedAt, "recently")}

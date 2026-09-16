@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -19,13 +19,14 @@ import type { PropsWithChildren } from "react";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import { emptyApplicationFormValues } from "../utils/applicationForm";
 import { applicationStatusLabel } from "../utils/applicationStatus";
+import { getApiErrorMessage } from "../../../lib/apiClient";
 
 type ApplicationFormDialogProps = {
   mode: "add" | "edit";
   open: boolean;
   initialValues?: JobApplicationFormValues;
   onClose: () => void;
-  onSubmit: (values: JobApplicationFormValues) => void;
+  onSubmit: (values: JobApplicationFormValues) => Promise<void>;
 };
 
 type FormErrors = Partial<Record<"companyName" | "jobTitle", string>>;
@@ -39,15 +40,11 @@ export function ApplicationFormDialog({
   onClose,
   onSubmit,
 }: ApplicationFormDialogProps) {
-  const [values, setValues] = useState<JobApplicationFormValues>(emptyApplicationFormValues);
+  const [values, setValues] = useState<JobApplicationFormValues>(initialValues ?? emptyApplicationFormValues);
   const [errors, setErrors] = useState<FormErrors>({});
-
-  useEffect(() => {
-    if (open) {
-      setValues(initialValues ?? emptyApplicationFormValues);
-      setErrors({});
-    }
-  }, [initialValues, open]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const submitting = useRef(false);
 
   const handleFieldChange =
     (field: keyof JobApplicationFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +61,8 @@ export function ApplicationFormDialog({
       }
     };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitting.current) return;
     const nextErrors: FormErrors = {};
 
     if (values.companyName.trim().length === 0) {
@@ -81,13 +79,23 @@ export function ApplicationFormDialog({
       return;
     }
 
-    onSubmit(values);
+    submitting.current = true;
+    setIsSaving(true);
+    setSubmitError(null);
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      setSubmitError(getApiErrorMessage(error));
+    } finally {
+      submitting.current = false;
+      setIsSaving(false);
+    }
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={isSaving ? undefined : onClose}
       fullWidth
       maxWidth="xl"
       PaperProps={{
@@ -110,9 +118,7 @@ export function ApplicationFormDialog({
         }}
       >
         <Stack gap={2.5}>
-          <Alert severity="info">
-            This flow updates local browser data only. No API or database changes are made yet.
-          </Alert>
+          {submitError ? <Alert severity="error">{submitError}</Alert> : null}
           <FormSection
             title="Basic info"
             description="The minimum information needed to create a useful application card."
@@ -120,6 +126,7 @@ export function ApplicationFormDialog({
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Company"
                   value={values.companyName}
                   onChange={handleFieldChange("companyName")}
@@ -131,6 +138,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Job title"
                   value={values.jobTitle}
                   onChange={handleFieldChange("jobTitle")}
@@ -142,6 +150,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Job URL"
                   value={values.jobUrl}
                   onChange={handleFieldChange("jobUrl")}
@@ -151,6 +160,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Location"
                   value={values.location}
                   onChange={handleFieldChange("location")}
@@ -168,6 +178,7 @@ export function ApplicationFormDialog({
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
+                  disabled={isSaving}
                   select
                   label="Status"
                   value={values.status}
@@ -183,6 +194,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Applied date"
                   type="date"
                   value={values.appliedDate}
@@ -193,6 +205,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Deadline"
                   type="date"
                   value={values.deadline}
@@ -203,6 +216,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Source"
                   value={values.source}
                   onChange={handleFieldChange("source")}
@@ -212,6 +226,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Salary range"
                   value={values.salaryRange}
                   onChange={handleFieldChange("salaryRange")}
@@ -229,6 +244,7 @@ export function ApplicationFormDialog({
             <Grid container spacing={2}>
               <Grid size={{ xs: 12 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Notes"
                   value={values.notes}
                   onChange={handleFieldChange("notes")}
@@ -240,6 +256,7 @@ export function ApplicationFormDialog({
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
+                  disabled={isSaving}
                   label="Job description"
                   value={values.jobDescription}
                   onChange={handleFieldChange("jobDescription")}
@@ -254,9 +271,9 @@ export function ApplicationFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: { xs: 2.5, md: 3 }, py: 2 }}>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit}>
-          {mode === "add" ? "Add application" : "Save changes"}
+        <Button onClick={onClose} disabled={isSaving}>Cancel</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={isSaving}>
+          {isSaving ? "Saving…" : mode === "add" ? "Add application" : "Save changes"}
         </Button>
       </DialogActions>
     </Dialog>

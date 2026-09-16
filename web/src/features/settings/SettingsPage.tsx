@@ -20,18 +20,16 @@ import {
 import type { ThemeMode } from "../../app/theme";
 import { useThemeMode } from "../../app/useThemeMode";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
-import { useApplications } from "../applications/context/ApplicationsContext";
 
 export function SettingsPage() {
   const { mode, setMode } = useThemeMode();
-  const { resetApplications } = useApplications();
   const isDark = mode === "dark";
 
   return (
     <PageShell>
       <PageHeader
         title="Settings"
-        description="A simple prototype settings screen to show how profile, preferences, and local data controls could be organized later."
+        description="Manage appearance and preview future profile and tracking preferences."
       />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 6 }}>
@@ -121,7 +119,7 @@ export function SettingsPage() {
         <Grid size={{ xs: 12, lg: 5 }}>
           <SectionCard
             title="Data management"
-            description="The current MVP stores application data in this browser only."
+            description="Applications are saved through the API. Appearance preferences stay in this browser."
             action={
               <Button disabled variant="outlined" startIcon={<SaveOutlinedIcon />}>
                 Export later
@@ -130,22 +128,22 @@ export function SettingsPage() {
           >
             <Stack gap={2}>
               <Typography color="text.secondary">
-                Your application list, edits, deletes, search state, and refinement work remain local to this browser until backend work begins.
+                Saved applications persist after refresh. Search and filters affect only your current view.
               </Typography>
               <Divider />
               <Stack direction="row" gap={1.5} flexWrap="wrap">
-                <Chip label="No API connected" variant="outlined" />
+                <Chip label="API persistence" variant="outlined" />
                 <Chip label="No account required" variant="outlined" />
-                <Chip label="Local storage enabled" color="secondary" variant="outlined" />
+                <Chip label="Theme saved locally" color="secondary" variant="outlined" />
               </Stack>
               <Button
                 variant="outlined"
                 color="error"
                 startIcon={<RestartAltOutlinedIcon />}
-                onClick={resetApplications}
+                disabled
                 sx={{ alignSelf: "flex-start" }}
               >
-                Reset demo data
+                Demo reset unavailable with API data
               </Button>
             </Stack>
           </SectionCard>

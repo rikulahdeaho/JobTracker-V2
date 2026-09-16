@@ -3,12 +3,22 @@ import { alpha } from "@mui/material/styles";
 import { Chip, Grid, LinearProgress, Stack, Typography } from "@mui/material";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import { ApplicationDataState } from "../applications/components/ApplicationDataState";
 import { getApplicationsNeedingFollowUp } from "../applications/utils/applicationNextAction";
 import { applicationStatusLabel } from "../applications/utils/applicationStatus";
 import type { ApplicationStatus } from "../applications/types/application";
 
 export function InsightsPage() {
-  const { applications } = useApplications();
+  const { applications, isPending, error, refetch } = useApplications();
+
+  if (isPending || error) {
+    return (
+      <PageShell>
+        <PageHeader title="Insights" description="A summary of your application progress, pipeline, and data coverage." />
+        <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
+      </PageShell>
+    );
+  }
   const followUps = getApplicationsNeedingFollowUp(applications);
   const activeApplications = applications.filter((application) =>
     ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
@@ -46,7 +56,7 @@ export function InsightsPage() {
     <PageShell>
       <PageHeader
         title="Insights"
-        description="Simple local-only metrics that help the prototype feel more like a real product dashboard."
+        description="A summary of your application progress, pipeline, and data coverage."
       />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 7 }}>
@@ -70,7 +80,7 @@ export function InsightsPage() {
               <Typography color="text.secondary">
                 {followUps.length > 0
                   ? "Your pipeline has items that likely need a check-in or next step soon."
-                  : "The current mock pipeline is relatively calm right now."}
+                  : "Your current pipeline is relatively calm right now."}
               </Typography>
               <Typography color="text.secondary">
                 {applications.filter((application) => application.status === "Offer").length} offer stage item(s) and{" "}
@@ -80,7 +90,7 @@ export function InsightsPage() {
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, lg: 5 }}>
-          <SectionCard title="Data coverage" description="A simple summary of how much real context is already stored locally.">
+          <SectionCard title="Data coverage" description="A simple summary of the context saved with your applications.">
             <Stack gap={2}>
               {dataCoverage.map((item) => {
                 const percentage = applications.length > 0
@@ -108,7 +118,7 @@ export function InsightsPage() {
           </SectionCard>
         </Grid>
         <Grid size={{ xs: 12, lg: 7 }}>
-          <SectionCard title="Status breakdown" description="Current distribution of applications across the mock pipeline.">
+          <SectionCard title="Status breakdown" description="Current distribution of applications across your pipeline.">
             <Grid container spacing={2}>
               {statusCounts.map((item) => {
                 const percentage = applications.length > 0 ? Math.round((item.count / applications.length) * 100) : 0;

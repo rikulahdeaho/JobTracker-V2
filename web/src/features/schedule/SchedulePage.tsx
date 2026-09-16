@@ -12,13 +12,23 @@ import {
 import { alpha } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import { ApplicationDataState } from "../applications/components/ApplicationDataState";
 import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
 import { formatApplicationDate } from "../applications/utils/applicationPresentation";
 import { getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function SchedulePage() {
-  const { applications } = useApplications();
+  const { applications, isPending, error, refetch } = useApplications();
+
+  if (isPending || error) {
+    return (
+      <PageShell>
+        <PageHeader title="Schedule" description="Plan around application deadlines, current statuses, and follow-up signals." />
+        <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
+      </PageShell>
+    );
+  }
   const reminderGroups = getGroupedReminders(applications);
   const activePipeline = applications
     .filter((application) => ["Interviewing", "Assignment", "Offer"].includes(application.status))

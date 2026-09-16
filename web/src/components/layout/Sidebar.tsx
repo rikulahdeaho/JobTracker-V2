@@ -136,10 +136,10 @@ export function Sidebar({
             <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: "success.main", flexShrink: 0, mt: 0.75 }} />
             <Box>
               <Typography variant="body2" sx={{ color: sidebarColors.text, fontWeight: 700 }}>
-                Local data saved
+                Application storage
               </Typography>
               <Typography variant="caption" sx={{ display: "block", color: sidebarColors.muted, mt: 0.25 }}>
-                Saved in this browser
+                Saved to your tracker
               </Typography>
             </Box>
           </Stack>

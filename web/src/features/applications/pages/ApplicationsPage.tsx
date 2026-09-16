@@ -18,10 +18,10 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { PageHeader, PageShell } from "../../../components/ui/PageSection";
 import { ApplicationList } from "../components/ApplicationList";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
+import { ApplicationDataState } from "../components/ApplicationDataState";
 import { useApplications } from "../context/ApplicationsContext";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import {
@@ -33,8 +33,7 @@ import {
 import { applicationStatusLabel } from "../utils/applicationStatus";
 
 export function ApplicationsPage() {
-  const navigate = useNavigate();
-  const { applications, addApplication } = useApplications();
+  const { applications, addApplication, isPending, error, refetch } = useApplications();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | ApplicationStatus>("all");
@@ -55,10 +54,10 @@ export function ApplicationsPage() {
   const hasActiveFilters =
     searchTerm.trim().length > 0 || statusFilter !== "all" || listFilter !== "all" || sortOption !== "updatedDesc";
 
-  const handleAddApplication = (values: JobApplicationFormValues) => {
-    const createdApplication = addApplication(values);
+  const handleAddApplication = async (values: JobApplicationFormValues) => {
+    await addApplication(values);
+    clearFilters();
     setDialogOpen(false);
-    navigate(`/applications/${createdApplication.id}`);
   };
 
   const clearFilters = () => {
@@ -72,7 +71,7 @@ export function ApplicationsPage() {
     <PageShell>
       <PageHeader
         title="Applications"
-        description="Review the current pipeline, track local changes across refreshes, and open any application for full details."
+        description="Review your pipeline, track progress, and open any application for full details."
         actions={
           <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => setDialogOpen(true)}>
             Add Application
@@ -80,7 +79,9 @@ export function ApplicationsPage() {
         }
       />
 
-      {applications.length > 0 ? (
+      <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
+
+      {!isPending && !error && applications.length > 0 ? (
         <Card>
           <CardContent>
             <Stack gap={2.5}>
@@ -185,13 +186,13 @@ export function ApplicationsPage() {
         </Card>
       ) : null}
 
-      {applications.length === 0 ? (
+      {isPending || error ? null : applications.length === 0 ? (
         <Card>
           <CardContent>
             <Stack gap={2}>
               <Typography variant="h6">No applications yet</Typography>
               <Typography color="text.secondary">
-                Start by adding your first application. It will be saved in local storage and stay here after refresh.
+                Start by adding your first application. Your saved applications will stay here after refresh.
               </Typography>
               <Box>
                 <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => setDialogOpen(true)}>
@@ -231,12 +232,14 @@ export function ApplicationsPage() {
           </CardContent>
         </Card>
       )}
-      <ApplicationFormDialog
-        mode="add"
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSubmit={handleAddApplication}
-      />
+      {dialogOpen ? (
+        <ApplicationFormDialog
+          mode="add"
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSubmit={handleAddApplication}
+        />
+      ) : null}
     </PageShell>
   );
 }

@@ -16,15 +16,17 @@ export type JobApplication = {
   status: ApplicationStatus;
   appliedDate: string | null;
   deadline: string | null;
-  location: string;
-  source: string;
-  jobUrl: string;
-  salaryRange: string;
-  notes: string;
-  jobDescription: string;
+  location: string | null;
+  source: string | null;
+  jobUrl: string | null;
+  salaryRange: string | null;
+  notes: string | null;
+  jobDescription: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type JobApplicationRequest = Omit<JobApplication, "id" | "createdAt" | "updatedAt">;
 
 export type JobApplicationFormValues = {
   companyName: string;

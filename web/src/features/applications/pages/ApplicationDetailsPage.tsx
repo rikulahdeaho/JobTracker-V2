@@ -28,6 +28,9 @@ import { type ReactNode, useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "../../../components/ui/PageSection";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
+import { ApplicationDataState } from "../components/ApplicationDataState";
+import { useApplicationQuery } from "../api/applicationQueries";
+import { getApiErrorMessage, isNotFoundError } from "../../../lib/apiClient";
 import { NextActionChip } from "../components/NextActionChip";
 import { TimelineEventList } from "../components/TimelineEventList";
 import { StatusChip } from "../components/StatusChip";
@@ -41,12 +44,15 @@ import { getApplicationTimelineEvents } from "../utils/applicationWorkflow";
 export function ApplicationDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { getApplicationById, updateApplication, deleteApplication } = useApplications();
+  const { updateApplication, deleteApplication } = useApplications();
+  const query = useApplicationQuery(id);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const application = id ? getApplicationById(id) : undefined;
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const application = query.data;
 
-  if (!application) {
+  if (query.isPending || isNotFoundError(query.error) || !application) {
     return (
       <PageShell>
         <Stack gap={2}>
@@ -58,7 +64,15 @@ export function ApplicationDetailsPage() {
           >
             Back to applications
           </Button>
-          <Alert severity="warning">Application not found in the current mock dataset.</Alert>
+          {isNotFoundError(query.error) || !id ? (
+            <Alert severity="warning">Application not found.</Alert>
+          ) : (
+            <ApplicationDataState
+              isPending={query.isPending}
+              error={query.error}
+              onRetry={() => { void query.refetch(); }}
+            />
+          )}
         </Stack>
       </PageShell>
     );
@@ -68,22 +82,29 @@ export function ApplicationDetailsPage() {
   const timelineEvents = getApplicationTimelineEvents(application);
   const companyInitial = application.companyName.trim().charAt(0).toUpperCase();
 
-  const handleUpdateApplication = (values: JobApplicationFormValues) => {
-    updateApplication(application.id, values);
+  const handleUpdateApplication = async (values: JobApplicationFormValues) => {
+    await updateApplication(application.id, values);
     setEditOpen(false);
   };
 
-  const handleDeleteApplication = () => {
-    const deleted = deleteApplication(application.id);
-
-    if (deleted) {
-      navigate("/applications");
+  const handleDeleteApplication = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteApplication(application.id);
+      navigate("/applications", { replace: true });
+    } catch (error) {
+      setDeleteError(getApiErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
     <PageShell>
       <Stack gap={2.5}>
+        <ApplicationDataState isPending={false} error={query.error} onRetry={() => { void query.refetch(); }} />
         <Button
           component={RouterLink}
           to="/applications"
@@ -135,7 +156,7 @@ export function ApplicationDetailsPage() {
                   variant="outlined"
                   color="error"
                   startIcon={<DeleteOutlineOutlinedIcon />}
-                  onClick={() => setDeleteOpen(true)}
+                  onClick={() => { setDeleteError(null); setDeleteOpen(true); }}
                 >
                   Delete
                 </Button>
@@ -220,7 +241,7 @@ export function ApplicationDetailsPage() {
                   <Stack gap={1.5}>
                     <Typography variant="h6">Timeline</Typography>
                     <Typography color="text.secondary">
-                      A mock history view of this application based on the current local data and status.
+                      A mock history view based on the current application data and status.
                     </Typography>
                     <TimelineEventList events={timelineEvents} />
                   </Stack>
@@ -266,24 +287,28 @@ export function ApplicationDetailsPage() {
             </Stack>
           </Grid>
         </Grid>
-        <ApplicationFormDialog
-          mode="edit"
-          open={editOpen}
-          initialValues={toApplicationFormValues(application)}
-          onClose={() => setEditOpen(false)}
-          onSubmit={handleUpdateApplication}
-        />
-        <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        {editOpen ? (
+          <ApplicationFormDialog
+            key={application.id}
+            mode="edit"
+            open={editOpen}
+            initialValues={toApplicationFormValues(application)}
+            onClose={() => setEditOpen(false)}
+            onSubmit={handleUpdateApplication}
+          />
+        ) : null}
+        <Dialog open={deleteOpen} onClose={isDeleting ? undefined : () => setDeleteOpen(false)}>
           <DialogTitle>Delete application?</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              This removes {application.companyName} - {application.jobTitle} from the current local state.
+              This permanently deletes {application.companyName} - {application.jobTitle}.
             </DialogContentText>
+            {deleteError ? <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert> : null}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button variant="contained" color="error" onClick={handleDeleteApplication}>
-              Delete
+            <Button onClick={() => setDeleteOpen(false)} disabled={isDeleting}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={handleDeleteApplication} disabled={isDeleting}>
+              {isDeleting ? "Deleting…" : "Delete"}
             </Button>
           </DialogActions>
         </Dialog>

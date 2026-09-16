@@ -27,6 +27,7 @@ import { alpha } from "@mui/material/styles";
 import type { Theme } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
+import { ApplicationDataState } from "../applications/components/ApplicationDataState";
 import { StatusChip } from "../applications/components/StatusChip";
 import type { ApplicationStatus, JobApplication } from "../applications/types/application";
 import { formatApplicationDate } from "../applications/utils/applicationPresentation";
@@ -39,7 +40,16 @@ import {
 import { getAllReminders, getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function DashboardPage() {
-  const { applications } = useApplications();
+  const { applications, isPending, error, refetch } = useApplications();
+
+  if (isPending || error) {
+    return (
+      <PageShell>
+        <PageHeader title="Job search at a glance" description="Your current applications, priorities, and progress at a glance." />
+        <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
+      </PageShell>
+    );
+  }
   const followUpApplications = getApplicationsNeedingFollowUp(applications);
   const ghostedRiskApplications = getGhostedRiskApplications(applications);
   const reminderGroups = getGroupedReminders(applications);
@@ -69,7 +79,7 @@ export function DashboardPage() {
     {
       label: "Total applications",
       value: applications.length,
-      helper: "Saved in this browser",
+      helper: "Saved applications",
       icon: <BusinessCenterOutlinedIcon color="primary" />,
     },
     {
@@ -119,7 +129,7 @@ export function DashboardPage() {
     <PageShell>
       <PageHeader
         title="Job search at a glance"
-        description="A polished local-first dashboard powered entirely by your current mock application data."
+        description="Your current applications, priorities, and progress at a glance."
         actions={
           <Stack direction="row" gap={1.25} alignItems="center" flexWrap="wrap">
             <Button component={RouterLink} to="/applications" variant="contained">
@@ -132,7 +142,7 @@ export function DashboardPage() {
         <Grid size={{ xs: 12, xl: 8 }}>
           <SectionCard
             title="Priority action"
-            description="Start here. This is the highest-signal next step from the current local pipeline."
+            description="Start here. This is the highest-signal next step from your current pipeline."
             action={<Chip label="High priority" color="warning" variant="outlined" />}
           >
             {priorityItem ? (

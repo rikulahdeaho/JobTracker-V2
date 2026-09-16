@@ -3,11 +3,12 @@ import type { JobApplication, JobApplicationFormValues } from "../types/applicat
 
 export type ApplicationsContextValue = {
   applications: JobApplication[];
-  addApplication: (values: JobApplicationFormValues) => JobApplication;
-  updateApplication: (id: string, values: JobApplicationFormValues) => JobApplication | null;
-  deleteApplication: (id: string) => boolean;
-  resetApplications: () => JobApplication[];
-  getApplicationById: (id: string) => JobApplication | undefined;
+  isPending: boolean;
+  error: Error | null;
+  refetch: () => void;
+  addApplication: (values: JobApplicationFormValues) => Promise<JobApplication>;
+  updateApplication: (id: string, values: JobApplicationFormValues) => Promise<JobApplication>;
+  deleteApplication: (id: string) => Promise<void>;
 };
 
 export const ApplicationsContext = createContext<ApplicationsContextValue | undefined>(undefined);
