@@ -2,6 +2,7 @@ namespace JobTracker.Api.Models;
 
 public sealed class JobApplication
 {
+    public List<ApplicationEvent> Events { get; set; } = [];
     public Guid Id { get; set; }
     public required string UserId { get; set; }
     public required string CompanyName { get; set; }

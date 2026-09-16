@@ -1,140 +1,71 @@
 import type { ChipProps } from "@mui/material";
 import type { JobApplication } from "../types/application";
-import type { Reminder, ReminderType, TimelineEvent, TimelineEventType } from "../types/workflow";
-import { getApplicationNextAction } from "./applicationNextAction";
+import type { ApplicationEventType, Reminder, ReminderType, TimelineEvent } from "../types/workflow";
+import { getLastContact, getStageEvent } from "./applicationActivity";
 
 type ReminderGroupKey = "overdue" | "today" | "upcoming";
+export type ReminderGroup = { key: ReminderGroupKey; title: string; description: string; reminders: Reminder[] };
+type ReminderPresentation = { label: string; color: ChipProps["color"] };
 
-export type ReminderGroup = {
-  key: ReminderGroupKey;
-  title: string;
-  description: string;
-  reminders: Reminder[];
-};
-
-type ReminderPresentation = {
-  label: string;
-  color: ChipProps["color"];
+const eventPresentation: Record<ApplicationEventType, { type: TimelineEvent["type"]; title: string }> = {
+  ApplicationCreated: { type: "applicationCreated", title: "Application created" },
+  ApplicationSent: { type: "applicationSent", title: "Application sent" },
+  StatusChanged: { type: "statusChanged", title: "Status changed" },
+  FollowUpSent: { type: "followUpSent", title: "Follow-up sent" },
+  InterviewScheduled: { type: "interviewScheduled", title: "Interview scheduled" },
+  AssignmentReceived: { type: "assignmentReceived", title: "Assignment received" },
+  AssignmentSubmitted: { type: "assignmentSubmitted", title: "Assignment submitted" },
+  OfferReceived: { type: "offerReceived", title: "Offer received" },
 };
 
 export function getApplicationTimelineEvents(application: JobApplication): TimelineEvent[] {
-  const events: TimelineEvent[] = [
-    createTimelineEvent(application, "applicationCreated", application.createdAt, "Application created", "Added to your tracker and ready for the next step."),
-  ];
-
-  if (application.appliedDate) {
-    events.push(
-      createTimelineEvent(
-        application,
-        "applicationSent",
-        toIsoDate(application.appliedDate),
-        "Application sent",
-        `Application submitted to ${application.companyName}.`,
-      ),
-    );
-  }
-
-  for (const statusEvent of getStatusTimelineEvents(application)) {
-    events.push(statusEvent);
-  }
-
-  const nextAction = getApplicationNextAction(application);
-
-  if (nextAction.isNeedsFollowUp) {
-    events.push(
-      createTimelineEvent(
-        application,
-        "followUpPlanned",
-        application.updatedAt,
-        "Follow-up planned",
-        nextAction.description,
-      ),
-    );
-  }
-
-  return events.sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
+  return [...application.events]
+    .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt)
+      || Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id))
+    .map(event => ({
+      id: event.id, applicationId: application.id, occurredAt: event.occurredAt,
+      ...eventPresentation[event.type],
+      description: [
+        event.type === "StatusChanged" ? `${event.fromStatus} -> ${event.toStatus}` : null,
+        event.dueAt ? `Scheduled / due: ${new Date(event.dueAt).toLocaleString()}` : null,
+        event.note,
+      ].filter(Boolean).join(" | "),
+    }));
 }
 
-export function getApplicationReminders(application: JobApplication): Reminder[] {
+export function getApplicationReminders(application: JobApplication, referenceDate = new Date()): Reminder[] {
+  if (["Rejected", "Ghosted", "Withdrawn"].includes(application.status)) return [];
   const reminders: Reminder[] = [];
-  const nextAction = getApplicationNextAction(application);
-
-  if (nextAction.isNeedsFollowUp) {
-    reminders.push(
-      createReminder(
-        application,
-        "followUp",
-        toDateOnly(addDays(application.updatedAt, 14)),
-        "Follow up",
-        nextAction.description,
-      ),
-    );
+  if (application.status === "Applied") {
+    const contact = getLastContact(application, referenceDate);
+    if (contact) reminders.push(createReminder(application, "followUp",
+      toDateOnly(new Date(Date.parse(contact.occurredAt) + 14 * 86400000).toISOString()),
+      "Follow up", "Follow up 14 days after the last application or follow-up sent."));
   }
-
-  switch (application.status) {
-    case "Interviewing":
-      reminders.push(
-        createReminder(
-          application,
-          "prepareInterview",
-          application.deadline ?? toDateOnly(addDays(application.updatedAt, 2)),
-          "Prepare interview",
-          "Review the company, role, and examples before the next interview step.",
-        ),
-      );
-      break;
-    case "Assignment":
-      reminders.push(
-        createReminder(
-          application,
-          "submitAssignment",
-          application.deadline ?? toDateOnly(addDays(application.updatedAt, 3)),
-          "Submit assignment",
-          "Wrap up the take-home work, check details, and submit on time.",
-        ),
-      );
-      break;
-    case "Offer":
-      reminders.push(
-        createReminder(
-          application,
-          "respondToOffer",
-          application.deadline ?? toDateOnly(addDays(application.updatedAt, 2)),
-          "Respond to offer",
-          "Review the package and send your decision or negotiation response.",
-        ),
-      );
-      break;
+  const stage = application.status === "Interviewing" ? getStageEvent(application, ["InterviewScheduled"])
+    : application.status === "Assignment" ? getStageEvent(application, ["AssignmentReceived", "AssignmentSubmitted"])
+    : application.status === "Offer" ? getStageEvent(application, ["OfferReceived"]) : undefined;
+  if (stage?.dueAt && stage.type !== "AssignmentSubmitted") {
+    const type = application.status === "Interviewing" ? "prepareInterview"
+      : application.status === "Assignment" ? "submitAssignment" : "respondToOffer";
+    reminders.push(createReminder(application, type, toDateOnly(stage.dueAt),
+      getReminderPresentation(type).label, `Scheduled / due: ${new Date(stage.dueAt).toLocaleString()}`));
   }
-
-  const alreadyHasDeadlineReminder = reminders.some(
-    (reminder) => reminder.dueDate === application.deadline,
-  );
-
-  if (application.deadline && !alreadyHasDeadlineReminder) {
-    reminders.push(
-      createReminder(
-        application,
-        "checkDeadline",
-        application.deadline,
-        "Check deadline",
-        `Keep the ${application.companyName} deadline in view and plan your next step before it passes.`,
-      ),
-    );
-  }
-
-  return dedupeReminders(reminders).sort((left, right) => left.dueDate.localeCompare(right.dueDate));
+  if (application.deadline) reminders.push(createReminder(application, "checkDeadline", application.deadline,
+    "Application deadline", "The application deadline recorded on this application."));
+  return reminders.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
 
-export function getAllReminders(applications: JobApplication[]): Reminder[] {
-  return applications.flatMap((application) => getApplicationReminders(application));
+export function getAllReminders(applications: JobApplication[], referenceDate = new Date()): Reminder[] {
+  return applications.flatMap((application) => getApplicationReminders(application, referenceDate))
+    .sort((left, right) => left.dueDate.localeCompare(right.dueDate));
 }
 
 export function getGroupedReminders(
   applications: JobApplication[],
   referenceDate = new Date(),
 ): ReminderGroup[] {
-  const reminders = getAllReminders(applications);
+  const reminders = getAllReminders(applications, referenceDate);
   const todayValue = toDateOnly(referenceDate.toISOString());
 
   return [
@@ -181,93 +112,6 @@ export function getReminderPresentation(type: ReminderType): ReminderPresentatio
   }
 }
 
-function getStatusTimelineEvents(application: JobApplication): TimelineEvent[] {
-  switch (application.status) {
-    case "Interviewing":
-      return [
-        createTimelineEvent(
-          application,
-          "interviewScheduled",
-          application.updatedAt,
-          "Interview scheduled",
-          "The process moved into an interview stage and now needs preparation.",
-        ),
-      ];
-    case "Assignment":
-      return [
-        createTimelineEvent(
-          application,
-          "assignmentReceived",
-          application.updatedAt,
-          "Assignment received",
-          "The team shared an assignment or take-home step for this application.",
-        ),
-      ];
-    case "Offer":
-      return [
-        createTimelineEvent(
-          application,
-          "offerReceived",
-          application.updatedAt,
-          "Offer received",
-          "The process reached the offer stage and now needs a response.",
-        ),
-      ];
-    case "Rejected":
-      return [
-        createTimelineEvent(
-          application,
-          "rejected",
-          application.updatedAt,
-          "Rejected",
-          "This application is marked as closed.",
-        ),
-      ];
-    case "Ghosted":
-    case "Withdrawn":
-      return [
-        createTimelineEvent(
-          application,
-          "statusChanged",
-          application.updatedAt,
-          `Status changed to ${application.status}`,
-          `This application is currently marked as ${application.status.toLowerCase()}.`,
-        ),
-      ];
-    case "Draft":
-    case "ToApply":
-    case "Applied":
-      return application.updatedAt !== application.createdAt
-        ? [
-            createTimelineEvent(
-              application,
-              "statusChanged",
-              application.updatedAt,
-              `Status updated to ${application.status === "ToApply" ? "To Apply" : application.status}`,
-              `The application is currently in the ${application.status === "ToApply" ? "To Apply" : application.status} stage.`,
-            ),
-          ]
-        : [];
-  }
-}
-
-function createTimelineEvent(
-  application: JobApplication,
-  type: TimelineEventType,
-  occurredAt: string,
-  title: string,
-  description: string,
-): TimelineEvent {
-  return {
-    id: `${application.id}-${type}-${occurredAt}`,
-    applicationId: application.id,
-    type,
-    title,
-    description,
-    occurredAt,
-  };
-}
-
 function createReminder(
   application: JobApplication,
   type: ReminderType,
@@ -288,29 +132,7 @@ function createReminder(
   };
 }
 
-function dedupeReminders(reminders: Reminder[]): Reminder[] {
-  const seenReminderIds = new Set<string>();
-
-  return reminders.filter((reminder) => {
-    if (seenReminderIds.has(reminder.id)) {
-      return false;
-    }
-
-    seenReminderIds.add(reminder.id);
-    return true;
-  });
-}
-
-function addDays(value: string, days: number): string {
-  const nextDate = new Date(value);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate.toISOString();
-}
-
 function toDateOnly(value: string): string {
-  return value.slice(0, 10);
-}
-
-function toIsoDate(value: string): string {
-  return `${value}T09:00:00Z`;
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }

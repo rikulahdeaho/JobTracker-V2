@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AxiosError, AxiosHeaders, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { apiClient } from "../../../lib/apiClient";
-import { applicationFixture } from "../../../test/applicationFixture";
+import { applicationFixture, eventFixture } from "../../../test/applicationFixture";
 import { ApplicationsProvider } from "../context/ApplicationsProvider";
 import { ApplicationsPage } from "./ApplicationsPage";
 import { ApplicationDetailsPage } from "./ApplicationDetailsPage";
@@ -140,4 +140,79 @@ it("handles a detail 404 separately from a connection error with a link back", a
   expect(await screen.findByRole("alert")).toHaveTextContent("Application not found");
   expect(screen.getByRole("link", { name: "Back to applications" })).toHaveAttribute("href", "/applications");
   expect(http.mock.calls.some(([config]) => config.url === "/api/applications/missing")).toBe(true);
+});
+
+it("records follow-up, refreshes list/detail caches, and keeps persisted history visible", async () => {
+  const user = userEvent.setup();
+  let application = applicationFixture();
+  http.mockImplementation(async config => {
+    if (config.method === "post" && config.url === `/api/applications/${application.id}/events`) {
+      expect(JSON.parse(String(config.data))).toMatchObject({ type: "FollowUpSent", note: "Sent a polite follow-up", dueAt: null });
+      application = { ...application, events: [...application.events, eventFixture({
+        id: "new-followup", type: "FollowUpSent", occurredAt: new Date().toISOString(), note: "Sent a polite follow-up",
+      })] };
+      return response(config, application, 201);
+    }
+    if (config.method === "get") return response(config, config.url === "/api/applications" ? [application] : application);
+    throw new Error("Unexpected HTTP request");
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Record activity" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.type(dialog.getByRole("textbox", { name: "Activity note" }), "Sent a polite follow-up");
+  await user.click(dialog.getByRole("button", { name: "Save activity" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(screen.getByText("Follow-up sent")).toBeInTheDocument();
+  expect(screen.getByText("Application sent")).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Wait for response" })).toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
+  expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
+});
+
+it("keeps an activity note available after a failed event save", async () => {
+  const user = userEvent.setup();
+  const application = applicationFixture();
+  http.mockImplementation(async config => {
+    if (config.method === "post") throw new AxiosError("Network Error", "ERR_NETWORK");
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Record activity" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.type(dialog.getByRole("textbox", { name: "Activity note" }), "Keep this activity");
+  await user.click(dialog.getByRole("button", { name: "Save activity" }));
+  expect(await dialog.findByText(/Cannot reach the API/)).toBeInTheDocument();
+  expect(dialog.getByRole("textbox", { name: "Activity note" })).toHaveValue("Keep this activity");
+});
+
+it.each([
+  ["Interview scheduled", "InterviewScheduled", "Interviewing", "Interview date and time"],
+  ["Assignment received", "AssignmentReceived", "Assignment", "Response / assignment deadline"],
+  ["Offer received", "OfferReceived", "Offer", "Response / assignment deadline"],
+] as const)("submits an explicit local date for %s as UTC", async (label, type, status, dateLabel) => {
+  const user = userEvent.setup();
+  let application = applicationFixture();
+  const localDate = "2030-09-25T14:30";
+  let posted = false;
+  http.mockImplementation(async config => {
+    if (config.method === "post") {
+      expect(JSON.parse(String(config.data))).toMatchObject({ type, dueAt: new Date(localDate).toISOString() });
+      posted = true;
+      application = { ...application, status, events: [...application.events,
+        eventFixture({ id: "scheduled", type, dueAt: new Date(localDate).toISOString() }),
+      ] };
+      return response(config, application, 201);
+    }
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Record activity" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.click(dialog.getByRole("combobox", { name: /Activity/ }));
+  await user.click(screen.getByRole("option", { name: label }));
+  fireEvent.change(dialog.getByLabelText(new RegExp(dateLabel)), { target: { value: localDate } });
+  await user.click(dialog.getByRole("button", { name: "Save activity" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(posted).toBe(true);
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
 });

@@ -27,6 +27,7 @@ import { alpha } from "@mui/material/styles";
 import { type ReactNode, useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "../../../components/ui/PageSection";
+import { ApplicationEventDialog } from "../components/ApplicationEventDialog";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { ApplicationDataState } from "../components/ApplicationDataState";
 import { useApplicationQuery } from "../api/applicationQueries";
@@ -46,6 +47,7 @@ export function ApplicationDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { updateApplication, deleteApplication } = useApplications();
   const query = useApplicationQuery(id);
+  const [eventOpen, setEventOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -239,9 +241,12 @@ export function ApplicationDetailsPage() {
               <Card>
                 <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
                   <Stack gap={1.5}>
-                    <Typography variant="h6">Timeline</Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="h6">Timeline</Typography>
+                      <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => setEventOpen(true)}>Record activity</Button>
+                    </Stack>
                     <Typography color="text.secondary">
-                      A mock history view based on the current application data and status.
+                      Recorded application activity. Status changes are saved automatically.
                     </Typography>
                     <TimelineEventList events={timelineEvents} />
                   </Stack>
@@ -287,6 +292,7 @@ export function ApplicationDetailsPage() {
             </Stack>
           </Grid>
         </Grid>
+        {eventOpen && <ApplicationEventDialog application={application} onClose={() => setEventOpen(false)} />}
         {editOpen ? (
           <ApplicationFormDialog
             key={application.id}

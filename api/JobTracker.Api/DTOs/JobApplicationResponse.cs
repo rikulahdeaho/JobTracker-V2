@@ -16,7 +16,8 @@ public sealed record JobApplicationResponse(
     string? Notes,
     string? JobDescription,
     DateTime CreatedAt,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt,
+    IReadOnlyList<ApplicationEventResponse> Events)
 {
     public static JobApplicationResponse FromEntity(JobApplication application) => new(
         application.Id,
@@ -32,5 +33,7 @@ public sealed record JobApplicationResponse(
         application.Notes,
         application.JobDescription,
         application.CreatedAt,
-        application.UpdatedAt);
+        application.UpdatedAt,
+        application.Events.OrderByDescending(item => item.OccurredAt).ThenByDescending(item => item.CreatedAt)
+            .ThenBy(item => item.Id).Select(ApplicationEventResponse.FromEntity).ToList());
 }

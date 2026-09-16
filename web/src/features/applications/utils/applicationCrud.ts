@@ -17,6 +17,7 @@ export function createApplicationFromValues(values: JobApplicationFormValues): J
     notes: values.notes.trim(),
     jobDescription: values.jobDescription.trim(),
     createdAt: timestamp,
+    events: [],
     updatedAt: timestamp,
   };
 }

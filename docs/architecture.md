@@ -238,6 +238,13 @@ Ghosted
 Withdrawn
 ```
 
+## Workflow implementation
+
+The current implementation persists `ApplicationEvent` history and returns it with
+applications. Next Action and Schedule derive behavior from contact events and explicit
+dates. See [Application Workflow Model](application-workflow.md). Separate reminders
+and contacts remain future work. The sections below describe broader target capabilities.
+
 ## Later Models
 
 ### TimelineEvent

@@ -15,6 +15,7 @@ type TimelineEventListProps = {
 };
 
 export function TimelineEventList({ events }: TimelineEventListProps) {
+  if (events.length === 0) return <Typography color="text.secondary">No recorded events yet.</Typography>;
   return (
     <List disablePadding>
       {events.map((event, index) => (
@@ -62,10 +63,11 @@ function getTimelineEventIcon(type: TimelineEvent["type"]) {
       return <TimelineOutlinedIcon fontSize="small" />;
     case "statusChanged":
       return <AccessTimeOutlinedIcon fontSize="small" />;
-    case "followUpPlanned":
+    case "followUpSent":
       return <MarkEmailUnreadOutlinedIcon fontSize="small" />;
     case "interviewScheduled":
       return <RecordVoiceOverOutlinedIcon fontSize="small" />;
+    case "assignmentSubmitted":
     case "assignmentReceived":
       return <AssignmentTurnedInOutlinedIcon fontSize="small" />;
     case "offerReceived":

@@ -1,8 +1,33 @@
+import type { ApplicationStatus } from "./application";
+
+export type ApplicationEventType = "ApplicationCreated" | "ApplicationSent" | "StatusChanged"
+  | "FollowUpSent" | "InterviewScheduled" | "AssignmentReceived" | "AssignmentSubmitted" | "OfferReceived";
+
+export type ApplicationEvent = {
+  id: string;
+  applicationId: string;
+  type: ApplicationEventType;
+  occurredAt: string;
+  dueAt: string | null;
+  note: string | null;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus | null;
+  createdAt: string;
+};
+
+export type CreateApplicationEventRequest = {
+  type: Exclude<ApplicationEventType, "ApplicationCreated" | "StatusChanged">;
+  occurredAt: string;
+  dueAt: string | null;
+  note: string | null;
+};
+
 export type TimelineEventType =
   | "applicationCreated"
   | "applicationSent"
   | "statusChanged"
-  | "followUpPlanned"
+  | "followUpSent"
+  | "assignmentSubmitted"
   | "interviewScheduled"
   | "assignmentReceived"
   | "offerReceived"

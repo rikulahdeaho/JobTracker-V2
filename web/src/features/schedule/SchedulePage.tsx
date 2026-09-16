@@ -16,6 +16,7 @@ import { ApplicationDataState } from "../applications/components/ApplicationData
 import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
 import { formatApplicationDate } from "../applications/utils/applicationPresentation";
+import { getLastWorkflowTime } from "../applications/utils/applicationActivity";
 import { getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function SchedulePage() {
@@ -32,7 +33,7 @@ export function SchedulePage() {
   const reminderGroups = getGroupedReminders(applications);
   const activePipeline = applications
     .filter((application) => ["Interviewing", "Assignment", "Offer"].includes(application.status))
-    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+    .sort((left, right) => getLastWorkflowTime(right).localeCompare(getLastWorkflowTime(left)))
     .slice(0, 4);
 
   return (
@@ -82,7 +83,7 @@ export function SchedulePage() {
         <Grid size={{ xs: 12, md: 4 }}>
           <SectionCard
             title="Today"
-            description="Items that should be handled today in the current mock schedule."
+            description="Items due today based on recorded dates and contact history."
             action={<Chip label={`${reminderGroups[1].reminders.length} today`} color="warning" size="small" variant="outlined" />}
           >
             <Box
@@ -125,7 +126,7 @@ export function SchedulePage() {
                     </Stack>
                     <Typography color="text.secondary">{application.jobTitle}</Typography>
                     <Stack direction="row" gap={1} flexWrap="wrap">
-                      <Chip icon={<TodayOutlinedIcon />} label={`Updated ${formatApplicationDate(application.updatedAt, "recently")}`} size="small" />
+                      <Chip icon={<TodayOutlinedIcon />} label={`Activity ${formatApplicationDate(getLastWorkflowTime(application), "unknown")}`} size="small" />
                       {application.deadline ? (
                         <Chip icon={<NotificationsActiveOutlinedIcon />} label={`Due ${formatApplicationDate(application.deadline, "No deadline")}`} size="small" variant="outlined" />
                       ) : null}

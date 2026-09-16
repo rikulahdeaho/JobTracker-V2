@@ -129,3 +129,18 @@ deletes its own temporary record, leaving existing applications untouched.
 For manual Swagger verification, expand an operation, select **Try it out**,
 enter the body or ID and select **Execute**. POST returns the ID to use for
 GET, PUT and DELETE.
+
+## Application workflow
+
+Application responses now include persisted `events`. POST
+`/api/applications/{applicationId}/events` records workflow activity and returns
+201 with the updated application. Status changes and activity save atomically;
+invalid events return 400 and missing/other-user applications return 404.
+No separate GET events call is needed because both application GET endpoints include history.
+
+Migration `20260916123052_ApplicationWorkflow` creates ApplicationEvents and
+backfills only creation and known applied dates. Run `dotnet ef database update`
+before starting the updated API. No inferred interviews or follow-ups are created.
+
+See [workflow model, API example and rules](../docs/application-workflow.md),
+including date corrections and intentionally deferred reminder/event management.

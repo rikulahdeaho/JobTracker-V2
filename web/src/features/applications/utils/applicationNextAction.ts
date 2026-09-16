@@ -1,5 +1,6 @@
 import type { ChipProps } from "@mui/material";
 import type { JobApplication } from "../types/application";
+import { getLastContact, getStageEvent } from "./applicationActivity";
 
 type NextActionKind =
   | "draft"
@@ -49,7 +50,12 @@ export function getApplicationNextAction(
         isGhostedRisk: false,
       };
     case "Applied": {
-      const lastActivityDate = getLastActivityDate(application);
+      const contact = getLastContact(application, referenceDate);
+      if (!contact) return {
+        title: "Add application sent date", description: "Record when you sent the application to start follow-up timing.",
+        kind: "followUp", color: "info", isNeedsFollowUp: false, isGhostedRisk: false,
+      };
+      const lastActivityDate = new Date(contact.occurredAt);
       const daysSinceActivity = getDaysBetween(lastActivityDate, referenceDate);
 
       if (daysSinceActivity >= GHOSTED_THRESHOLD_DAYS) {
@@ -83,37 +89,34 @@ export function getApplicationNextAction(
         isGhostedRisk: false,
       };
     }
-    case "Interviewing":
+    case "Interviewing": {
+      const interview = getStageEvent(application, ["InterviewScheduled"]);
       return {
-        title: "Prepare interview",
-        description: "Review the company, role, and your strongest examples before the next conversation.",
-        kind: "interview",
-        color: "secondary",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        title: interview?.dueAt ? "Prepare interview" : "Add interview details",
+        description: interview?.dueAt
+          ? `Interview: ${new Date(interview.dueAt).toLocaleString()}.`
+          : "Record the actual interview date and time.",
+        kind: "interview", color: "secondary", isNeedsFollowUp: false, isGhostedRisk: false,
       };
-    case "Assignment":
+    }
+    case "Assignment": {
+      const assignment = getStageEvent(application, ["AssignmentReceived", "AssignmentSubmitted"]);
+      const submitted = assignment?.type === "AssignmentSubmitted";
       return {
-        title: "Submit assignment",
-        description: application.deadline
-          ? `Assignment work is due by ${formatDisplayDate(application.deadline)}.`
-          : "Finish and submit the assignment.",
-        kind: "assignment",
-        color: "warning",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        title: submitted ? "Wait for assignment feedback" : assignment?.dueAt ? "Submit assignment" : "Add assignment deadline",
+        description: submitted ? "The assignment was submitted. Wait for feedback."
+          : assignment?.dueAt ? `Assignment due ${new Date(assignment.dueAt).toLocaleString()}.` : "Record the actual assignment deadline.",
+        kind: "assignment", color: "warning", isNeedsFollowUp: false, isGhostedRisk: false,
       };
-    case "Offer":
+    }
+    case "Offer": {
+      const offer = getStageEvent(application, ["OfferReceived"]);
       return {
-        title: "Respond to offer",
-        description: application.deadline
-          ? `Offer decision needed by ${formatDisplayDate(application.deadline)}.`
-          : "Review the offer and prepare your response.",
-        kind: "offer",
-        color: "success",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        title: offer?.dueAt ? "Respond to offer" : "Review offer",
+        description: offer?.dueAt ? `Respond by ${new Date(offer.dueAt).toLocaleString()}.` : "Review the offer and record a response deadline if one is agreed.",
+        kind: "offer", color: "success", isNeedsFollowUp: false, isGhostedRisk: false,
       };
+    }
     case "Rejected":
       return {
         title: "No action",
@@ -150,11 +153,6 @@ export function getApplicationsNeedingFollowUp(applications: JobApplication[]): 
 
 export function getGhostedRiskApplications(applications: JobApplication[]): JobApplication[] {
   return applications.filter((application) => getApplicationNextAction(application).isGhostedRisk);
-}
-
-function getLastActivityDate(application: JobApplication): Date {
-  const referenceValue = application.updatedAt || application.appliedDate || application.createdAt;
-  return new Date(referenceValue);
 }
 
 function getDaysBetween(olderDate: Date, newerDate: Date): number {

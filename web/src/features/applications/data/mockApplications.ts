@@ -18,6 +18,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Build product interfaces for international clients, collaborate across design and engineering, and lead frontend quality improvements.",
     createdAt: daysAgoIso(16, 9),
+    events: [],
     updatedAt: daysAgoIso(2, 13),
   },
   {
@@ -35,6 +36,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Own end-to-end product features, work closely with product and design, and ship polished user experiences in a fast-moving team.",
     createdAt: daysAgoIso(17, 10),
+    events: [],
     updatedAt: daysAgoIso(15, 18),
   },
   {
@@ -52,6 +54,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Create accessible web applications, contribute to client design systems, and support modern frontend delivery across consulting projects.",
     createdAt: daysAgoIso(4, 8),
+    events: [],
     updatedAt: daysAgoIso(1, 12),
   },
   {
@@ -69,6 +72,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Consult on digital products, deliver full stack solutions, and communicate clearly with client teams across discovery and implementation.",
     createdAt: daysAgoIso(13, 14),
+    events: [],
     updatedAt: daysAgoIso(3, 16),
   },
   {
@@ -86,6 +90,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Work on customer-facing software products, collaborate across disciplines, and help teams build maintainable digital services.",
     createdAt: daysAgoIso(1, 9),
+    events: [],
     updatedAt: daysAgoIso(1, 9),
   },
   {
@@ -103,6 +108,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Develop high-quality digital products with React, mentor teammates, and contribute to modern engineering practices.",
     createdAt: daysAgoIso(50, 11),
+    events: [],
     updatedAt: daysAgoIso(31, 8),
   },
   {
@@ -120,6 +126,7 @@ export const mockApplications: JobApplication[] = [
     jobDescription:
       "Build performant product experiences for marketing teams, work across product areas, and partner closely with design and data teams.",
     createdAt: daysAgoIso(24, 15),
+    events: [],
     updatedAt: daysAgoIso(1, 17),
   },
 ];

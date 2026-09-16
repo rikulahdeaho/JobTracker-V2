@@ -32,7 +32,7 @@ toteutus ei tunnista käyttäjiä.
 | --- | --- | --- |
 | Dashboard | `/dashboard` | Hakemusten yhteenveto, tilajakauma, seuraavat toimet ja muistutusten yhteenveto. |
 | Applications | `/applications` | Hakemuslista, lisääminen, haku, suodatus ja järjestäminen. |
-| Application Details | `/applications/:id` | Hakemuksen tiedot, muokkaus, poistaminen ja Timeline-esikatselu. |
+| Application Details | `/applications/:id` | Hakemuksen tiedot, muokkaus, poistaminen ja tallennettu tapahtumahistoria. |
 | Schedule | `/schedule` | Hakemuksista muodostetut muistutukset ja aktiiviset haastattelu-, tehtävä- ja tarjousvaiheet. |
 | Insights | `/insights` | Hakemuksista lasketut tilastot, kuten tilajakauma ja tietojen kattavuus. |
 | Settings | `/settings` | Teeman valinta sekä myöhempien asetusten esikatselu. |
@@ -86,34 +86,49 @@ API ei tallenna Next Action -arvoa eikä muuta tilaa automaattisesti.
 | `Offer` | Respond to offer |
 | `Rejected`, `Ghosted`, `Withdrawn` | No action |
 
-Aika lasketaan ensisijaisesti `updatedAt`-kentästä kokonaisina 24 tunnin jaksoina.
-Varavaihtoehdot ovat `appliedDate` ja `createdAt`. API:n hakemuksilla `updatedAt`
-on aina olemassa, joten myös esimerkiksi muistiinpanon muokkaus aloittaa odotusajan
-uudelleen. Vähintään 30 päivän kohdalla hakemus kuuluu sekä follow-up- että
-ghosted risk -ryhmään. Käyttäjä päättää itse, muuttaako tilaksi `Ghosted`.
+Aika lasketaan viimeisimmän `ApplicationSent`- tai `FollowUpSent`-tapahtuman
+`OccurredAt`-ajasta kokonaisina 24 tunnin jaksoina. Muistiinpanojen tai muiden
+hakemustietojen muokkaus ei vaikuta tähän aikaan. Jos lähetysajankohta puuttuu,
+sovellus pyytää sen lisäämistä. Ghosted-tilaan ei siirrytä automaattisesti.
+
+Haastatteluvaiheessa puuttuva aika tuottaa **Add interview details** -toiminnon.
+Tehtävän puuttuva määräaika tuottaa **Add assignment deadline** -toiminnon; palautettu
+tehtävä tuottaa **Wait for assignment feedback** -toiminnon. Tarjous ilman
+vastausmääräaikaa tuottaa **Review offer** -toiminnon.
 
 ## Timeline, Schedule ja Insights
 
-Timeline muodostetaan nykyisen hakemuksen luontiajasta, hakupäivästä, tilasta ja
-päivitysajasta. Se ei ole tallennettu muutoshistoria: aiempia tilasiirtymiä ei
-säilytetä erillisinä tapahtumina.
+Timeline näyttää tietokantaan tallennetut tapahtumat uusimmasta vanhimpaan.
+Detailsin **Record activity** -painikkeella kirjataan lähetys, follow-up,
+haastattelun sopiminen, tehtävän vastaanotto/palautus tai tarjouksen vastaanotto.
+Tilamuutokset tallentuvat automaattisesti. Tavallinen tekstikentän muokkaus ei luo tapahtumaa.
 
-Schedule muodostaa muistutukset selaimessa:
+Lomakkeen Activity occurred at tarkoittaa tapahtuma-aikaa. Haastattelun aika tai
+tehtävän/tarjouksen määräaika annetaan erikseen. Ajat syötetään paikallisessa
+ajassa ja tallennetaan UTC-muodossa. Tapahtuman kirjaaminen voi myös päivittää tilan.
 
-- Follow-up: viimeinen päivitys + 14 päivää, kun Next Action edellyttää follow-upia.
-- Haastatteluun valmistautuminen: määräpäivä tai viimeinen päivitys + 2 päivää.
-- Tehtävän palautus: määräpäivä tai viimeinen päivitys + 3 päivää.
-- Tarjoukseen vastaaminen: määräpäivä tai viimeinen päivitys + 2 päivää.
-- Hakemuksen määräpäivä: erillinen muistutus, jos samalle päivälle ei jo muodostunut muistutusta.
+Schedule käyttää oikeita kirjattuja päiviä:
 
-Muistutukset ryhmitellään myöhästyneisiin, tämän päivän ja tuleviin.
-Niitä ei tallenneta erilliseen tauluun, eikä niillä ole pysyvää kuittausta tai
-taustalla toimivaa ilmoitusten lähettämistä.
+- Follow-up: viimeinen lähetys tai follow-up + 14 päivää.
+- Haastattelu: InterviewScheduled-tapahtuman haastatteluaika.
+- Tehtävä: AssignmentReceived-tapahtuman määräaika. Palautus poistaa tehtävämuistutuksen.
+- Tarjous: OfferReceived-tapahtuman vastausmääräaika.
+- Hakemisen määräpäivä: hakemuksen Deadline, erillään myöhempien vaiheiden määräajoista.
 
-Dashboard ja Insights laskevat yhteenvetonsa samasta API:sta haetusta listasta.
-Niille ei ole erillisiä backend-endpointteja. Settingsin profiili-, vienti- ja
-seuranta-asetukset ovat vielä esikatselua. Teemavalinta toimii ja säilyy selaimessa.
-Näkyvät 14/30 päivän seurantarajat eivät ole muokattavia asetuksia.
+Jos aikaa ei tiedetä, sitä ei arvata. Muistutukset johdetaan näistä tiedoista, eikä
+niille vielä ole omaa tietokantataulua tai kuittaustoimintoa. Suljetut hakemukset
+eivät tuota automaattisia muistutuksia. Schedule ryhmittelee päivät paikallisen kalenterin mukaan.
+
+Vanhoille hakemuksille luodaan migraatiossa vain luonti ja tunnettu lähetyspäivä.
+Pelkkä nykyinen tila ei synnytä oletettua historiaa. Applied date -kentän korjaus
+korjaa saman lähetyksen päivää; tyhjentäminen poistaa kyseisen lähetystiedon.
+Muut tapahtumat säilyvät. Tämä ei ole muuttumaton audit-loki.
+
+Dashboard ja Insights käyttävät samaa hakemuslistaa tapahtumineen. Niille ei ole
+erillisiä backend-endpointteja. Settingsin teemavalinta toimii; profiili-, vienti-
+ja seuranta-asetukset ovat vielä esikatselua.
+
+Tarkat säännöt, rajaukset ja migraatio on kuvattu [workflow-dokumentissa](application-workflow.md).
 
 ## API ja tietomalli
 
@@ -129,7 +144,8 @@ ja EF Core -migraatiot määrittävät tietokannan rakenteen.
 | `status` | Yksi Next Action -taulukon yhdeksästä tilasta; oletus `Draft`. |
 | `appliedDate`, `deadline` | Valinnaiset päivämäärät muodossa `YYYY-MM-DD`. |
 | `salaryRange`, `notes`, `jobDescription` | Valinnaiset tekstikentät. |
-| `createdAt`, `updatedAt` | API:n asettamat UTC-aikaleimat. |
+| `createdAt`, `updatedAt` | API:n asettamat tekniset UTC-aikaleimat. |
+| `events` | Tallennetut työnkulun tapahtumat, mukana API:n vastauksissa. |
 
 Status kulkee JSONissa merkkijonona ja tallentuu tietokantaan tekstinä.
 Luonnissa molemmat aikaleimat saavat saman arvon. Muokkauksessa vain `updatedAt`
@@ -147,6 +163,7 @@ Näin selain lähettää vain muokattavat kentät eikä määrää omistajaa, tu
 | `POST /api/applications` | `201`, hakemus ja Location-otsake | `400`, virheellinen syöte |
 | `PUT /api/applications/{id}` | `200`, päivitetty hakemus | `400` tai `404` |
 | `DELETE /api/applications/{id}` | `204`, ei vastausrunkoa | `404` |
+| `POST /api/applications/{id}/events` | `201`, päivitetty hakemus tapahtumineen | `400` tai `404` |
 
 PUT korvaa muokattavat kentät; pois jätetty valinnainen kenttä muuttuu `null`-arvoksi.
 Kaikki haut rajataan `dev-user`-omistajaan. Esimerkkipyyntö löytyy [API-ohjeesta](../api/README.md).
@@ -276,8 +293,8 @@ käyttämässä tietokannassa. Ohje on [API-dokumentaatiossa](../api/README.md#v
 - [Applications API -kutsut](../web/src/features/applications/api/applicationsApi.ts): viisi HTTP-operaatiota.
 - [Next Action](../web/src/features/applications/utils/applicationNextAction.ts): seuraavan toimen säännöt.
 - [Listan käsittely](../web/src/features/applications/utils/applicationList.ts): haku, suodatus ja järjestys.
-- [Timeline ja muistutukset](../web/src/features/applications/utils/applicationWorkflow.ts): johdetut esikatselut.
+- [Timeline ja muistutukset](../web/src/features/applications/utils/applicationWorkflow.ts): tallennettu historia ja päivämääristä johdetut muistutukset.
 - [API:n käynnistys](../api/JobTracker.Api/Program.cs): palvelut, tietokanta, CORS ja Swagger.
 
-Clerk-kirjautuminen, erikseen tallennettava Timeline ja muistutukset, tuotannon
+Clerk-kirjautuminen, erikseen hallittavat muistutukset, tuotannon
 PostgreSQL, julkaisu ja mobiilisovellus ovat tulevaa työtä.

@@ -1,3 +1,5 @@
+import type { ApplicationEvent } from "./workflow";
+
 export type ApplicationStatus =
   | "Draft"
   | "ToApply"
@@ -24,9 +26,10 @@ export type JobApplication = {
   jobDescription: string | null;
   createdAt: string;
   updatedAt: string;
+  events: ApplicationEvent[];
 };
 
-export type JobApplicationRequest = Omit<JobApplication, "id" | "createdAt" | "updatedAt">;
+export type JobApplicationRequest = Omit<JobApplication, "id" | "createdAt" | "updatedAt" | "events">;
 
 export type JobApplicationFormValues = {
   companyName: string;

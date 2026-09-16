@@ -1,3 +1,4 @@
+import type { CreateApplicationEventRequest } from "../types/workflow";
 import { apiClient } from "../../../lib/apiClient";
 import type { JobApplication, JobApplicationRequest } from "../types/application";
 
@@ -23,4 +24,9 @@ export async function updateApplication(id: string, data: JobApplicationRequest)
 
 export async function deleteApplication(id: string): Promise<void> {
   await apiClient.delete(`/api/applications/${encodeURIComponent(id)}`);
+}
+
+export async function createApplicationEvent(id: string, data: CreateApplicationEventRequest): Promise<JobApplication> {
+  const response = await apiClient.post<JobApplication>(`/api/applications/${encodeURIComponent(id)}/events`, data);
+  return response.data;
 }

@@ -49,11 +49,11 @@ public sealed class ApplicationsTests : IDisposable
         Assert.Equal(created.CreatedAt, created.UpdatedAt);
 
         var detail = await ReadApplication(await client.GetAsync(response.Headers.Location));
-        Assert.Equal(created, detail);
+        Assert.Equivalent(created, detail, strict: true);
         Assert.Equal(new DateOnly(2026, 9, 30), detail.Deadline);
         Assert.Equal("My notes", detail.Notes);
         var list = await client.GetFromJsonAsync<JobApplicationResponse[]>("/api/applications", JsonOptions);
-        Assert.Equal(created, Assert.Single(list!));
+        Assert.Equivalent(created, Assert.Single(list!), strict: true);
 
         using var scope = factory.Services.CreateScope();
         var stored = await scope.ServiceProvider.GetRequiredService<AppDbContext>().JobApplications.SingleAsync();
@@ -79,7 +79,7 @@ public sealed class ApplicationsTests : IDisposable
         using var problem = JsonDocument.Parse(await update.Content.ReadAsStringAsync());
         Assert.True(problem.RootElement.GetProperty("errors").EnumerateObject().Any());
         var list = await client.GetFromJsonAsync<JobApplicationResponse[]>("/api/applications", JsonOptions);
-        Assert.Equal(created, Assert.Single(list!));
+        Assert.Equivalent(created, Assert.Single(list!), strict: true);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class ApplicationsTests : IDisposable
         Assert.Equal(created.CreatedAt, updated.CreatedAt);
         Assert.True(updated.UpdatedAt > created.UpdatedAt);
         Assert.Equal(DateTimeKind.Utc, updated.UpdatedAt.Kind);
-        Assert.Equal(updated, await ReadApplication(await client.GetAsync($"/api/applications/{created.Id}")));
+        Assert.Equivalent(updated, await ReadApplication(await client.GetAsync($"/api/applications/{created.Id}")), strict: true);
     }
 
     [Theory]

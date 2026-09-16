@@ -7,8 +7,27 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
 
+    public DbSet<ApplicationEvent> ApplicationEvents => Set<ApplicationEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var workflowEvent = modelBuilder.Entity<ApplicationEvent>();
+        workflowEvent.HasKey(item => item.Id);
+        workflowEvent.Property(item => item.Id).ValueGeneratedNever();
+        workflowEvent.Property(item => item.Type).HasConversion<string>();
+        workflowEvent.Property(item => item.FromStatus).HasConversion<string>();
+        workflowEvent.Property(item => item.ToStatus).HasConversion<string>();
+        workflowEvent.Property(item => item.Note).HasMaxLength(4000);
+        workflowEvent.HasIndex(item => new { item.ApplicationId, item.OccurredAt });
+        workflowEvent.Property(item => item.OccurredAt).HasConversion(
+            value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+        workflowEvent.Property(item => item.CreatedAt).HasConversion(
+            value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+        workflowEvent.Property(item => item.DueAt).HasConversion(
+            value => value, value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : (DateTime?)null);
+        modelBuilder.Entity<JobApplication>().HasMany(item => item.Events).WithOne()
+            .HasForeignKey(item => item.ApplicationId).OnDelete(DeleteBehavior.Cascade);
+
         var application = modelBuilder.Entity<JobApplication>();
 
         application.HasKey(item => item.Id);

@@ -22,7 +22,8 @@ JobTracker is a job application tracker built with React, TypeScript and an ASP.
 
 Applications CRUD uses the API. Search, filters, sorting, Next Action, Dashboard
 and Insights use frontend calculations based on API application data. Timeline
-and Schedule reminders remain frontend-derived previews without separate persistence.
+uses persisted workflow events; Schedule derives reminders from explicit dates
+and meaningful contact history. See [workflow rules](docs/application-workflow.md).
 Theme preferences are saved in localStorage.
 
 Authentication is not implemented; all API requests use the temporary `dev-user`.

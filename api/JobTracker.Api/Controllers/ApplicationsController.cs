@@ -1,6 +1,7 @@
 using JobTracker.Api.Data;
 using JobTracker.Api.DTOs;
 using JobTracker.Api.Models;
+using JobTracker.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,7 @@ public sealed class ApplicationsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var applications = await _dbContext.JobApplications
+            .Include(application => application.Events)
             .AsNoTracking()
             .Where(application => application.UserId == CurrentUserId)
             .OrderByDescending(application => application.CreatedAt)
@@ -45,6 +47,7 @@ public sealed class ApplicationsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var application = await _dbContext.JobApplications
+            .Include(application => application.Events)
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 application => application.Id == id && application.UserId == CurrentUserId,
@@ -78,6 +81,8 @@ public sealed class ApplicationsController : ControllerBase
         };
         ApplyRequestToApplication(application, request);
 
+        ApplicationWorkflow.AddEvent(application, ApplicationEventType.ApplicationCreated, now, now);
+        ApplicationWorkflow.SynchronizeAppliedDate(application, null, now);
         _dbContext.JobApplications.Add(application);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -104,8 +109,13 @@ public sealed class ApplicationsController : ControllerBase
             return NotFound();
         }
 
+        var now = DateTime.UtcNow;
+        var previousStatus = application.Status;
+        var previousAppliedDate = application.AppliedDate;
         ApplyRequestToApplication(application, request);
-        application.UpdatedAt = DateTime.UtcNow;
+        ApplicationWorkflow.RecordStatusChange(application, previousStatus, now);
+        ApplicationWorkflow.SynchronizeAppliedDate(application, previousAppliedDate, now);
+        application.UpdatedAt = now;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -137,7 +147,7 @@ public sealed class ApplicationsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        return _dbContext.JobApplications.SingleOrDefaultAsync(
+        return _dbContext.JobApplications.Include(application => application.Events).SingleOrDefaultAsync(
             application => application.Id == id && application.UserId == CurrentUserId,
             cancellationToken);
     }

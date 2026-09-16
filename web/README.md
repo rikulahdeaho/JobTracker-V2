@@ -74,7 +74,9 @@ failed saves, and delete failures keep the confirmation open.
 ## Retained frontend behavior
 
 - Search, filters, sorting, Next Action and summary calculations remain local.
-- Timeline and reminders remain frontend-derived previews with no backend persistence.
+- Timeline displays persisted application events. Schedule derives reminders from explicit event dates and contact history.
+- Details can record activity through POST /api/applications/{id}/events. The returned aggregate refreshes list and detail caches.
+- Next Action uses sent/follow-up events, never generic updatedAt. See [workflow rules](../docs/application-workflow.md).
 - Theme preference still uses localStorage.
 - Existing localStorage application records are untouched and are not imported.
 - `mockApplications.ts`, `applicationStorage.ts` and `applicationCrud.ts` remain

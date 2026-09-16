@@ -70,6 +70,7 @@ function isJobApplication(value: unknown): value is JobApplication {
     typeof application.notes === "string" &&
     typeof application.jobDescription === "string" &&
     typeof application.createdAt === "string" &&
-    typeof application.updatedAt === "string"
+    typeof application.updatedAt === "string" &&
+    Array.isArray(application.events)
   );
 }
