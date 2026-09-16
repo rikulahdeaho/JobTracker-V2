@@ -2,112 +2,62 @@
 
 ## Feature Name
 
-Web MVP Usability Polish Pass
+API Foundation and Applications CRUD Design
 
 ## Status
 
-Completed
+Complete — API foundation and CRUD verified locally on 2026-09-16.
 
 ## Scope
 
-Work only inside `web/`.
+Work inside `api/` and project documentation only.
+
+Do not modify the existing React web application yet.
 
 ## Goals
 
-- Improve readability of small text across the app
-- Make typography and spacing more consistent
-- Make page content width and alignment consistent
-- Improve sidebar readability
-- Clarify topbar/search behavior
-- Improve Schedule visual hierarchy
-- Improve Insights Data Coverage section
-- Make Settings placeholders more honest and intentional
-- Keep the current layout and visual direction
-- Keep all existing frontend functionality working
+- Create the ASP.NET Core API foundation
+- Add Entity Framework Core
+- Use SQLite for initial local development
+- Create the JobApplication entity
+- Create the ApplicationStatus enum
+- Create AppDbContext
+- Create API DTOs
+- Create the first EF Core migration
+- Create Applications CRUD endpoints
+- Enable Swagger/OpenAPI
+- Validate CRUD through Swagger
 
-## Not Included
+## Architecture
 
-- API integration
-- Authentication
-- Database
-- TanStack Query
-- Backend code
-- New business features
-- Chart libraries
-- Mobile app
-- Deployment
-- Major redesign
+```text
+React Web
+    |
+    | later
+    v
+ASP.NET Core Web API
+    |
+    v
+Entity Framework Core
+    |
+    v
+SQLite local
+```
 
-## Page Focus
+## Implementation
 
-### Dashboard
+- ASP.NET Core 10 controller API in `api/JobTracker.Api`.
+- EF Core with SQLite, string statuses and generated `InitialCreate` migration.
+- Separate create/update request DTOs and response DTO; required-field validation.
+- All five Applications endpoints use `dev-user` and server-owned UTC timestamps.
+- Swagger UI and OpenAPI enabled for local development.
+- React and mobile remain unchanged; no authentication or API integration added.
 
-Keep the current focused dashboard layout. Only make small readability and spacing improvements if needed.
+## Verification
 
-### Applications
+- `dotnet build`: passed without warnings or errors.
+- `dotnet ef database update`: applied the initial migration successfully.
+- Swagger UI: list, create, detail, update and delete verified.
+- `api/scripts/Test-Applications.ps1`: CRUD and validation checks passed.
 
-Keep CRUD, search, filters, sorting and application cards working.
-
-### Application Details
-
-Keep the current workspace layout, edit/delete, quick facts, next action and timeline working.
-
-### Schedule
-
-Make Overdue, Today, Upcoming and Active Queue easier to scan. Keep it mock-data only.
-
-### Insights
-
-Improve Data Coverage so it feels intentional and not empty. Use simple rows or progress bars, not chart libraries.
-
-### Settings
-
-Make prototype-only settings clear. Keep Appearance/theme toggle working. Do not implement real auth/account/export/import features.
-
-## Existing Functionality That Must Keep Working
-
-- App navigation
-- Light/dark mode toggle
-- Theme persistence
-- Applications list
-- Application details
-- Add application
-- Edit application
-- Delete application
-- localStorage application persistence
-- Search
-- Filters
-- Sorting
-- Status chips
-- Next Action logic
-- Dashboard summary
-- Schedule reminder/deadline groups
-- Insights metrics
-- Timeline on details page
-
-## Validation
-
-- `npm run build` passes
-- App runs locally
-- Text is easier to read without browser zoom
-- Pages feel consistently aligned
-- Schedule hierarchy is clearer
-- Insights Data Coverage looks intentional
-- Settings placeholders are honest
-- Dashboard still works
-- Applications still work
-- Details still work
-- Light mode works
-- Dark mode works
-- No API/auth/database code was added
-
-## History
-
-- Completed Web App Mock Data Foundation
-- Completed Web CRUD Flow with Local State
-- Completed Next Action Logic in Frontend
-- Completed Web UX Polish and Local Persistence
-- Completed Mock Timeline and Reminders UI
-- Completed Web Visual Alignment and Theme Polish
-- Completed Dashboard Layout Balance Pass
-- Started Web MVP Usability Polish Pass
+See [API setup and endpoint documentation](../api/README.md) for commands and request examples.
