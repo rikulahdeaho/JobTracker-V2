@@ -1,8 +1,13 @@
 using System.Text.Json.Serialization;
 using JobTracker.Api.Data;
+using JobTracker.Api.Authentication;
+using JobTracker.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddClerkAuthentication(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CurrentUser>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(
@@ -26,7 +31,9 @@ if (app.Environment.IsDevelopment())
     app.UseCors("LocalFrontend");
 }
 
-app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers().RequireAuthorization();
 app.Run();
 
 public partial class Program { }

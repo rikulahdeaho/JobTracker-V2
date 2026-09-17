@@ -35,7 +35,7 @@ export function SettingsPage() {
         <Grid size={{ xs: 12, lg: 6 }}>
           <SectionCard
             title="Appearance"
-            description="Choose the prototype theme. The selection is saved locally and survives refreshes."
+            description="Choose your theme. The selection is saved locally and survives refreshes."
             action={isDark ? <DarkModeOutlinedIcon color="action" /> : <LightModeOutlinedIcon color="action" />}
           >
             <Stack gap={2.25}>
@@ -88,7 +88,7 @@ export function SettingsPage() {
         <Grid size={{ xs: 12, lg: 6 }}>
           <SectionCard
             title="Profile placeholder"
-            description="No authentication is implemented yet, but this shows the future account area without adding Clerk."
+            description="A preview of future profile preferences. Your signed-in account is shown in the sidebar."
             action={<Chip icon={<CheckCircleOutlineOutlinedIcon />} label="Preview only" color="primary" variant="outlined" />}
           >
             <Stack gap={2}>
@@ -133,7 +133,7 @@ export function SettingsPage() {
               <Divider />
               <Stack direction="row" gap={1.5} flexWrap="wrap">
                 <Chip label="API persistence" variant="outlined" />
-                <Chip label="No account required" variant="outlined" />
+                <Chip label="Private to your account" variant="outlined" />
                 <Chip label="Theme saved locally" color="secondary" variant="outlined" />
               </Stack>
               <Button

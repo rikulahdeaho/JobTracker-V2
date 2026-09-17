@@ -2,7 +2,7 @@
 
 ## Feature Name
 
-Application Workflow Model
+Authentication and User Ownership
 
 ## Status
 
@@ -10,660 +10,854 @@ Completed
 
 ## Scope
 
-Design and implement a more reliable application workflow model.
+Implement authentication and user-specific data ownership for the existing JobTracker web application and ASP.NET Core API.
 
 Work mainly inside:
 
-- `api/`
 - `web/`
+- `api/`
 - `docs/`
 
-Do not implement authentication yet.
+Do not modify `mobile/`.
 
-Do not deploy anything.
+Do not deploy the application during this feature.
 
 ## Goal
 
-Improve the JobTracker domain model so that:
+Replace the temporary shared `dev-user` model with real authenticated users.
 
-- Next Action is based on meaningful workflow events instead of generic record updates
-- Timeline can represent real application history
-- Schedule can use real dates and reminders instead of guessed dates
-- technical `updatedAt` changes do not reset follow-up timing
-- future authentication can be added on top of a stable domain model
+Use Clerk for frontend authentication.
 
-The current implementation uses `updatedAt` as the main fallback for follow-up and ghosted calculations.
+The ASP.NET Core API must validate authentication tokens and derive the current user's identity from the validated token.
 
-This causes unrelated edits, such as changing Notes, Salary Range, or Job Description, to affect workflow timing.
+Users must only be able to access their own:
 
-This feature should separate:
+- JobApplications
+- ApplicationEvents
+- Reminders
 
-```text
-technical record updates
-```
+The frontend must not send or control ownership identifiers.
 
-from:
+The backend must remain the authority for data ownership.
+
+## Target Architecture
 
 ```text
-actual job application activity
+User
+  ↓
+Clerk Authentication
+  ↓
+React Web
+  ↓
+Clerk access token
+  ↓
+Axios
+  ↓
+ASP.NET Core authentication
+  ↓
+Validated user identity
+  ↓
+Applications / Events / Reminders
+  ↓
+EF Core
+  ↓
+SQLite
 ```
+
+Later production deployment may replace SQLite with PostgreSQL, but that is not part of this feature.
 
 ---
 
-## Current Problems
+## Situation Before This Feature
 
-### 1. `updatedAt` is not workflow activity
-
-`updatedAt` currently changes whenever the JobApplication entity is edited.
-
-This includes edits such as:
+The current API uses the same temporary user for all requests:
 
 ```text
-Notes changed
-Salary changed
-Job description changed
-Source changed
+dev-user
 ```
 
-These should not automatically restart follow-up timing.
+`UserId` already exists in the data model, but there is currently no real authentication.
 
-### 2. Timeline is derived instead of persisted
-
-The current Timeline is reconstructed from:
+The current frontend already communicates with the ASP.NET Core API through:
 
 ```text
-createdAt
-appliedDate
-status
-updatedAt
+React
+  ↓
+TanStack Query
+  ↓
+applicationsApi.ts
+  ↓
+Axios
+  ↓
+ASP.NET Core API
 ```
 
-It does not preserve previous state transitions or communication history.
+This data flow should remain.
 
-For example, the application cannot currently represent:
-
-```text
-Applied
-→ Follow-up sent
-→ Interview scheduled
-→ Interview completed
-→ Assignment received
-```
-
-as real persisted events.
-
-### 3. Schedule uses estimated dates
-
-Some current reminders are based on guessed dates such as:
-
-```text
-updatedAt + 2 days
-updatedAt + 3 days
-```
-
-These are useful for a prototype but should not become the long-term workflow model.
-
-Important events should use real dates when known.
+Authentication should be added on top of it.
 
 ---
 
-## Target Domain Model
+## Authentication Provider
 
-The target workflow should contain three concepts:
+Use Clerk for web authentication.
 
-```text
-JobApplication
-ApplicationEvent
-Reminder
-```
+Add Clerk to the React application using the current recommended Clerk React integration.
 
-### JobApplication
-
-JobApplication remains the main aggregate containing current application state.
-
-It should continue to contain fields such as:
+The frontend should support at least:
 
 ```text
-Id
-UserId
-CompanyName
-JobTitle
-JobUrl
-Location
-Source
-Status
-AppliedDate
-Deadline
-SalaryRange
-Notes
-JobDescription
-CreatedAt
-UpdatedAt
+Sign in
+Sign out
+Authenticated application access
+Current user display
 ```
 
-`UpdatedAt` remains a technical record timestamp.
+Do not build a custom username/password authentication system.
 
-Do not use `UpdatedAt` as the primary workflow activity timestamp after this feature.
+Do not store passwords.
 
 ---
 
-## ApplicationEvent
+## Frontend Environment Configuration
 
-Add a persisted timeline/event model.
-
-Suggested entity:
-
-```text
-ApplicationEvent
-```
-
-Suggested fields:
-
-```text
-Id
-ApplicationId
-Type
-OccurredAt
-Note
-CreatedAt
-```
-
-Possible event types:
-
-```text
-ApplicationCreated
-ApplicationSent
-StatusChanged
-FollowUpSent
-InterviewScheduled
-InterviewCompleted
-AssignmentReceived
-AssignmentSubmitted
-OfferReceived
-NoteAdded
-```
-
-Do not add every possible event type unless needed.
-
-Start with a small set that supports the current application workflow.
-
-### Event Principles
-
-Events represent meaningful workflow activity.
-
-Examples:
-
-```text
-Application sent
-Follow-up sent
-Interview scheduled
-Assignment received
-Offer received
-Status changed
-```
-
-Events should not be created for every technical database update.
-
-For example:
-
-```text
-Changing Salary Range
-Changing Source
-Editing Job Description
-```
-
-should normally not create workflow events.
-
----
-
-## Timeline
-
-Application Details should eventually display persisted `ApplicationEvent` records.
-
-Timeline should be ordered by:
-
-```text
-OccurredAt descending
-```
-
-or another clearly documented order.
-
-Timeline should no longer be reconstructed only from the current state of JobApplication.
-
-The system should retain historical events even after the current application status changes.
+Use an environment variable for the Clerk publishable key.
 
 Example:
 
 ```text
-Sep 20
-Interview scheduled
-
-Sep 16
-Follow-up sent
-
-Sep 01
-Application sent
-
-Aug 30
-Application created
+VITE_CLERK_PUBLISHABLE_KEY=
 ```
+
+Update:
+
+```text
+web/.env.example
+```
+
+Do not commit real secrets.
+
+The Clerk publishable key is intended for frontend use.
+
+Any backend-specific configuration must be stored through normal ASP.NET Core configuration/environment variables.
+
+Do not hardcode Clerk tenant-specific URLs or secrets into source code.
 
 ---
 
-## Reminder Model
+## Clerk Provider
 
-Add a Reminder model only if required for the workflow implementation.
+Configure Clerk at the React application root.
 
-Suggested fields:
-
-```text
-Id
-ApplicationId
-Type
-Title
-DueAt
-CompletedAt
-CreatedAt
-```
-
-Possible types:
+The existing application should continue to contain the existing providers such as:
 
 ```text
-FollowUp
-ApplicationDeadline
-Interview
-AssignmentDeadline
-OfferResponse
-Custom
+ClerkProvider
+Theme Provider
+QueryClientProvider
+Router
 ```
 
-Keep the first implementation small.
+Use an appropriate provider order that allows authenticated API access.
 
-A reminder should represent something the user may need to act on.
-
-Do not automatically create arbitrary dates when no real date exists.
+Do not unnecessarily redesign the application bootstrap structure.
 
 ---
 
-## Schedule Rules
+## Authentication States
 
-Schedule should prefer explicit dates.
-
-Examples:
-
-### Application deadline
-
-Use:
+The application must handle:
 
 ```text
-JobApplication.Deadline
+Clerk loading
+Signed out
+Signed in
+Authentication failure
 ```
 
-### Interview
+Do not attempt authenticated API requests before Clerk authentication state is ready.
 
-Use an explicit interview date from an event or reminder.
+---
 
-Do not automatically assume:
+## Signed-Out Experience
+
+When the user is not authenticated, do not show the normal JobTracker workspace as though it were available.
+
+Provide a simple signed-out view.
+
+It may contain:
 
 ```text
-updatedAt + 2 days
+JobTracker
+Career Co-pilot
+
+Track your job applications and next actions.
+
+Sign in
 ```
 
-### Assignment
+Keep it visually consistent with the existing application.
 
-Use the real assignment deadline when known.
+Do not spend significant time building a marketing landing page during this feature.
 
-Do not automatically assume:
+---
+
+## Signed-In Experience
+
+After successful sign-in:
+
+- show the existing JobTracker application
+- load the authenticated user's data
+- preserve the current Dashboard
+- preserve Applications
+- preserve Application Details
+- preserve Schedule
+- preserve Insights
+- preserve Settings
+- preserve the existing sidebar layout
+
+Authentication should not require a broad UI redesign.
+
+---
+
+## Sidebar Account Section
+
+Replace the current mock account placeholder with real authenticated user information.
+
+Display a compact account section using available Clerk user information.
+
+Possible content:
 
 ```text
-updatedAt + 3 days
+Avatar
+Display name
+Email
+Sign out
 ```
 
-### Offer response
+Keep the sidebar footer compact.
 
-Use a real response deadline when known.
+Do not turn the sidebar into a full account management interface.
 
-### Follow-up
+Theme controls should continue to work independently.
 
-Follow-up may still be derived from workflow activity if no explicit reminder exists.
+---
+
+## API Authentication
+
+Configure ASP.NET Core authentication using Clerk-issued tokens.
+
+Use the current Clerk-supported JWT validation approach.
+
+Do not invent token validation rules.
+
+Validate at least:
+
+```text
+Signature
+Issuer
+Expiration
+```
+
+Validate audience when the actual Clerk token configuration requires it.
+
+Keep Clerk tenant-specific configuration outside source code.
+
+Do not trust JWT payloads without cryptographic validation.
+
+---
+
+## API Authorization
+
+Application API endpoints that operate on user data must require authentication.
+
+Use ASP.NET Core authorization.
 
 For example:
 
 ```text
-ApplicationSent + follow-up threshold
+[Authorize]
 ```
 
-or:
+or an equivalent application-wide authorization policy.
+
+Protected resources include at least:
 
 ```text
-FollowUpSent + next waiting period
-```
-
-The exact rule should be documented.
-
----
-
-## Next Action
-
-Next Action should remain a derived value.
-
-Do not persist a `NextAction` string directly in the database during this feature unless a strong reason appears.
-
-The system should calculate the recommended action from:
-
-```text
-Current application status
-Relevant workflow events
-Deadlines
+JobApplications
+ApplicationEvents
 Reminders
 ```
 
-instead of generic `UpdatedAt`.
+Swagger/OpenAPI may remain accessible in Development if useful.
 
 ---
 
-## Proposed Next Action Rules
+## Current User ID
 
-### Draft
+The backend must derive the authenticated user identifier from the validated token.
 
-```text
-Finish application
-```
+Use the authenticated subject/user identifier from the claims principal.
 
-### ToApply
-
-If a deadline exists:
+Conceptually:
 
 ```text
-Apply before deadline
+HttpContext.User
+    ↓
+validated subject claim
+    ↓
+CurrentUserId
 ```
 
-Otherwise:
+Do not accept `UserId` from frontend request bodies.
+
+Do not allow the frontend to choose application ownership.
+
+---
+
+## Ownership Rules
+
+Every user-owned query must be scoped to the authenticated user.
+
+Conceptually:
 
 ```text
-Apply
+application.UserId == currentUserId
 ```
 
-### Applied
-
-Use the latest relevant activity.
-
-Relevant events include:
+This applies to:
 
 ```text
-ApplicationSent
-FollowUpSent
+GET list
+GET by id
+POST
+PUT
+DELETE
+Application Events
+Reminders
 ```
 
-Do not use generic record updates.
+---
 
-Possible behavior:
+## Create Application
+
+When creating a JobApplication:
+
+The backend should set:
 
 ```text
-recently sent
-→ Wait for response
-
-follow-up threshold reached
-→ Follow up
-
-follow-up already sent recently
-→ Wait for response
-
-long silence after latest relevant contact
-→ Consider ghosted
+UserId = current authenticated user ID
 ```
 
-### Interviewing
+The request DTO must not contain a writable ownership field.
 
-If an interview date exists:
+The frontend must not send `UserId`.
 
-```text
-Prepare for interview
-```
+---
 
-If no interview details exist:
-
-```text
-Add interview details
-```
-
-or:
-
-```text
-Follow up
-```
-
-depending on workflow context.
-
-### Assignment
-
-If a deadline exists:
-
-```text
-Submit assignment
-```
-
-Otherwise:
-
-```text
-Add assignment deadline
-```
-
-### Offer
-
-If a response deadline exists:
-
-```text
-Respond to offer
-```
-
-Otherwise:
-
-```text
-Review offer
-```
-
-### Closed States
+## Read Applications
 
 For:
 
 ```text
-Rejected
-Ghosted
-Withdrawn
+GET /api/applications
 ```
 
-use:
+return only applications owned by the authenticated user.
 
-```text
-No action
-```
-
-unless there is an explicit incomplete reminder.
+User A must never receive applications owned by User B.
 
 ---
 
-## Follow-Up Rules
+## Read Single Application
 
-Do not use `JobApplication.UpdatedAt` as the main follow-up timer.
-
-Use the most recent relevant workflow event.
-
-Example:
+For:
 
 ```text
-ApplicationSent
-    ↓
-14 days
-    ↓
-Follow up
+GET /api/applications/{id}
 ```
 
-After:
+the application must match both:
 
 ```text
-FollowUpSent
+Id == requested id
+UserId == current user
 ```
 
-the waiting period should restart from that event.
+If the application exists but belongs to another user, do not expose that fact.
 
-Editing Notes should not affect this timer.
+Prefer the same outward result as an unknown application:
+
+```text
+404 Not Found
+```
 
 ---
 
-## Ghosted Risk
+## Update Application
 
-Ghosted risk should be based on meaningful communication history.
-
-Do not define Ghosted Risk as simply:
+For:
 
 ```text
-updatedAt >= 30 days ago
+PUT /api/applications/{id}
 ```
 
-Prefer logic based on the last meaningful activity such as:
+only allow updates when the application belongs to the authenticated user.
+
+User ownership must never change through normal update requests.
+
+The request must not be able to overwrite:
 
 ```text
-ApplicationSent
-FollowUpSent
-InterviewCompleted
+UserId
+Id
+CreatedAt
 ```
-
-A user editing the record must not reset or trigger ghosted risk.
-
-Do not automatically change the application status to `Ghosted`.
-
-The user should remain in control of status changes.
 
 ---
 
-## Backend
+## Delete Application
 
-Add only the backend pieces needed for the new workflow.
-
-Possible additions:
+For:
 
 ```text
-ApplicationEvent entity
-ApplicationEventType enum
-Reminder entity
-ReminderType enum
-DbSet<ApplicationEvent>
-DbSet<Reminder>
-EF Core migration
+DELETE /api/applications/{id}
 ```
 
-Do not create unnecessary service layers unless they provide clear value.
+only delete records belonging to the authenticated user.
 
-Keep the existing Applications CRUD working.
+A user must not be able to delete another user's application by guessing its ID.
 
 ---
 
-## API
+## Application Events
 
-Add endpoints only when required by the frontend workflow.
-
-Possible event endpoints:
-
-```text
-GET  /api/applications/{applicationId}/events
-POST /api/applications/{applicationId}/events
-```
-
-Possible reminder endpoints:
-
-```text
-GET    /api/applications/{applicationId}/reminders
-POST   /api/applications/{applicationId}/reminders
-PUT    /api/reminders/{id}
-DELETE /api/reminders/{id}
-```
-
-Do not implement all endpoints automatically.
-
-Prefer the smallest API that supports the current UI.
-
----
-
-## Frontend
-
-Update the frontend so that:
-
-- Timeline can use persisted events
-- Next Action uses meaningful activity
-- Schedule uses real dates when available
-- unrelated application edits do not affect follow-up timing
-
-Preserve the current visual design where possible.
-
-Do not redesign the entire Application Details or Schedule page.
-
----
-
-## Migration Strategy
-
-Existing applications do not have historical event data.
-
-Do not fabricate a detailed fake history.
-
-If useful, create only minimal initial events from existing reliable fields.
+ApplicationEvent ownership should be enforced through its parent JobApplication.
 
 For example:
 
 ```text
-ApplicationCreated from CreatedAt
-ApplicationSent from AppliedDate if it exists
+ApplicationEvent
+  ↓
+JobApplication
+  ↓
+UserId
 ```
 
-Do not infer interviews, follow-ups, assignments, or offers that are not actually known.
+When retrieving or creating events:
 
-Document any migration behavior clearly.
+1. find the parent application
+2. verify that it belongs to the current user
+3. only then access or modify its events
+
+Do not trust an arbitrary `ApplicationId` without ownership validation.
 
 ---
 
-## Tests
+## Reminders
 
-Update automated tests for the workflow model.
+Reminder ownership should also be enforced through the owning JobApplication.
 
-### Backend
-
-Add tests for:
-
-- creating application events
-- retrieving application events
-- events belonging to the correct application
-- meaningful timestamps
-- reminder persistence if Reminder is implemented
-- application CRUD still working
-
-### Frontend
-
-Add tests for Next Action rules.
-
-Important cases:
+A user must not be able to:
 
 ```text
-Draft → Finish application
-ToApply → Apply
-Applied recently → Wait for response
-Applied after follow-up threshold → Follow up
-Follow-up sent → Wait again
-Long silence → Consider ghosted
-Interviewing with date → Prepare for interview
-Assignment with deadline → Submit assignment
-Offer → Respond to offer
-Closed status → No action
+read
+create
+update
+complete
+delete
 ```
 
-Also test:
+a reminder belonging to another user's application.
 
-- editing unrelated application fields does not change workflow activity
-- latest relevant event controls follow-up timing
-- explicit deadlines are preferred over generated dates
+---
 
-Do not aim for maximum coverage.
+## Current User Abstraction
 
-Test the business rules that would be easy to break.
+Avoid duplicating raw claims extraction across every controller.
+
+If useful, introduce a small abstraction such as:
+
+```text
+ICurrentUser
+CurrentUserService
+```
+
+or a similarly simple solution.
+
+Its responsibility should be small:
+
+```text
+return current authenticated user ID
+```
+
+Do not create a large authentication/domain service layer unnecessarily.
+
+---
+
+## Axios Authentication
+
+The frontend API client must send the authenticated Clerk token with protected API requests.
+
+Conceptually:
+
+```text
+Authorization: Bearer <token>
+```
+
+Keep token handling centralized.
+
+Do not manually add authentication headers separately in every API function.
+
+Integrate authentication with the existing shared Axios/API client structure.
+
+---
+
+## Token Retrieval
+
+Use Clerk's supported token retrieval mechanism.
+
+Do not store access tokens manually in:
+
+```text
+localStorage
+sessionStorage
+application state
+```
+
+unless Clerk itself manages its internal session storage.
+
+The application should request/use the current Clerk session token through Clerk APIs.
+
+---
+
+## TanStack Query and Authentication
+
+TanStack Query must not leak cached server data between authenticated users.
+
+When the authenticated user changes or signs out:
+
+- remove or clear user-specific query data
+- ensure previous user data is not rendered for the next user
+
+At minimum, handle:
+
+```text
+Sign out
+User switch
+New sign in
+```
+
+Possible strategies include:
+
+```text
+clear the QueryClient on authentication change
+```
+
+or user-scoped query keys.
+
+Choose the simplest reliable approach.
+
+The important requirement is:
+
+```text
+User B must never briefly see cached User A data.
+```
+
+---
+
+## Existing Query Structure
+
+Preserve the existing application query structure where practical.
+
+Current examples:
+
+```text
+["applications"]
+["applications", id]
+```
+
+These may remain if the entire query cache is safely cleared when authentication changes.
+
+If user identity is included in query keys instead, keep the structure simple and consistent.
+
+Do not introduce unnecessary query-key complexity.
+
+---
+
+## Existing Frontend Functionality
+
+Authentication must not break:
+
+- Applications CRUD
+- Application Events
+- Timeline
+- Reminders
+- Next Action
+- Schedule
+- Dashboard
+- Insights
+- Search
+- Filters
+- Sorting
+- light mode
+- dark mode
+- theme persistence
+
+---
+
+## Theme Persistence
+
+Theme preference may continue using localStorage.
+
+Theme preference does not need to become a backend user setting during this feature.
+
+Do not mix client appearance preferences with authentication data unless necessary.
+
+---
+
+## Existing Development Data
+
+Existing SQLite records may currently belong to:
+
+```text
+dev-user
+```
+
+Do not automatically assign all existing `dev-user` data to the first person who signs in.
+
+That could incorrectly transfer ownership.
+
+Existing development data may instead:
+
+```text
+remain as legacy dev-user data
+```
+
+and become invisible to authenticated users.
+
+For local development, it is acceptable to:
+
+```text
+delete/reset the development database
+```
+
+and create new records after authentication is enabled.
+
+If a migration or development utility is added for existing data, it must require an explicit action.
+
+Do not silently migrate ownership.
+
+Document the chosen development migration behavior.
+
+---
+
+## Database Model
+
+The existing `UserId` field may remain a string unless there is a concrete reason to change it.
+
+Clerk user identifiers can be stored in the existing ownership field.
+
+Do not create a local Users table merely to duplicate Clerk users during this feature.
+
+A local application user/profile table can be considered later if the product needs application-specific profile data.
+
+---
+
+## Database Migration
+
+Only create an EF Core migration if the database schema actually changes.
+
+Authentication by itself may not require a migration if:
+
+```text
+UserId
+```
+
+already exists with a suitable type.
+
+Do not create empty or unnecessary migrations.
+
+---
+
+## Error Handling
+
+Frontend should clearly handle at least:
+
+```text
+401 Unauthorized
+403 Forbidden if used
+Authentication loading
+Expired/invalid session
+API unavailable
+```
+
+If the API returns `401`, do not silently replace authenticated data with mock data.
+
+Do not expose sensitive authentication details in UI error messages.
+
+---
+
+## Unauthorized API Requests
+
+Unauthenticated access to protected user data should return:
+
+```text
+401 Unauthorized
+```
+
+Authenticated access to another user's resource should not reveal ownership information.
+
+Prefer:
+
+```text
+404 Not Found
+```
+
+for inaccessible resource IDs where appropriate.
+
+---
+
+## Backend Tests
+
+Update the existing xUnit / WebApplicationFactory test suite.
+
+The tests should support fake authenticated identities.
+
+Do not require real Clerk network calls in automated backend tests.
+
+Use a test authentication handler or equivalent isolated authentication mechanism.
+
+Test at least:
+
+### Authentication
+
+```text
+Unauthenticated GET /api/applications → 401
+Authenticated request → succeeds
+```
+
+### Ownership
+
+Create records for:
+
+```text
+user-a
+user-b
+```
+
+Verify:
+
+```text
+user-a only sees user-a applications
+user-b only sees user-b applications
+```
+
+Verify that User A cannot:
+
+```text
+GET User B application
+PUT User B application
+DELETE User B application
+access User B events
+access User B reminders
+```
+
+### Creation
+
+Verify that POST automatically sets ownership from the authenticated identity.
+
+The frontend/request body must not control UserId.
+
+### Existing Behavior
+
+Keep tests for:
+
+- CRUD
+- validation
+- timestamps
+- statuses
+- workflow events
+- reminders
+- Next Action related backend behavior if applicable
+
+---
+
+## Frontend Tests
+
+Update Vitest / React Testing Library tests where necessary.
+
+Mock Clerk authentication at the authentication boundary.
+
+Do not make real Clerk network calls during unit/component tests.
+
+Add focused coverage for:
+
+```text
+signed-out state
+signed-in application rendering
+authenticated API requests
+sign-out behavior
+query cache clearing on authentication change
+```
+
+Do not test Clerk's internal implementation.
+
+Test JobTracker behavior around Clerk.
+
+---
+
+## Manual Multi-User Test
+
+Perform a manual ownership test using two separate Clerk users.
+
+### User A
+
+1. Sign in as User A.
+2. Create an application.
+3. Add workflow/event data if supported.
+4. Sign out.
+
+### User B
+
+1. Sign in as User B.
+2. Verify User A's application is not visible.
+3. Create a separate application.
+4. Sign out.
+
+### User A Again
+
+1. Sign in again as User A.
+2. Verify User A's application is visible.
+3. Verify User B's application is not visible.
+
+This is an important acceptance test.
+
+---
+
+## Security Requirements
+
+Do not rely only on frontend route protection.
+
+The API must enforce ownership.
+
+The following is not sufficient:
+
+```text
+Hide other users' applications in React
+```
+
+Authorization must happen on the server.
+
+Never trust these values from a request:
+
+```text
+UserId
+OwnerId
+ClerkUserId
+```
+
+Ownership comes from the validated authenticated identity.
 
 ---
 
@@ -671,44 +865,34 @@ Test the business rules that would be easy to break.
 
 Do not implement during this feature:
 
-- Clerk authentication
-- JWT authentication
-- production users
-- deployment
-- PostgreSQL / Neon
-- push notifications
+- social profile system
+- local password authentication
+- custom password reset
+- roles
+- admin panel
+- organizations
+- teams
+- Clerk Organizations
+- account billing
+- subscription plans
+- production PostgreSQL
+- Neon
+- Railway deployment
+- Vercel deployment changes
+- mobile authentication
+- Expo Clerk integration
 - email notifications
-- mobile integration
-- AI suggestions
-- job scraping
-- browser extension
+- push notifications
 - calendar integrations
-
----
-
-## Definition of Done
-
-This feature is complete when:
-
-- `updatedAt` is no longer the primary follow-up timer
-- meaningful application activity can be represented explicitly
-- Timeline can represent real persisted history
-- Next Action uses relevant workflow activity
-- Notes or other unrelated edits do not reset follow-up timing
-- Schedule prefers real deadlines/dates
-- Ghosted risk uses meaningful activity
-- application status is not automatically changed to Ghosted
-- existing Applications CRUD still works
-- frontend build passes
-- backend build passes
-- automated tests pass
-- workflow rules are documented
+- AI features
 
 ---
 
 ## Validation
 
-Backend:
+### Backend
+
+Run:
 
 ```powershell
 cd api
@@ -716,7 +900,18 @@ dotnet test
 dotnet build
 ```
 
-Frontend:
+Verify:
+
+```text
+all tests pass
+unauthenticated requests are rejected
+authenticated CRUD works
+ownership isolation works
+```
+
+### Frontend
+
+Run:
 
 ```powershell
 cd web
@@ -725,37 +920,151 @@ npm run build
 npm run lint
 ```
 
+Verify:
+
+```text
+all tests pass
+frontend builds
+lint passes
+```
+
+---
+
+## Manual Validation
+
+Verify:
+
+### Authentication
+
+- Signed-out user sees sign-in experience
+- User can sign in
+- User can sign out
+- Reload keeps valid Clerk session
+- Expired/invalid authentication does not expose application data
+
+### Applications
+
+- Applications load after sign-in
+- Add Application works
+- Edit Application works
+- Delete Application works
+- Refresh works
+- Direct Details route works
+
+### Workflow
+
+- Application Events still work
+- Timeline still works
+- Next Action still works
+- Reminders still work
+- Schedule still works
+
+### Other Pages
+
+- Dashboard works
+- Insights works
+- Settings works
+- light mode works
+- dark mode works
+- theme persists
+
+### User Isolation
+
+- User A cannot see User B data
+- User B cannot see User A data
+- Direct ID requests cannot bypass ownership rules
+- frontend cache does not leak previous user's data
+
+---
+
+## Definition of Done
+
+This feature is complete when:
+
+- Clerk is integrated into the React frontend
+- Signed-out users cannot access the normal workspace
+- Signed-in users can use the existing application
+- Axios sends valid authentication tokens to the API
+- ASP.NET Core validates authentication
+- API no longer uses hardcoded `dev-user` for normal authenticated requests
+- User ID is derived from authenticated claims
+- JobApplications belong to the authenticated user
+- ApplicationEvents are ownership protected
+- Reminders are ownership protected
+- User A cannot access User B resources
+- frontend query cache cannot leak data between users
+- existing CRUD still works
+- workflow model still works
+- Dashboard still works
+- Schedule still works
+- Insights still works
+- automated authentication/ownership tests pass
+- frontend tests pass
+- backend tests pass
+- frontend build passes
+- backend build passes
+- lint passes
+- no production deployment work was added
+
 ---
 
 ## Expected Result
 
-The workflow should move from:
+Before:
 
 ```text
-Application status
-      +
-updatedAt
-      ↓
-Next Action / Timeline / Schedule
+Any browser
+    ↓
+React
+    ↓
+API
+    ↓
+UserId = dev-user
+    ↓
+Shared development data
 ```
 
-toward:
+After:
 
 ```text
-JobApplication
-      +
-ApplicationEvent history
-      +
-real deadlines/reminders
-      ↓
-Next Action
-Timeline
-Schedule
-Ghosted risk
+Clerk User
+    ↓
+Authenticated React session
+    ↓
+Bearer token
+    ↓
+ASP.NET Core token validation
+    ↓
+Authenticated user ID
+    ↓
+User-owned JobApplications
+    ↓
+User-owned Events / Reminders
 ```
 
-`updatedAt` remains useful as technical metadata but no longer represents user workflow activity.
+---
 
+## Next Feature
+
+After authentication and ownership are stable, likely next areas include:
+
+```text
+Production Database and Deployment
+```
+
+or:
+
+```text
+Reminder / Schedule Product Refinement
+```
+
+or:
+
+```text
+Mobile App Foundation
+```
+
+Do not implement those as part of this feature.
 
 ---
 
@@ -764,21 +1073,6 @@ Ghosted risk
 - Completed Web App Mock Data Foundation
 - Completed Web CRUD Flow with Local State
 - Completed Frontend Applications API Integration
-- Completed Applications automated test layer
-- Started Application Workflow Model
-## Implementation result — 2026-09-16
-
-- Persisted ApplicationEvent model and ApplicationWorkflow migration implemented.
-- Application responses include events; one POST activity endpoint added.
-- Details records activity and displays persisted history through the existing Query cache.
-- Next Action and Schedule no longer use application UpdatedAt as workflow activity.
-- No separate Reminder table: explicit event dates and contact history are sufficient for this slice.
-- Migration applied locally; only known creation and applied-date facts backfilled.
-- Validation: dotnet test 37 passed; dotnet build passed with no warnings/errors;
-  npm run test 47 passed; npm run build passed; npm run lint passed.
-- Vite retains its bundle-size warning (approximately 767 kB main chunk).
-- Browser verified API-backed loading, follow-up recording/history/Next Action and
-  Schedule display of an API-recorded interview. Temporary test data removed.
-- Manual check remains for the native datetime picker: browser automation could
-  not fill it. RTL tests verify date input state and local-to-UTC request conversion.
-- See [workflow decisions and remaining limits](application-workflow.md).
+- Completed Applications Automated Test Layer
+- Completed Application Workflow Model
+- Completed Authentication and User Ownership

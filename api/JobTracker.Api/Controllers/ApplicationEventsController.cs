@@ -9,7 +9,7 @@ namespace JobTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/applications/{applicationId:guid}/events")]
-public sealed class ApplicationEventsController(AppDbContext db) : ControllerBase
+public sealed class ApplicationEventsController(AppDbContext db, CurrentUser currentUser) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType<JobApplicationResponse>(StatusCodes.Status201Created)]
@@ -19,7 +19,7 @@ public sealed class ApplicationEventsController(AppDbContext db) : ControllerBas
         CreateApplicationEventRequest request, CancellationToken cancellationToken)
     {
         var application = await db.JobApplications.Include(item => item.Events)
-            .SingleOrDefaultAsync(item => item.Id == applicationId && item.UserId == "dev-user", cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == applicationId && item.UserId == currentUser.Id, cancellationToken);
         if (application is null) return NotFound();
 
         var type = request.Type!.Value;

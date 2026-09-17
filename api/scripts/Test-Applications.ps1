@@ -1,4 +1,7 @@
-param([string]$BaseUrl = 'http://localhost:5080')
+param(
+    [string]$BaseUrl = 'http://localhost:5080',
+    [Parameter(Mandatory)][SecureString]$Token
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -15,6 +18,11 @@ function Send-Request([string]$Method, [string]$Path, [int]$ExpectedStatus, $Bod
     if ($null -ne $Body) {
         $parameters.ContentType = 'application/json'
         $parameters.Body = ConvertTo-Json -InputObject $Body -Depth 10
+    }
+    if ($Path.StartsWith('/api/')) {
+        $parameters.Authentication = 'Bearer'
+        $parameters.Token = $Token
+        if ($BaseUrl.StartsWith('http://')) { $parameters.AllowUnencryptedAuthentication = $true }
     }
     $response = Invoke-WebRequest @parameters
     Assert-True ($response.StatusCode -eq $ExpectedStatus) "$Method $Path expected $ExpectedStatus, got $($response.StatusCode): $($response.Content)"

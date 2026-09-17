@@ -57,7 +57,7 @@ public sealed class ApplicationsTests : IDisposable
 
         using var scope = factory.Services.CreateScope();
         var stored = await scope.ServiceProvider.GetRequiredService<AppDbContext>().JobApplications.SingleAsync();
-        Assert.Equal("dev-user", stored.UserId);
+        Assert.Equal("user-a", stored.UserId);
     }
 
     [Theory]

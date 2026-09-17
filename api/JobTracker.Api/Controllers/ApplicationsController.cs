@@ -11,12 +11,14 @@ namespace JobTracker.Api.Controllers;
 [Route("api/applications")]
 public sealed class ApplicationsController : ControllerBase
 {
-    private const string CurrentUserId = "dev-user";
+    private readonly CurrentUser _currentUser;
+    private string CurrentUserId => _currentUser.Id;
     private readonly AppDbContext _dbContext;
 
-    public ApplicationsController(AppDbContext dbContext)
+    public ApplicationsController(AppDbContext dbContext, CurrentUser currentUser)
     {
         _dbContext = dbContext;
+        _currentUser = currentUser;
     }
 
     [HttpGet]

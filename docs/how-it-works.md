@@ -1,6 +1,6 @@
 # Miten JobTracker toimii nyt
 
-Tämä dokumentti kuvaa toteutusta 16.9.2026. Tulevaisuuden suunnitelmat löytyvät
+Tämä dokumentti kuvaa toteutusta 17.9.2026. Tulevaisuuden suunnitelmat löytyvät
 [roadmapista](roadmap.md) ja [arkkitehtuurisuunnitelmasta](architecture.md).
 
 ## Kokonaisuus
@@ -22,9 +22,17 @@ Hakemusten pysyvä tietolähde on tietokanta. TanStack Query pitää API:n vasta
 selaimen muistissa. Sivun uudelleenlataus hakee tiedot API:sta uudelleen.
 Teemavalinta säilytetään selaimen localStoragessa.
 
-Kirjautumista ei vielä ole. API käyttää kaikille pyynnöille samaa `dev-user`-käyttäjää.
-`UserId` valmistaa tietomallia myöhempään käyttäjäkohtaiseen käyttöön, mutta nykyinen
-toteutus ei tunnista käyttäjiä.
+Kirjautuminen käyttää Clerkiä. Kirjautumaton käyttäjä näkee kirjautumisnäkymän;
+työtila ja API-haut käynnistyvät vasta valmiin kirjautumisistunnon jälkeen.
+Sivupalkki näyttää käyttäjän nimen, sähköpostin, kuvan ja uloskirjautumisen.
+Teemaprovider säilyy kirjautumisten välillä.
+
+Axios hakee joka pyynnölle nykyisen session tokenin Clerkiltä ja lähettää sen
+Bearer-otsakkeessa. Sovellus ei tallenna tokeneita itse. ASP.NET Core tarkistaa
+allekirjoituksen, issuerin, voimassaolon ja sallitun `azp`-originin; audience
+tarkistetaan, jos se on määritetty oikeaan token-konfiguraatioon. CurrentUser lukee
+validoidun `sub`-claimin. Jokainen käyttäjätietoja käsittelevä endpoint vaatii
+autentikoinnin, ja kaikki haut rajataan kyseiseen omistajaan.
 
 ## Sivut
 
@@ -138,7 +146,7 @@ ja EF Core -migraatiot määrittävät tietokannan rakenteen.
 | Kentät | Merkitys |
 | --- | --- |
 | `id` | API:n luoma GUID-tunniste. |
-| `UserId` | Sisäinen omistajakenttä, nyt `dev-user`; ei mukana vastaus-DTO:ssa. |
+| `UserId` | Validoidun Clerk-tokenin `sub`; ei mukana pyyntö- tai vastaus-DTO:ssa. |
 | `companyName`, `jobTitle` | Pakollinen yritys ja tehtävänimike; pelkkä tyhjä tila ei kelpaa. |
 | `jobUrl`, `location`, `source` | Valinnaiset ilmoituksen osoite, sijainti ja lähde. |
 | `status` | Yksi Next Action -taulukon yhdeksästä tilasta; oletus `Draft`. |
@@ -166,12 +174,21 @@ Näin selain lähettää vain muokattavat kentät eikä määrää omistajaa, tu
 | `POST /api/applications/{id}/events` | `201`, päivitetty hakemus tapahtumineen | `400` tai `404` |
 
 PUT korvaa muokattavat kentät; pois jätetty valinnainen kenttä muuttuu `null`-arvoksi.
-Kaikki haut rajataan `dev-user`-omistajaan. Esimerkkipyyntö löytyy [API-ohjeesta](../api/README.md).
+Ilman kelvollista autentikointia kaikki kuusi endpointtia palauttavat `401`.
+Toisen käyttäjän hakemus-ID palauttaa `404` myös muokkauksessa, poistossa ja tapahtuman
+lisäämisessä. Tapahtumat ja muistutusten lähdetiedot ovat saatavilla vain omistetun
+hakemuksen kautta. Esimerkkipyyntö löytyy [API-ohjeesta](../api/README.md).
 
 ## Frontendin datavirta ja virhetilanteet
 
 `ApplicationsProvider` jakaa listakyselyn Applications-, Dashboard-, Schedule- ja
 Insights-sivuille. Details hakee yhden hakemuksen omalla kyselyllään.
+
+Jokainen käyttäjän ja session yhdistelmä saa oman QueryClientin ja työtilan.
+Uloskirjautuminen tai käyttäjän vaihtuminen purkaa vanhan työtilan, peruu haut ja
+tyhjentää query- ja mutation-välimuistit. Vanhan session myöhäiset vastaukset eivät
+voi täyttää uuden käyttäjän välimuistia. Myös johdetut muistutukset ja yhteenvedot
+poistuvat näkyvistä. Query key -rakenne pysyy ennallaan.
 
 | Query key | Käyttö |
 | --- | --- |
@@ -190,6 +207,9 @@ automaattisesti uudelleen; käyttöliittymä tarjoaa uudelleenyrityksen.
 Lataukselle, epäonnistuneelle haulle, tyhjälle listalle ja puuttuvalle hakemukselle
 on omat näkymänsä. API-virhe ei vaihda tietolähteeksi mock-dataa.
 Axios-asiakas käyttää 15 sekunnin aikakatkaisua ja `VITE_API_BASE_URL`-asetusta.
+API:n `401` poistaa työtilan näkyvistä ja ohjaa kirjautumaan uudelleen uloskirjautumisen
+kautta. `403` näyttää käyttöoikeusvirheen. Tokenin hakemisen verkkovirheestä näytetään
+yleinen virheilmoitus. Clerkin lataus- ja virhetiloille on omat näkymänsä.
 
 Aiemmin hakemukset alustettiin localStoragesta tai mock-datasta, ja muutokset
 tallennettiin selaimeen. `mockApplications.ts`, `applicationStorage.ts` ja
@@ -202,6 +222,11 @@ Tarvitset .NET 10 SDK:n sekä Node.js:n ja npm:n, jotka tukevat projektin riippu
 Aja komennot PowerShellissä. Kumpikin terminaali aloittaa projektin juuresta.
 
 Ensimmäinen terminaali, API:
+
+Tallenna oman Clerk-instanssin issuer ja sallitut frontend-originit kerran tiedostoon
+`api/JobTracker.Api/appsettings.Development.json` [API-ohjeen](../api/README.md#clerk-configuration)
+mukaan. Development lukee tiedoston automaattisesti; PowerShell-muuttujia ei tarvita.
+Tiedosto on Gitin ulkopuolella, ja tämä paikallinen checkout on jo konfiguroitu.
 
 ```powershell
 cd api/JobTracker.Api
@@ -227,6 +252,7 @@ Tarkista, että `web/.env.local` sisältää:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:5080
+VITE_CLERK_PUBLISHABLE_KEY=<oman Clerk-instanssin publishable key>
 ```
 
 Osoitteeseen ei lisätä `/api`-osaa. Käynnistä Vite uudelleen ympäristömuuttujan muuttamisen jälkeen.
@@ -239,6 +265,15 @@ Development-tilassa CORS sallii frontendin osoitteista `http://localhost:5173` j
 `http://127.0.0.1:5173`. Muu portti vaatii CORS-asetuksen muuttamisen.
 Jos hakemukset eivät lataudu, tarkista API:n käynnistys, migraatiot, ympäristömuuttuja
 ja frontendin portti. Tyhjä lista ensimmäisellä käynnistyksellä on normaali.
+
+Clerk Dashboardissa valitaan kehitysinstanssi ja kirjautumistavat. Publishable key
+ja Frontend API URL otetaan saman instanssin API keys -sivulta. JWT-templatea tai
+Clerk secret keytä ei tarvita oletussession tokeneille. Tarkat asetukset ja
+valinnainen audience ovat [API-ohjeessa](../api/README.md#clerk-configuration).
+
+Vanhoja `dev-user`-rivejä ei siirretä kirjautuneelle käyttäjälle. Ne jäävät
+tietokantaan näkymättömäksi kehitysdataksi. [Paikallinen nollaus](../api/README.md#legacy-development-data)
+onnistuu valitsemalla uusi SQLite-tiedosto; vanhaa tietokantaa ei tarvitse poistaa.
 
 ## Miten testit ajetaan?
 
@@ -257,6 +292,9 @@ dotnet build
 testaavat CRUD-pyyntöjä, validointia, aikaleimoja, tilojen tekstimuotoa ja omistajarajausta.
 Jokaisella testillä on oma muistissa oleva SQLite-tietokanta, johon ajetaan oikeat
 migraatiot. Testit eivät käytä tavallista kehitystietokantaa.
+Testiautentikointi kattaa kaksi käyttäjää, kaikki 401-reitit, vieraat ID:t,
+tapahtumien ja muistutuspäivien eristyksen sekä omistajan väärentämisen eston.
+JWT-testit käyttävät paikallisia RSA-avaimia eivätkä tee Clerk-verkkopyyntöjä.
 
 Frontend:
 
@@ -278,10 +316,14 @@ Frontend-testit kattavat Next Action -säännöt ja aikarajat, listan suodatukse
 järjestämisen, lomakkeiden tietomuunnokset sekä valitut lataus-, virhe-, tyhjä lista-,
 lisäys- ja puuttuvan hakemuksen tilanteet. React Testing Library -testeissä käytetään
 oikeaa provideriä ja QueryClientiä, mutta HTTP-liikenne korvataan testivastauksilla.
+Auth-testeissä Clerk korvataan kirjautumisrajalla. Testit kattavat kirjautumistilat,
+Bearer-tokenin, uloskirjautumisen, käyttäjänvaihdon, vanhat keskeneräiset haut,
+välimuistin ja muistutusten eristyksen sekä sivupalkin käyttäjän ja teemakytkimen.
 
-Testikerros ei kata kaikkia käyttöliittymäpolkuja: esimerkiksi muokkauksen ja poiston
-frontend-vuorovaikutus, teeman säilyminen sekä kaikkien yhteenvetosivujen näkymät
-vaativat vielä manuaalista tarkistusta. MUI:n sisäistä toteutusta ei testata.
+Muokkauksen ja poiston frontend-testit kattavat onnistumisen, virheestä palautumisen
+sekä välimuistipäivitykset. Testikerros ei kata kaikkia käyttöliittymäpolkuja tai MUI:n
+sisäistä toteutusta. Oikealla Clerk-istunnolla on tarkistettu sivujen navigointi,
+hakemushaku, Details/Timeline, reload ja teeman säilyminen.
 
 Erillinen `api/scripts/Test-Applications.ps1` on käynnissä olevaa API:a käyttävä
 HTTP-tarkistus. Toisin kuin xUnit-testit, se luo ja poistaa testihakemuksen API:n
@@ -296,5 +338,9 @@ käyttämässä tietokannassa. Ohje on [API-dokumentaatiossa](../api/README.md#v
 - [Timeline ja muistutukset](../web/src/features/applications/utils/applicationWorkflow.ts): tallennettu historia ja päivämääristä johdetut muistutukset.
 - [API:n käynnistys](../api/JobTracker.Api/Program.cs): palvelut, tietokanta, CORS ja Swagger.
 
-Clerk-kirjautuminen, erikseen hallittavat muistutukset, tuotannon
-PostgreSQL, julkaisu ja mobiilisovellus ovat tulevaa työtä.
+Oikean Clerk-instanssin kahden käyttäjän testi on vielä tehtävä manuaalisesti:
+luo A:lle hakemus ja tapahtuma, vaihda B:hen ja varmista eristys, luo B:lle oma
+hakemus ja palaa A:han. Tarkista myös sivun päivitys, suora Details-linkki,
+CRUD, Timeline, Schedule, Dashboard, Insights, teema ja vanhentunut sessio.
+Erikseen hallittavat muistutukset, tuotannon PostgreSQL, julkaisu ja mobiilisovellus
+ovat tulevaa työtä.

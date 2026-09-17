@@ -5,6 +5,10 @@ the current pages, data flow, application rules and test commands.
 
 ## Local setup
 
+Configure a Clerk development application first (see [API setup](../api/README.md#clerk-configuration)).
+Set `VITE_CLERK_PUBLISHABLE_KEY` in `.env.local` to its publishable key. Never put a
+Clerk secret key in a `VITE_` variable. Node.js 20.9+ is required by `@clerk/react`.
+
 Run the existing API in one terminal:
 
 ```powershell
@@ -48,7 +52,7 @@ Previously, ApplicationsProvider initialized React state from
 CRUD helpers generated IDs and timestamps in the browser, and an effect saved
 the array after changes. Details looked up an item in that array.
 
-Now the provider exposes one TanStack Query list cache to Applications,
+Now the provider exposes one TanStack Query list cache per signed-in session to Applications,
 Dashboard, Schedule and Insights. Details uses its own API query:
 
 - `["applications"]`: GET /api/applications.
@@ -82,7 +86,33 @@ failed saves, and delete failures keep the confirmation open.
 - `mockApplications.ts`, `applicationStorage.ts` and `applicationCrud.ts` remain
   as unused legacy code; the runtime provider no longer imports them.
 - The demo reset control is disabled because it must not replace API data.
-- No authentication, new backend endpoints, deployment or mobile changes.
+- Authentication protects the existing workspace; no new data endpoints, deployment or mobile changes.
+
+## Authentication
+
+`@clerk/react` provides ClerkProvider, the sign-in modal, session state and user information.
+The provider tree is ThemeModeProvider -> ClerkProvider -> AuthenticationBoundary ->
+session-specific QueryClientProvider -> ApplicationsProvider -> RouterProvider.
+Theme state stays mounted through sign-out and user changes. The sidebar shows the
+user's name/email/avatar and a Sign out action, alongside existing theme controls.
+
+Missing configuration, Clerk loading/failure and signed-out states do not mount the
+workspace or start API queries. Deep links keep their URL through sign-in.
+The shared Axios client calls Clerk `getToken()` for each request and sets Bearer
+authentication centrally. Tokens are never manually persisted or kept in React state.
+Feature API functions do not set auth headers. Token retrieval failures have a safe
+error message; API 401 hides the workspace, clears cached data and offers sign-out
+and reauthentication. API 403 is reported as a permission error.
+
+Each `(userId, sessionId)` gets a new QueryClient and workspace subtree. Sign-out or
+identity changes destroy queries, abort pending reads, remove mutation cache entries,
+and detach the token getter. Existing query keys are unchanged. A token retrieval
+finishing after a session change is rejected. Late mutation callbacks only reference
+the discarded client, so they cannot populate the next user's cache. An old 401 cannot
+invalidate the new session. Theme preference remains the only app preference stored locally.
+
+Existing `dev-user` data stays in SQLite and is invisible to Clerk users. See the
+[local reset instructions](../api/README.md#legacy-development-data).
 
 ## Checks
 
@@ -103,9 +133,23 @@ loading-to-empty, failure-and-retry, API records/search, successful create
 and list refresh, failed create preserving values, and detail 404 navigation.
 No running API, browser storage, or development database is required.
 
+Auth boundary tests mock Clerk hooks/components and the Axios transport, while using
+the real providers/cache. They cover loading, signed-out and signed-in rendering,
+Bearer token refresh, sign-out, direct user switches, canceled reads, delayed token
+retrieval, 401/missing-token behavior, derived reminder isolation, sidebar identity
+and theme controls. They do not test Clerk internals.
+
+Manual acceptance still needs real Clerk configuration: sign in as A, create an
+application and activity, sign out, sign in as B and verify isolation, then return
+to A. Also verify reload, direct Details links, CRUD, Timeline, Schedule, Dashboard,
+Insights, theme persistence and session expiry with a running configured API.
+
 Intentionally outside this small suite: visual/MUI internals, snapshots,
 full browser end-to-end tests, native date-picker interaction, theme persistence,
-frontend edit/delete interactions, and exhaustive Dashboard/Schedule/Insights
+exhaustive Dashboard/Schedule/Insights
 UI coverage. Backend update/delete behavior is covered in the xUnit suite.
+
+Frontend integration tests also cover edit success updating both caches, failed edits
+preserving input, and failed deletion followed by retry, cache removal and list navigation.
 
 See `docs/current-feature.md` for the feature acceptance checklist.

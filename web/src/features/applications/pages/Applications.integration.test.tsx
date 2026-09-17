@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { AxiosError, AxiosHeaders, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { apiClient } from "../../../lib/apiClient";
+import { apiClient, bindApiSession } from "../../../lib/apiClient";
 import { applicationFixture, eventFixture } from "../../../test/applicationFixture";
 import { ApplicationsProvider } from "../context/ApplicationsProvider";
 import { ApplicationsPage } from "./ApplicationsPage";
@@ -12,6 +12,7 @@ import { ApplicationDetailsPage } from "./ApplicationDetailsPage";
 
 const originalAdapter = apiClient.defaults.adapter;
 let queryClient: QueryClient;
+let unbindSession: () => void;
 const http = vi.fn<AxiosAdapter>();
 
 function response(config: InternalAxiosRequestConfig, data: unknown, status = 200): AxiosResponse<unknown> {
@@ -34,6 +35,7 @@ function renderPage(path = "/applications") {
 }
 
 beforeEach(() => {
+  unbindSession = bindApiSession({ getToken: async () => "test-token", onUnauthorized: vi.fn() });
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   http.mockReset();
   http.mockImplementation(async (config) => {
@@ -44,6 +46,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  unbindSession();
   queryClient.clear();
   apiClient.defaults.adapter = originalAdapter;
 });
@@ -129,6 +132,75 @@ it("keeps entered values and the dialog open when creation fails", async () => {
   expect(dialog.getByRole("textbox", { name: /^Company/ })).toHaveValue("Keep this company");
   expect(dialog.getByRole("textbox", { name: /^Job title/ })).toHaveValue("Keep this title");
   expect(dialog.getByRole("button", { name: "Add application" })).toBeEnabled();
+});
+
+it("edits an application and updates both list and detail caches", async () => {
+  const user = userEvent.setup();
+  let application = applicationFixture();
+  http.mockImplementation(async config => {
+    if (config.method === "put") {
+      expect(JSON.parse(String(config.data))).toMatchObject({ companyName: "Updated company" });
+      application = { ...application, companyName: "Updated company" };
+      return response(config, application);
+    }
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Edit" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.clear(dialog.getByRole("textbox", { name: /^Company/ }));
+  await user.type(dialog.getByRole("textbox", { name: /^Company/ }), "Updated company");
+  await user.click(dialog.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(screen.getByRole("heading", { name: "Backend Developer at Updated company" })).toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
+  expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
+});
+
+it("keeps edited values after a failed update", async () => {
+  const user = userEvent.setup();
+  const application = applicationFixture();
+  http.mockImplementation(async config => {
+    if (config.method === "put") throw new AxiosError("Network Error", "ERR_NETWORK");
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Edit" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.clear(dialog.getByRole("textbox", { name: /^Company/ }));
+  await user.type(dialog.getByRole("textbox", { name: /^Company/ }), "Unsaved change");
+  await user.click(dialog.getByRole("button", { name: "Save changes" }));
+  expect(await dialog.findByRole("alert")).toHaveTextContent("Cannot reach the API");
+  expect(dialog.getByRole("textbox", { name: /^Company/ })).toHaveValue("Unsaved change");
+  expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
+});
+
+it("keeps a failed deletion open, then retries and returns to the empty list", async () => {
+  const user = userEvent.setup();
+  const application = applicationFixture();
+  let attempts = 0;
+  let deleted = false;
+  http.mockImplementation(async config => {
+    if (config.method === "delete") {
+      if (++attempts === 1) throw new AxiosError("Network Error", "ERR_NETWORK");
+      deleted = true;
+      return response(config, undefined, 204);
+    }
+    if (config.url === "/api/applications") return response(config, deleted ? [] : [application]);
+    if (deleted) throw new AxiosError("Not found", "ERR_BAD_REQUEST", config, undefined, response(config, {}, 404));
+    return response(config, application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Delete" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.click(dialog.getByRole("button", { name: "Delete" }));
+  expect(await dialog.findByRole("alert")).toHaveTextContent("Cannot reach the API");
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
+  await user.click(dialog.getByRole("button", { name: "Delete" }));
+  expect(await screen.findByText("No applications yet")).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications"])).toEqual([]);
+  expect(queryClient.getQueryData(["applications", application.id])).toBeUndefined();
 });
 
 it("handles a detail 404 separately from a connection error with a link back", async () => {

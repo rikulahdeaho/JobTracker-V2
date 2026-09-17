@@ -8,6 +8,10 @@ See [Miten sovellus toimii nyt](../docs/how-it-works.md) for the current applica
 
 Prerequisite: .NET 10 SDK.
 
+Store the Clerk settings below in `JobTracker.Api/appsettings.Development.json`
+once. Development loads this file automatically, so subsequent starts need only
+`dotnet run`. The file is ignored by Git; this checkout has been configured locally.
+
 From the repository root:
 
 ```powershell
@@ -24,8 +28,70 @@ dotnet run
 
 The launch profile selects Development. Swagger and CORS for
 `http://localhost:5173` and `http://127.0.0.1:5173` are enabled only in Development.
-Authentication is not implemented. All requests use the
-same temporary `dev-user`; this is a local development API.
+All application and event endpoints require a validated Clerk session token.
+Swagger/OpenAPI remain public in Development; data operations still require Bearer authentication.
+
+## Clerk configuration
+
+1. Create/select your own **development** application in [Clerk Dashboard](https://dashboard.clerk.com).
+2. Under sign-up/sign-in settings, enable the identifiers/providers you want to use
+   (for example email). Keep personal accounts enabled; this app does not use organizations.
+3. From **API keys**, copy the publishable key to `web/.env.local` as
+   `VITE_CLERK_PUBLISHABLE_KEY`. Copy that same instance's **Frontend API URL** as
+   `Clerk__Authority` below. It is the session token's exact `iss`, not the web/API URL
+   and not `https://api.clerk.com`. Do not invent a tenant hostname.
+4. Use the default Clerk session token; no JWT template or Clerk secret key is required.
+   If you intentionally customize session tokens to include `aud`, configure
+   `Clerk__Audience` to that exact value. Otherwise leave it unset.
+5. Use one consistent local frontend origin. If you have restricted origins or
+   redirect URLs in your Clerk settings, allow that origin and its sign-in return URLs.
+   The backend permitted origins must match the token's `azp` exactly.
+
+Recommended local configuration in `JobTracker.Api/appsettings.Development.json`
+(replace the placeholder with your actual Clerk Frontend API URL):
+
+```json
+{
+  "Clerk": {
+    "Authority": "<Frontend API URL from your Clerk development instance>",
+    "AuthorizedParties": [
+      "http://127.0.0.1:5173",
+      "http://localhost:5173"
+    ]
+  }
+}
+```
+
+Keep any other existing settings in this file. No `Audience` is needed for default
+session tokens. An optional `Clerk:Audience` must match your configured token audience.
+Environment variables are an alternative and override JSON settings; old values in
+a terminal therefore still take precedence:
+
+```powershell
+$env:Clerk__Authority = '<Frontend API URL from your Clerk development instance>'
+$env:Clerk__AuthorizedParties__0 = 'http://127.0.0.1:5173'
+$env:Clerk__AuthorizedParties__1 = 'http://localhost:5173'
+# Only if your actual session tokens have a configured audience:
+# $env:Clerk__Audience = '<that exact audience>'
+```
+
+Configuration uses the standard ASP.NET Core `Clerk` section; double underscores map
+environment variables to nested keys. Missing/invalid authority or permitted origins
+fail startup rather than enabling anonymous access. Tenant configuration is not checked in.
+`ConnectionStrings__DefaultConnection` remains an optional SQLite override.
+
+`Microsoft.AspNetCore.Authentication.JwtBearer` 10.0.9 validates tokens following
+[Clerk's JWT guidance](https://clerk.com/docs/guides/sessions/manual-jwt-verification).
+Authority discovery uses `/.well-known/openid-configuration` and its JWKS signing keys,
+with HTTPS metadata and cached key refresh. Validation checks RS256 signature, issuer,
+expiration/not-before (5-second clock skew), and configured audience when present.
+The `azp` claim, when provided, must equal a configured AuthorizedParties origin.
+Missing subjects and pending sessions are rejected. Authentication runs before authorization.
+
+All mapped controllers require authorization. `CurrentUser` reads the validated `sub`
+claim without inbound claim remapping. Reads/updates/deletes include both ID and owner;
+POST assigns the current subject, and DTOs do not accept ownership fields. Other users'
+resource IDs return 404, and requests without valid authentication return 401.
 
 ## Database
 
@@ -61,7 +127,35 @@ replaces the older transitive native SQLite package that raised NU1903.
 | DELETE | /api/applications/{id} | 204 | 404 |
 
 IDs use GUID format; malformed IDs do not match the route and return 404.
-Every database lookup is scoped to `dev-user`.
+Every database lookup is scoped to the authenticated subject. All rows in the endpoint
+table can also return 401. POST `/api/applications/{id}/events` uses the same rule on
+the parent application before changing history/status and returns 201, 400 or 404.
+GET list/detail include events only through owned parents.
+
+There are no separate Reminder entities or endpoints yet. The existing frontend
+Reminder model derives dates from the owned application/event aggregate. Schedule,
+Dashboard and Insights therefore inherit the same ownership boundary. This feature
+does not add reminder CRUD or completion endpoints.
+
+## Legacy development data
+
+Existing `dev-user` rows are left untouched and are inaccessible to real Clerk users.
+There is no automatic ownership transfer and no schema migration for authentication.
+
+For an explicit local reset without deleting old data, stop the API and select a new,
+unused SQLite filename in the same API terminal, then apply migrations and restart:
+
+```powershell
+cd api/JobTracker.Api
+$env:ConnectionStrings__DefaultConnection = 'Data Source=jobtracker-auth-local.db'
+dotnet ef database update
+dotnet run
+```
+
+Keep that connection setting for subsequent runs. Sign in and create new records.
+The old database remains available as a backup. No migration utility is supplied;
+any manual transfer must explicitly select the local source rows and the intended
+Clerk user ID after backing up the database, never assign data to the first login.
 
 Create and update use separate DTOs sharing field definitions and validation.
 Responses omit the internal `UserId`. IDs, ownership and timestamps are
@@ -110,15 +204,20 @@ open SQLite `:memory:` connection and applies the real EF migrations. The
 development DbContext registration is replaced before the host handles requests.
 No development database is read or written, and no running API is required.
 
-The suite covers CRUD HTTP responses, validation without unintended writes,
-UTC timestamps, all nine statuses stored as strings, and user ownership filtering.
-It deliberately does not test private helpers, authentication, deployment,
-or every possible malformed request.
+The suite covers CRUD, validation, timestamps, status serialization, workflow events,
+401 on every data route, authenticated `user-a`/`user-b` isolation, forged ownership
+fields on POST/PUT, parent ownership for events and reminder source dates, and untouched
+legacy data. TestAuthenticationHandler exists only in the test project; no test header
+or development authentication bypass is installed in the API.
+Additional bearer tests use locally signed RSA tokens and static discovery keys to
+verify issuer, signature, algorithm, lifetime, subject, origin and optional audience.
+No automated test makes a real Clerk request.
 
 With the API running, use a second PowerShell 7 terminal from the repository root:
 
 ```powershell
-./api/scripts/Test-Applications.ps1
+$token = Read-Host 'Paste a fresh Clerk session token' -AsSecureString
+./api/scripts/Test-Applications.ps1 -Token $token
 ```
 
 The script checks OpenAPI availability, CRUD, all statuses, field round-trips,
@@ -126,9 +225,14 @@ required-field and invalid-input validation, UTC timestamps, server-owned
 fields, replacement semantics, and missing-record responses. It creates and
 deletes its own temporary record, leaving existing applications untouched.
 
-For manual Swagger verification, expand an operation, select **Try it out**,
-enter the body or ID and select **Execute**. POST returns the ID to use for
-GET, PUT and DELETE.
+Use a fresh session token from your signed-in local app when making manual HTTP calls;
+Clerk session tokens expire quickly. Never check tokens into files. Swagger documents
+the routes; its unauthenticated Try it out requests return 401. The script sends the
+provided token in Bearer headers and creates/deletes only its own temporary record.
+
+Real Clerk acceptance remains manual: use two accounts and verify separate lists,
+404 for cross-user IDs/events, CRUD and dated workflow activity, sign-out/reload,
+cache isolation and the existing derived reminder views.
 
 ## Application workflow
 

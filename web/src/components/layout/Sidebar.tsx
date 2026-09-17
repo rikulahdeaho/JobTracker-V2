@@ -1,4 +1,6 @@
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import { useClerk, useUser } from "@clerk/react";
+import { useState } from "react";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -7,6 +9,7 @@ import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import {
   Avatar,
+  Alert,
   Box,
   Button,
   Divider,
@@ -45,6 +48,11 @@ export function Sidebar({
   onClose,
 }: SidebarProps) {
   const theme = useTheme();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const [signOutError, setSignOutError] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Your account";
   const { mode, toggleMode } = useThemeMode();
   const sidebarColors = getSidebarColors(theme.palette.mode);
   const drawerContent = (
@@ -111,6 +119,8 @@ export function Sidebar({
         <Stack gap={2}>
           <Stack direction="row" gap={1.25} alignItems="center">
             <Avatar
+              src={user?.imageUrl}
+              alt={displayName}
               sx={{
                 width: 34,
                 height: 34,
@@ -120,17 +130,23 @@ export function Sidebar({
                 fontWeight: 800,
               }}
             >
-              JT
+              {displayName.slice(0, 1).toUpperCase()}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="body2" sx={{ color: sidebarColors.text, fontWeight: 700 }}>
-                Account
+                {displayName}
               </Typography>
               <Typography variant="caption" sx={{ display: "block", color: sidebarColors.muted, mt: 0.25 }}>
-                Profile placeholder
+                {user?.primaryEmailAddress?.emailAddress}
               </Typography>
             </Box>
           </Stack>
+          {signOutError && <Alert severity="error">Sign out failed. Please try again.</Alert>}
+          <Button size="small" disabled={signingOut} onClick={() => {
+            setSigningOut(true);
+            setSignOutError(false);
+            void signOut().catch(() => { setSignOutError(true); setSigningOut(false); });
+          }}>Sign out</Button>
           <Divider sx={{ borderColor: sidebarColors.border }} />
           <Stack direction="row" gap={0.75} alignItems="flex-start">
             <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: "success.main", flexShrink: 0, mt: 0.75 }} />
