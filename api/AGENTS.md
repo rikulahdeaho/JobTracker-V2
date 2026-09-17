@@ -48,12 +48,14 @@ JobTracker.Api/
 - SQLite is acceptable for early local development.
 - PostgreSQL is the production target.
 
-## Auth Later
+## Authentication and Ownership
 
-- Clerk auth is not part of the first CRUD milestone.
+- Clerk JWT Bearer validation is implemented; user-data endpoints require authentication.
 - Keep `UserId` in user-owned entities.
-- Use `dev-user` temporarily until Clerk JWT validation is implemented.
-- Later, read the real user id from validated Clerk JWT claims.
+- Read the current user through CurrentUser from the validated sub claim.
+- Scope application queries and event parent lookups to the current user; prefer 404 for other-user IDs.
+- Never accept UserId from request DTOs or automatically transfer legacy dev-user records.
+- Keep tenant configuration outside committed source; local settings use ignored appsettings.Development.json.
 
 ## Validation
 

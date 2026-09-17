@@ -125,6 +125,7 @@ replaces the older transitive native SQLite package that raised NU1903.
 | POST | /api/applications | 201, application and Location header | 400 |
 | PUT | /api/applications/{id} | 200, updated application | 400, 404 |
 | DELETE | /api/applications/{id} | 204 | 404 |
+| POST | /api/applications/{id}/events | 201, updated application | 400, 404 |
 
 IDs use GUID format; malformed IDs do not match the route and return 404.
 Every database lookup is scoped to the authenticated subject. All rows in the endpoint
@@ -230,9 +231,13 @@ Clerk session tokens expire quickly. Never check tokens into files. Swagger docu
 the routes; its unauthenticated Try it out requests return 401. The script sends the
 provided token in Bearer headers and creates/deletes only its own temporary record.
 
-Real Clerk acceptance remains manual: use two accounts and verify separate lists,
-404 for cross-user IDs/events, CRUD and dated workflow activity, sign-out/reload,
-cache isolation and the existing derived reminder views.
+Real Clerk browser acceptance on 2026-09-17 verified an A -> B -> A session cycle,
+separate lists/derived reminders, and "Application not found" for direct foreign
+Details links in both directions. Browser creation, editing and Application sent
+event recording persisted through reload/re-login. Test records were retained at
+the user's request, so browser deletion was not executed. Cross-user PUT/DELETE/event
+POST and exact 404 status assertions are covered by the automated API suite;
+these HTTP mutations were not manually replayed with real Clerk tokens.
 
 ## Application workflow
 

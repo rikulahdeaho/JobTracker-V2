@@ -12,8 +12,11 @@ These instructions apply to the React web app in `web/`.
 - React Router
 - TanStack Query
 - Axios
-- React Hook Form
-- Zod
+- MUI
+- Clerk React
+- Vitest + React Testing Library
+
+React Hook Form and Zod are planned but not installed. Current forms use React state.
 
 ## Structure
 

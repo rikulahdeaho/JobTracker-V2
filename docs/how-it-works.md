@@ -79,16 +79,17 @@ Applications-listan Active-suodatin, johon myös luonnokset kuuluvat.
 
 ## Next Action
 
-Selain päättelee seuraavan toimen hakemuksen tilasta ja viimeisestä päivityksestä.
+Selain päättelee seuraavan toimen hakemuksen tilasta, yhteydenpitotapahtumista ja
+kirjatuista haastatteluajoista sekä määräpäivistä. Tekninen `updatedAt` ei nollaa laskentaa.
 API ei tallenna Next Action -arvoa eikä muuta tilaa automaattisesti.
 
 | Tila | Ehdotettu toiminto |
 | --- | --- |
 | `Draft` | Finish application |
 | `ToApply` | Apply |
-| `Applied`, alle 14 päivää viimeisestä toiminnasta | Wait for response |
-| `Applied`, vähintään 14 mutta alle 30 päivää | Follow up |
-| `Applied`, vähintään 30 päivää | Consider ghosted |
+| `Applied`, alle 14 päivää viimeisestä lähetyksestä/follow-upista | Wait for response |
+| `Applied`, vähintään 14 mutta alle 30 päivää viimeisestä lähetyksestä/follow-upista | Follow up |
+| `Applied`, vähintään 30 päivää viimeisestä lähetyksestä/follow-upista | Consider ghosted |
 | `Interviewing` | Prepare interview |
 | `Assignment` | Submit assignment |
 | `Offer` | Respond to offer |
@@ -332,15 +333,23 @@ käyttämässä tietokannassa. Ohje on [API-dokumentaatiossa](../api/README.md#v
 ## Keskeiset lähdekoodit
 
 - [API-asiakas](../web/src/lib/apiClient.ts): osoite, aikakatkaisu ja virheiden käsittely.
-- [Applications API -kutsut](../web/src/features/applications/api/applicationsApi.ts): viisi HTTP-operaatiota.
+- [Applications API -kutsut](../web/src/features/applications/api/applicationsApi.ts): CRUD ja tapahtuman lisääminen, yhteensä kuusi HTTP-operaatiota.
 - [Next Action](../web/src/features/applications/utils/applicationNextAction.ts): seuraavan toimen säännöt.
 - [Listan käsittely](../web/src/features/applications/utils/applicationList.ts): haku, suodatus ja järjestys.
 - [Timeline ja muistutukset](../web/src/features/applications/utils/applicationWorkflow.ts): tallennettu historia ja päivämääristä johdetut muistutukset.
 - [API:n käynnistys](../api/JobTracker.Api/Program.cs): palvelut, tietokanta, CORS ja Swagger.
 
-Oikean Clerk-instanssin kahden käyttäjän testi on vielä tehtävä manuaalisesti:
-luo A:lle hakemus ja tapahtuma, vaihda B:hen ja varmista eristys, luo B:lle oma
-hakemus ja palaa A:han. Tarkista myös sivun päivitys, suora Details-linkki,
-CRUD, Timeline, Schedule, Dashboard, Insights, teema ja vanhentunut sessio.
+Oikean Clerk-instanssin kahden käyttäjän A -> B -> A -testi tehtiin 17.9.2026
+samassa selainvälilehdessä ulos- ja sisäänkirjautumalla. Molemmat näkivät vain omat
+hakemuksensa ja niistä johdetut muistutukset. Suora linkki toisen hakemukseen näytti
+"Application not found" molempiin suuntiin. Molemmille luotiin testihakemus;
+A:n muistiinpanojen muokkaus ja Application sent -tapahtuman tallennus onnistuivat.
+Timeline, Applied-tila, Next Action ja follow-up-muistutus päivittyivät, ja tiedot
+säilyivät reloadin sekä tilille palaamisen jälkeen.
+AUTH TEST A/B 2026-09-17 -testihakemukset jätettiin paikalliseen tietokantaan.
+Käyttäjä valitsi testihakemuksen säilyttämisen, joten pysyvää poistoa ei ajettu selaimesta.
+Poisto, toisen käyttäjän PUT/DELETE/event POST, vanhentuneen session käsittely ja
+keskeneräisten pyyntöjen välimuistikilpailut on katettu automaattitesteillä;
+niitä ei toistettu tässä oikeiden Clerk-istuntojen selaintestissä.
 Erikseen hallittavat muistutukset, tuotannon PostgreSQL, julkaisu ja mobiilisovellus
 ovat tulevaa työtä.

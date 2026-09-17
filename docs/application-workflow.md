@@ -58,7 +58,10 @@ do not accept DueAt. Timestamps with offsets are normalized to UTC.
 
 The endpoint returns `201` and the updated application aggregate. Invalid input
 returns `400`; missing or other-user applications return `404`. Ownership is checked
-through the parent application using `dev-user`. There is no authentication yet.
+through the parent application's `UserId`, using the validated Clerk subject.
+All application/event endpoints require authentication; invalid or missing tokens
+return `401`. Derived reminders share this ownership boundary and the frontend's
+per-session query cache. See [authentication setup](../api/README.md#clerk-configuration).
 
 Recording ApplicationSent, InterviewScheduled, AssignmentReceived or OfferReceived
 also sets the corresponding current application status. Status changes are recorded
@@ -158,9 +161,13 @@ immutable audit history; no individual event correction/cancellation UI; no remi
 completion; no interview completion or accepted-offer status; no concurrent-editor
 conflict handling. These are explicit scope limits, not guessed workflow behavior.
 
-Validation on 2026-09-16: backend 37 tests passed, frontend 47 tests passed,
+Historical workflow-slice validation on 2026-09-16: backend 37 tests passed, frontend 47 tests passed,
 .NET build and frontend build/lint passed. The existing Vite bundle-size warning
 remains. Browser verification covered API loading, follow-up recording and Next
 Action refresh, persisted Timeline, and an explicit interview displayed on Schedule.
 Native datetime-picker interaction still needs a manual check because the browser
 automation fill operation failed; component tests cover input state and UTC conversion.
+
+Latest full-suite validation on 2026-09-17: backend 57 tests and frontend 61 tests
+passed, with both builds and frontend lint passing. The authenticated browser checks
+and remaining acceptance limits are summarized in [the project README](../README.md).

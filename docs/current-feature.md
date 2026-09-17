@@ -8,6 +8,35 @@ Authentication and User Ownership
 
 Completed
 
+## Implementation and verification (2026-09-17)
+
+Clerk sign-in/sign-out, centralized Axios tokens, per-user/session QueryClient isolation,
+JWT validation and authenticated subject ownership are implemented. All six existing
+data endpoints are protected. ApplicationEvents are owned through their application;
+Reminder objects remain frontend-derived, with no separate reminder table or endpoint.
+Legacy `dev-user` data is untouched. Local backend settings use ignored
+`appsettings.Development.json`; frontend settings use ignored `.env.local`.
+
+Latest checks: 57 backend tests, 61 frontend tests, both builds and frontend lint passed.
+Browser checks covered real Clerk sign-in/sign-out, API list/detail reads, all current
+pages, search, Timeline display, reload/session persistence and theme persistence.
+Real two-account browser isolation was verified with an A -> B -> A sign-out/sign-in
+cycle in the same tab: separate application lists, Dashboard/Schedule data, and
+"Application not found" for direct links to the other account's application in both directions.
+Browser writes verified application creation for both users, editing A's notes, and
+recording A's Application sent event. Reload and re-login preserved the notes/event;
+Timeline, Applied status, Next Action and the derived follow-up reminder updated.
+Both AUTH TEST A/B 2026-09-17 records remain in local development data. The user chose
+to retain the test application, so permanent browser deletion was not executed.
+Deletion, cross-user PUT/DELETE/event POST, expired-session handling and in-flight
+cache races remain covered by automated tests rather than this real-session browser run.
+The automated suites also cover failed edit/delete recovery.
+Vite reports a bundle-size warning. An isolated browser MutationObserver error did not
+reproduce in a fresh tab; its source remains unconfirmed. The last npm audit reported
+an existing high-severity js-yaml development dependency issue through ESLint.
+
+The sections below retain this feature's original requirements and acceptance checklist.
+
 ## Scope
 
 Implement authentication and user-specific data ownership for the existing JobTracker web application and ASP.NET Core API.
@@ -70,13 +99,13 @@ Later production deployment may replace SQLite with PostgreSQL, but that is not 
 
 ## Situation Before This Feature
 
-The current API uses the same temporary user for all requests:
+Before this feature, the API used the same temporary user for all requests:
 
 ```text
 dev-user
 ```
 
-`UserId` already exists in the data model, but there is currently no real authentication.
+`UserId` already existed in the data model, but real authentication was not yet implemented.
 
 The current frontend already communicates with the ASP.NET Core API through:
 

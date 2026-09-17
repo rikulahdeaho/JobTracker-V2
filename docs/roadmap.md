@@ -1,5 +1,28 @@
 # JobTracker Roadmap
 
+## Current progress (2026-09-17)
+
+The phases below are the original build plan, not a list of wholly unfinished work.
+Current implementation:
+
+| Area | Status |
+| --- | --- |
+| Web foundation and mock/local-state milestones | Completed; runtime now uses API data. |
+| API, EF Core, SQLite and Applications CRUD | Implemented. |
+| TanStack Query and Axios integration | Implemented; inactive legacy mock helpers remain. |
+| Clerk authentication and user ownership | Implemented; real A -> B -> A browser isolation and create/edit/event writes verified. Browser deletion remains unverified. |
+| Workflow events and Timeline | Implemented with ApplicationEvent, including status-change history. |
+| Next Action | Implemented using contact events and explicit stage dates. |
+| Reminders and Schedule | Derived from applications/events; separate reminder CRUD/completion is not implemented. |
+| Dashboard and Insights | Implemented as frontend summaries of authenticated API data; no summary endpoint. |
+| Search, filters and sorting | Implemented in the frontend, not as API query parameters. |
+| Light/dark theme | Implemented with browser persistence. |
+| Production database, deployment and mobile | Not implemented. |
+
+Latest checks: 57 backend tests and 61 frontend tests passed; both builds and frontend
+lint passed. See [current behavior and limits](how-it-works.md) and
+[the completed feature](current-feature.md). Future work requires a separately scoped task.
+
 ## Goal
 
 Build JobTracker in small, clear stages.
@@ -532,12 +555,15 @@ VITE_CLERK_PUBLISHABLE_KEY
 Backend:
 
 ```text
-DATABASE_URL
 ConnectionStrings__DefaultConnection
-CLERK_AUTHORITY
-CLERK_AUDIENCE
-CORS_ALLOWED_ORIGINS
+Clerk__Authority
+Clerk__AuthorizedParties__0
+Clerk__Audience  # optional; must match actual token configuration
 ```
+
+These are the implemented configuration names. Local settings can instead use ignored
+`appsettings.Development.json`. Production PostgreSQL, hosting and configurable production
+CORS remain future work; deployment settings will be finalized in that feature.
 
 ### Done When
 

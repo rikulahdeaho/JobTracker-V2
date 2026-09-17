@@ -4,9 +4,9 @@
 
 JobTracker is a fullstack job application tracking app.
 
-The first product milestone is a desktop-first React web app built with hardcoded/mock data. The goal is to validate the UI structure, application flow, and core product logic before connecting the backend.
-
-After the web flow works, the app will use an ASP.NET Core Web API connected to a relational database. The API owns the business logic and stores data through Entity Framework Core.
+The mock-data and API-integration milestones are complete. The desktop-first React
+web app uses an ASP.NET Core API, EF Core and local SQLite. Clerk authenticates users;
+the API validates tokens and enforces ownership. See docs/how-it-works.md for current behavior.
 
 A mobile app may be added later using Expo React Native. The mobile app should use the same API, the same authentication model, and the same database.
 
@@ -18,7 +18,7 @@ React Web ───────┐
 Expo Mobile ─────┘
 ```
 
-Auth target: Clerk  
+Authentication: Clerk
 ORM: Entity Framework Core  
 Frontend hosting later: Vercel  
 API hosting later: Railway  
@@ -44,7 +44,7 @@ jobtracker/
 - Vite
 - React Router
 - MUI
-- TanStack Query later for API server state
+- TanStack Query and Axios for API server state
 - React Hook Form later for forms
 - Zod later for validation
 
@@ -53,33 +53,34 @@ jobtracker/
 - ASP.NET Core Web API
 - C#
 - Entity Framework Core
-- SQLite or PostgreSQL locally
+- SQLite locally
 - PostgreSQL later in production
 
 ### Auth
 
-- Clerk later
-- Do not implement auth until the basic web flow and backend CRUD flow work
+- Clerk is implemented in the frontend and JWT Bearer validation in the API.
+- Ownership comes from validated claims; do not restore a dev-user runtime fallback.
 
 ## Current Development Priority
 
 Build the app in small, clear slices.
 
-Current target flow:
+Current implemented flow:
 
 ```text
-React + MUI Web prototype -> hardcoded/mock data
+React + MUI + Clerk -> TanStack Query + Axios -> authenticated ASP.NET Core API -> SQLite
 ```
 
-Do not implement API integration, authentication, deployment, mobile, or advanced features until the mock-data web flow works.
+Follow docs/current-feature.md for the current scope. Do not add deployment, mobile
+or advanced features unless explicitly requested.
 
-The first real milestone is:
+Completed first milestone:
 
 ```text
 A clean React + MUI JobTracker prototype that works with mock data.
 ```
 
-The second real milestone is:
+Completed second milestone:
 
 ```text
 The same UI connected to ASP.NET Core API and database.
@@ -205,8 +206,8 @@ Do not implement these unless explicitly asked:
 - Use DTOs for create and update requests.
 - Do not expose unnecessary internal fields from API responses.
 - Use async EF Core methods.
-- Keep user-specific data ready through `UserId`, even before Clerk is implemented.
-- Use `dev-user` temporarily until Clerk JWT validation is implemented.
+- Resolve UserId from validated Clerk claims and scope every owned query to it.
+- Legacy dev-user data stays untouched; never assign it automatically on sign-in.
 - Validate input before saving.
 - Return appropriate HTTP status codes.
 
@@ -253,9 +254,9 @@ Before saying a task is complete:
 - If frontend API calls changed, verify the browser can load the data.
 - Fix build errors before moving on.
 
-## Current Known Milestone
+## Completed Foundation Milestone (Historical)
 
-The first milestone is complete when:
+The original first milestone required:
 
 - React app starts
 - MUI is installed and used

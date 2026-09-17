@@ -4,6 +4,23 @@ This document describes the target architecture and staged implementation plan.
 For the current API-connected web app, local SQLite persistence and testing,
 see [Miten sovellus toimii nyt](how-it-works.md).
 
+## Implemented architecture (2026-09-17)
+
+```text
+React + MUI + Clerk -> TanStack Query -> Axios + session token
+    -> ASP.NET Core JWT Bearer -> owner-scoped controllers -> EF Core -> SQLite
+```
+
+Applications CRUD and workflow events are persisted. Timeline reads those events;
+Next Action, reminders, Schedule, Dashboard, Insights and list filters are frontend
+calculations over the current user's API data. Each user/session has its own QueryClient.
+All six data endpoints require authentication; ownership comes from validated `sub`.
+There is no separate Reminder table, dashboard endpoint or local Users table.
+React Hook Form and Zod are not installed; current forms use React state and existing validation.
+
+The phases below preserve the staged design. Mock-data phases are historical;
+PostgreSQL, hosting, mobile and the explicitly marked future models/endpoints are plans.
+
 ## Overview
 
 JobTracker is a fullstack job application tracking app.
@@ -41,7 +58,7 @@ Expo Mobile ─────┘
 - Vite
 - React Router
 - MUI
-- TanStack Query later for API server state
+- TanStack Query for API server state (implemented)
 - React Hook Form later for forms
 - Zod later for validation
 
@@ -63,7 +80,7 @@ Expo Mobile ─────┘
 
 ### Authentication
 
-- Clerk later
+- Clerk (implemented)
 - Clerk on web frontend
 - Clerk JWT validation in ASP.NET Core API
 - API reads Clerk user id from token claims
@@ -389,7 +406,7 @@ api/JobTracker.Api/
 - Move business logic into services when controller logic grows
 - Validate required fields before saving
 - Return appropriate HTTP status codes
-- Use `dev-user` temporarily until Clerk auth is implemented
+- Derive ownership from the validated Clerk `sub`; never accept UserId in request DTOs
 
 ---
 
@@ -431,14 +448,13 @@ Neon PostgreSQL
 
 ## Auth Architecture
 
-Authentication is added after the basic CRUD flow works.
+Authentication is implemented after the completed CRUD/API milestones.
 
 ## Frontend
 
-- Add ClerkProvider
-- Add sign in and sign up
-- Protect routes
-- Get Clerk token for API requests
+- ClerkProvider supplies session/user state and the Clerk sign-in modal
+- AuthenticationBoundary gates the workspace and isolates QueryClient by user/session
+- Axios requests the current Clerk token centrally, without manually persisting tokens
 
 ## Backend
 
@@ -456,7 +472,8 @@ Before Clerk:
 UserId = "dev-user"
 ```
 
-This allows backend data modeling to stay ready for user-specific data without implementing auth too early.
+This was the pre-auth ownership model. Those legacy rows remain untouched and invisible
+to real Clerk users; there is no automatic transfer on sign-in.
 
 ---
 
@@ -480,12 +497,17 @@ VITE_CLERK_PUBLISHABLE_KEY
 ## Backend Environment Variables
 
 ```text
-DATABASE_URL
 ConnectionStrings__DefaultConnection
-CLERK_AUTHORITY
-CLERK_AUDIENCE
-CORS_ALLOWED_ORIGINS
+Clerk__Authority
+Clerk__AuthorizedParties__0
+Clerk__AuthorizedParties__1
+Clerk__Audience  # optional; only for an actual configured token audience
 ```
+
+For local Development, the same Clerk section can be stored in ignored
+`api/JobTracker.Api/appsettings.Development.json`; see [API setup](../api/README.md).
+Environment variables override JSON. CORS currently allows the two local port-5173
+origins in Development. Production database/CORS/hosting configuration is not implemented.
 
 ---
 

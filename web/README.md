@@ -139,10 +139,15 @@ Bearer token refresh, sign-out, direct user switches, canceled reads, delayed to
 retrieval, 401/missing-token behavior, derived reminder isolation, sidebar identity
 and theme controls. They do not test Clerk internals.
 
-Manual acceptance still needs real Clerk configuration: sign in as A, create an
-application and activity, sign out, sign in as B and verify isolation, then return
-to A. Also verify reload, direct Details links, CRUD, Timeline, Schedule, Dashboard,
-Insights, theme persistence and session expiry with a running configured API.
+Local configuration, sign-in/sign-out, reads, navigation, search, reload and theme
+persistence were verified on 2026-09-17. A real Clerk A -> B -> A cycle in the same
+browser tab verified separate lists and derived reminders, restored A's persisted
+notes/events, and blocked foreign Details links in both directions. Application
+creation for both users, editing A's notes and recording A's Application sent event
+passed; Timeline, status, Next Action and Schedule updated accordingly.
+Test records were retained at the user's request; permanent browser deletion remains
+unverified. Real-session expiry and in-flight race scenarios were not manually induced;
+automated tests cover those auth/cache paths and deletion/error recovery.
 
 Intentionally outside this small suite: visual/MUI internals, snapshots,
 full browser end-to-end tests, native date-picker interaction, theme persistence,
