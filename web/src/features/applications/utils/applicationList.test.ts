@@ -23,10 +23,12 @@ describe("application list", () => {
     expect(filterAndSortApplications(records, { ...view, filter: "archived" }).map(item => item.id)).toEqual(["b"]);
   });
 
-  it("filters follow-ups using a fixed current time", () => {
+  it("filters meaningful attention, excluding uncontactable applications still waiting", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-16T12:00:00Z"));
-    expect(filterAndSortApplications(records, { ...view, filter: "needsFollowUp" }).map(item => item.id)).toEqual(["a"]);
+    expect(filterAndSortApplications(records, { ...view, filter: "needsAttention" }).map(item => item.id)).toEqual(["c"]);
+    vi.setSystemTime(new Date("2026-10-01T12:00:00Z"));
+    expect(filterAndSortApplications(records, { ...view, filter: "needsAttention" }).map(item => item.id)).toEqual(["a", "c"]);
   });
 
   it.each([

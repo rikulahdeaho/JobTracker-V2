@@ -1,7 +1,7 @@
 import type { ApplicationStatus, JobApplication } from "../types/application";
 import { getApplicationNextAction } from "./applicationNextAction";
 
-export type ApplicationListFilter = "all" | "active" | "archived" | "needsFollowUp";
+export type ApplicationListFilter = "all" | "active" | "archived" | "needsAttention";
 
 export type ApplicationSortOption = "updatedDesc" | "appliedDesc" | "deadlineAsc";
 
@@ -64,8 +64,8 @@ function matchesListFilter(
       return !["Rejected", "Ghosted", "Withdrawn"].includes(application.status);
     case "archived":
       return ["Rejected", "Ghosted", "Withdrawn"].includes(application.status);
-    case "needsFollowUp":
-      return getApplicationNextAction(application).isNeedsFollowUp;
+    case "needsAttention":
+      return getApplicationNextAction(application).needsAttention;
   }
 }
 

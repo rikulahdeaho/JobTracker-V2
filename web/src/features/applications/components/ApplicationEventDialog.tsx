@@ -8,6 +8,7 @@ import { applicationQueryKey, applicationsQueryKey } from "../api/applicationQue
 import { getApiErrorMessage } from "../../../lib/apiClient";
 
 const eventLabels: Record<CreateApplicationEventRequest["type"], string> = {
+  ContactReceived: "Recruiter reply received",
   ApplicationSent: "Application sent", FollowUpSent: "Follow-up sent",
   InterviewScheduled: "Interview scheduled", AssignmentReceived: "Assignment received",
   AssignmentSubmitted: "Assignment submitted", OfferReceived: "Offer received",

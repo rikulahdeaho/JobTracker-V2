@@ -107,7 +107,7 @@ export function SettingsPage() {
             <Stack gap={2.25}>
               <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
                 <TextField disabled label="Default follow-up" defaultValue="14" fullWidth InputProps={{ endAdornment: "days" }} />
-                <TextField disabled label="Ghosted risk indicator" defaultValue="30" fullWidth InputProps={{ endAdornment: "days" }} />
+                <TextField disabled label="Status review indicator" defaultValue="30" fullWidth InputProps={{ endAdornment: "days" }} />
               </Stack>
               <Divider />
               <FormControlLabel disabled control={<Switch defaultChecked />} label="Highlight applications needing follow-up" />

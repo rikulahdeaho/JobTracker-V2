@@ -18,6 +18,7 @@ import {
 import type { PropsWithChildren } from "react";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import { emptyApplicationFormValues } from "../utils/applicationForm";
+import { applicationMethodLabels, followUpModeLabels, isValidContactEmail } from "../utils/applicationContact";
 import { applicationStatusLabel } from "../utils/applicationStatus";
 import { getApiErrorMessage } from "../../../lib/apiClient";
 
@@ -29,7 +30,7 @@ type ApplicationFormDialogProps = {
   onSubmit: (values: JobApplicationFormValues) => Promise<void>;
 };
 
-type FormErrors = Partial<Record<"companyName" | "jobTitle", string>>;
+type FormErrors = Partial<Record<"companyName" | "jobTitle" | "contactEmail" | "contactPerson", string>>;
 
 const applicationStatuses = Object.keys(applicationStatusLabel) as ApplicationStatus[];
 
@@ -53,7 +54,7 @@ export function ApplicationFormDialog({
         [field]: event.target.value,
       }));
 
-      if (field === "companyName" || field === "jobTitle") {
+      if (field === "companyName" || field === "jobTitle" || field === "contactEmail" || field === "contactPerson") {
         setErrors((currentErrors) => ({
           ...currentErrors,
           [field]: undefined,
@@ -73,6 +74,10 @@ export function ApplicationFormDialog({
       nextErrors.jobTitle = "Job title is required.";
     }
 
+    if (values.contactEmail.trim() && !isValidContactEmail(values.contactEmail.trim())) {
+      nextErrors.contactEmail = "Enter a valid contact email address (at most 254 characters).";
+    }
+    if (values.contactPerson.length > 200) nextErrors.contactPerson = "Use at most 200 characters.";
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -233,6 +238,27 @@ export function ApplicationFormDialog({
                   fullWidth
                   placeholder="EUR 5,000 - 6,000 / month"
                 />
+              </Grid>
+            </Grid>
+          </FormSection>
+
+          <FormSection title="Application and contact" description="Optional. Portal applications without a direct contact are monitored without suggesting follow-ups.">
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField select fullWidth disabled={isSaving} label="Application method" value={values.applicationMethod} onChange={handleFieldChange("applicationMethod")}>
+                  {Object.entries(applicationMethodLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField select fullWidth disabled={isSaving} label="Follow-up preference" value={values.followUpMode} onChange={handleFieldChange("followUpMode")} helperText="Follow-up suggestions require a valid contact email, even when Possible is selected.">
+                  {Object.entries(followUpModeLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth disabled={isSaving} label="Contact person" value={values.contactPerson} onChange={handleFieldChange("contactPerson")} error={!!errors.contactPerson} helperText={errors.contactPerson || "Optional"} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth disabled={isSaving} label="Contact email" type="email" value={values.contactEmail} onChange={handleFieldChange("contactEmail")} error={!!errors.contactEmail} helperText={errors.contactEmail || "Optional direct contact channel"} />
               </Grid>
             </Grid>
           </FormSection>

@@ -1,5 +1,6 @@
 import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
-import { Chip, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import { Chip, Link, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import type { ChipProps, Theme } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { getSemanticChipStyles } from "../../../app/theme";
@@ -45,12 +46,12 @@ export function ReminderListItem({ reminder, borderTop = false }: ReminderListIt
         }
         secondary={
           <Stack gap={0.75} sx={{ mt: 0.75 }}>
-            <Typography color="text.secondary">
+            <Link component={RouterLink} to={`/applications/${reminder.applicationId}`}>
               {reminder.companyName} - {reminder.jobTitle}
-            </Typography>
+            </Link>
             <Typography color="text.secondary">{reminder.description}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Due {formatApplicationDate(reminder.dueDate, "No due date")}
+              {reminder.category === "suggestedAttention" ? "Suggested attention from" : "Scheduled for"} {formatApplicationDate(reminder.dueDate, "No date")}
             </Typography>
           </Stack>
         }

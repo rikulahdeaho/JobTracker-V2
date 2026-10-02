@@ -2,7 +2,7 @@
 
 This document describes the target architecture and staged implementation plan.
 For the current API-connected web app, local SQLite persistence and testing,
-see [Miten sovellus toimii nyt](how-it-works.md).
+see [How JobTracker works](how-it-works.md).
 
 ## Implemented architecture (2026-09-17)
 
@@ -229,6 +229,10 @@ JobTitle
 JobUrl
 Location
 Source
+ApplicationMethod
+FollowUpMode
+ContactPerson
+ContactEmail
 Status
 AppliedDate
 Deadline
@@ -284,7 +288,7 @@ Represents a follow-up, deadline, interview or other scheduled action.
 
 Examples:
 
-- Follow up after 14 days
+- Suggest follow-up after 14 days only when a direct contact exists and the preference allows it
 - Prepare for interview
 - Submit assignment
 - Respond to offer

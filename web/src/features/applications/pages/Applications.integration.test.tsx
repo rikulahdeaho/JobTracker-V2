@@ -9,11 +9,104 @@ import { applicationFixture, eventFixture } from "../../../test/applicationFixtu
 import { ApplicationsProvider } from "../context/ApplicationsProvider";
 import { ApplicationsPage } from "./ApplicationsPage";
 import { ApplicationDetailsPage } from "./ApplicationDetailsPage";
+import { SchedulePage } from "../../schedule/SchedulePage";
 
 const originalAdapter = apiClient.defaults.adapter;
 let queryClient: QueryClient;
 let unbindSession: () => void;
 const http = vi.fn<AxiosAdapter>();
+
+it("keeps review active without a write, then manually marks Ghosted through the normal update", async () => {
+  const user = userEvent.setup();
+  let application = applicationFixture({ events: [eventFixture({ occurredAt: "2020-01-01T00:00:00Z" })] });
+  http.mockImplementation(async config => {
+    if (config.method === "put") {
+      expect(JSON.parse(String(config.data))).toMatchObject({ status: "Ghosted", applicationMethod: "Unknown", followUpMode: "Unknown" });
+      application = { ...application, status: "Ghosted" };
+      return response(config, application);
+    }
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Keep active" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Review status remains available");
+  expect(screen.getByRole("heading", { name: "Review status" })).toBeInTheDocument();
+  expect(http.mock.calls.some(([config]) => config.method !== "get")).toBe(false);
+  await user.click(screen.getByRole("button", { name: "Mark as ghosted" }));
+  expect(await screen.findByRole("heading", { name: "No action" })).toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
+});
+
+it("edits contact information and validates the direct channel before saving", async () => {
+  const user = userEvent.setup();
+  let application = applicationFixture();
+  http.mockImplementation(async config => {
+    if (config.method === "put") {
+      expect(JSON.parse(String(config.data))).toMatchObject({ applicationMethod: "CompanyPortal", followUpMode: "Possible", contactPerson: "Recruiter", contactEmail: "recruiter@example.com" });
+      application = { ...application, applicationMethod: "CompanyPortal", followUpMode: "Possible", contactPerson: "Recruiter", contactEmail: "recruiter@example.com" };
+      return response(config, application);
+    }
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Edit" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.click(dialog.getByRole("combobox", { name: "Application method" }));
+  await user.click(screen.getByRole("option", { name: "Company portal" }));
+  await user.click(dialog.getByRole("combobox", { name: "Follow-up preference" }));
+  await user.click(screen.getByRole("option", { name: "Possible with a direct contact" }));
+  await user.type(dialog.getByRole("textbox", { name: "Contact person" }), "Recruiter");
+  await user.type(dialog.getByRole("textbox", { name: "Contact email" }), "invalid");
+  await user.click(dialog.getByRole("button", { name: "Save changes" }));
+  expect(dialog.getByText(/Enter a valid contact email/)).toBeInTheDocument();
+  expect(http.mock.calls.some(([config]) => config.method === "put")).toBe(false);
+  await user.clear(dialog.getByRole("textbox", { name: "Contact email" }));
+  await user.type(dialog.getByRole("textbox", { name: "Contact email" }), "recruiter@example.com");
+  await user.click(dialog.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(screen.getByText("recruiter@example.com")).toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
+});
+
+it("records a recruiter reply with an explicit timestamp and resets the visible next action", async () => {
+  const user = userEvent.setup();
+  let application = applicationFixture({ events: [eventFixture({ occurredAt: "2020-01-01T00:00:00Z" })] });
+  http.mockImplementation(async config => {
+    if (config.method === "post") {
+      const body = JSON.parse(String(config.data)) as { type: string; occurredAt: string; dueAt: string | null };
+      expect(body).toMatchObject({ type: "ContactReceived", dueAt: null });
+      expect(Number.isFinite(Date.parse(body.occurredAt))).toBe(true);
+      application = { ...application, events: [...application.events,
+        eventFixture({ id: "reply", type: "ContactReceived", occurredAt: body.occurredAt }),
+      ] };
+      return response(config, application, 201);
+    }
+    return response(config, config.url === "/api/applications" ? [application] : application);
+  });
+  renderPage(`/applications/${application.id}`);
+  await user.click(await screen.findByRole("button", { name: "Record activity" }));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.click(dialog.getByRole("combobox", { name: "Activity" }));
+  await user.click(screen.getByRole("option", { name: "Recruiter reply received" }));
+  expect(dialog.getByLabelText(/Activity occurred at/)).toBeInTheDocument();
+  await user.click(dialog.getByRole("button", { name: "Save activity" }));
+  expect(await screen.findByRole("heading", { name: "Wait for response" })).toBeInTheDocument();
+  expect(screen.getByText("Recruiter reply received")).toBeInTheDocument();
+  expect(queryClient.getQueryData(["applications"])).toEqual([application]);
+});
+
+it("shows hard commitments and suggested attention separately with application links", async () => {
+  const application = applicationFixture({ applicationMethod: "CompanyPortal", events: [eventFixture({ occurredAt: "2020-01-01T00:00:00Z" })] });
+  const draft = applicationFixture({ id: "draft", companyName: "Draft company", status: "ToApply", deadline: "2030-10-20" });
+  http.mockImplementation(async config => response(config, [application, draft]));
+  renderPage("/schedule");
+  expect(await screen.findByText("Suggested attention")).toBeInTheDocument();
+  expect(screen.getByText("Upcoming commitments")).toBeInTheDocument();
+  expect(screen.getByText(/Suggested attention from/)).toBeInTheDocument();
+  expect(screen.getByText(/Scheduled for/)).toBeInTheDocument();
+  expect(screen.queryByText("Follow up")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Example Company - Backend Developer" })).toHaveAttribute("href", `/applications/${application.id}`);
+});
 
 function response(config: InternalAxiosRequestConfig, data: unknown, status = 200): AxiosResponse<unknown> {
   return { config, data, status, statusText: String(status), headers: new AxiosHeaders() };
@@ -27,6 +120,7 @@ function renderPage(path = "/applications") {
           <Routes>
             <Route path="/applications" element={<ApplicationsPage />} />
             <Route path="/applications/:id" element={<ApplicationDetailsPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
           </Routes>
         </MemoryRouter>
       </ApplicationsProvider>

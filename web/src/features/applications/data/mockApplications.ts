@@ -5,6 +5,7 @@ const today = new Date();
 export const mockApplications: JobApplication[] = [
   {
     id: "reaktor-senior-frontend-engineer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Reaktor",
     jobTitle: "Senior Frontend Engineer",
     status: "Interviewing",
@@ -23,6 +24,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "wolt-product-designer-engineer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Wolt",
     jobTitle: "Product Engineer",
     status: "Applied",
@@ -41,6 +43,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "nitor-ui-engineer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Nitor",
     jobTitle: "UI Engineer",
     status: "ToApply",
@@ -59,6 +62,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "solita-fullstack-consultant",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Solita",
     jobTitle: "Full Stack Consultant",
     status: "Assignment",
@@ -77,6 +81,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "vincit-software-developer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Vincit",
     jobTitle: "Software Developer",
     status: "Draft",
@@ -95,6 +100,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "futurice-senior-react-developer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Futurice",
     jobTitle: "Senior React Developer",
     status: "Ghosted",
@@ -113,6 +119,7 @@ export const mockApplications: JobApplication[] = [
   },
   {
     id: "smartly-senior-product-engineer",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Smartly.io",
     jobTitle: "Senior Product Engineer",
     status: "Offer",

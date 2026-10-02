@@ -11,7 +11,7 @@ describe("Next Action", () => {
     ["Ghosted", "No action"], ["Withdrawn", "No action"],
   ])("suggests the appropriate action for %s", (status, title) => {
     expect(getApplicationNextAction(applicationFixture({ status }))).toMatchObject({
-      title, isNeedsFollowUp: false, isGhostedRisk: false,
+      title, needsAttention: !["Rejected", "Ghosted", "Withdrawn"].includes(status), needsStatusReview: false,
     });
   });
 
@@ -19,12 +19,12 @@ describe("Next Action", () => {
     [13, "Wait for response", false, false],
     [14, "Follow up", true, false],
     [29, "Follow up", true, false],
-    [30, "Consider ghosted", true, true],
+    [30, "Review status", true, true],
   ])("handles %i full days without activity", (days, title, followUp, ghosted) => {
-    const application = applicationFixture();
+    const application = applicationFixture({ contactEmail: "recruiter@example.com" });
     const reference = new Date(Date.parse(application.events[0].occurredAt) + days * 86400000);
     expect(getApplicationNextAction(application, reference)).toMatchObject({
-      title, isNeedsFollowUp: followUp, isGhostedRisk: ghosted,
+      title, needsAttention: followUp, needsStatusReview: ghosted,
     });
   });
 
@@ -33,25 +33,26 @@ describe("Next Action", () => {
     const edited = { ...original, notes: "Changed", salaryRange: "5000", updatedAt: "2026-10-10T12:00:00Z" };
     const now = new Date("2026-10-02T12:00:00Z");
     expect(getApplicationNextAction(edited, now)).toEqual(getApplicationNextAction(original, now));
-    expect(getApplicationNextAction(edited, now).isGhostedRisk).toBe(true);
+    expect(getApplicationNextAction(edited, now).needsStatusReview).toBe(true);
     expect(edited.status).toBe("Applied");
   });
 
   it("uses the latest contact in unsorted history, not status changes", () => {
-    const application = applicationFixture({ events: [
+    const application = applicationFixture({ contactEmail: "recruiter@example.com", events: [
       eventFixture({ type: "FollowUpSent", occurredAt: "2026-09-15T12:00:00Z" }),
       eventFixture(),
       eventFixture({ type: "StatusChanged", occurredAt: "2026-09-16T12:00:00Z" }),
     ] });
     expect(getApplicationNextAction(application, new Date("2026-09-16T12:00:00Z")).title).toBe("Wait for response");
     expect(getApplicationNextAction(application, new Date("2026-09-29T12:00:00Z")).title).toBe("Follow up");
-    expect(getApplicationNextAction(application, new Date("2026-10-15T12:00:00Z")).title).toBe("Consider ghosted");
+    expect(getApplicationNextAction(application, new Date("2026-10-15T12:00:00Z")).title).toBe("Review status");
   });
 
   it("does not invent contact from metadata or missing history", () => {
     const application = applicationFixture({ events: [] });
-    expect(getApplicationNextAction(application).title).toBe("Add application sent date");
-    expect(getApplicationNextAction(application).isGhostedRisk).toBe(false);
+    expect(getApplicationNextAction(application).title).toBe("Add application activity/details");
+    expect(getApplicationNextAction(application).needsAttention).toBe(true);
+    expect(getApplicationNextAction(application).needsStatusReview).toBe(false);
   });
 
   it.each([
@@ -62,7 +63,7 @@ describe("Next Action", () => {
     const application = applicationFixture({ status, deadline: "2026-09-01", events: [
       eventFixture({ type, dueAt: "2026-09-25T12:00:00Z" }),
     ] });
-    expect(getApplicationNextAction(application).title).toBe(title);
+    expect(getApplicationNextAction(application, new Date("2026-09-20T12:00:00Z")).title).toBe(title);
   });
 
   it("stops asking for submission after assignment submitted", () => {

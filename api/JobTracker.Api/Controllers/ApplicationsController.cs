@@ -163,6 +163,10 @@ public sealed class ApplicationsController : ControllerBase
         application.JobUrl = request.JobUrl;
         application.Location = request.Location;
         application.Source = request.Source;
+        application.ApplicationMethod = request.ApplicationMethod;
+        application.FollowUpMode = request.FollowUpMode;
+        application.ContactPerson = string.IsNullOrWhiteSpace(request.ContactPerson) ? null : request.ContactPerson.Trim();
+        application.ContactEmail = string.IsNullOrWhiteSpace(request.ContactEmail) ? null : request.ContactEmail.Trim();
         application.Status = request.Status;
         application.AppliedDate = request.AppliedDate;
         application.Deadline = request.Deadline;

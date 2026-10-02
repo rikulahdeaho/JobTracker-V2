@@ -2,7 +2,7 @@
 
 ASP.NET Core 10 controller API with EF Core 10 and local SQLite persistence.
 The React application uses this API for Applications CRUD through TanStack Query.
-See [Miten sovellus toimii nyt](../docs/how-it-works.md) for the current application behavior.
+See [How JobTracker works](../docs/how-it-works.md) for the current application behavior.
 
 ## Run locally
 
@@ -186,6 +186,10 @@ Example POST or PUT body:
   undefined enum values return 400. Omitted status defaults to `Draft`.
 - Applied date and deadline are nullable dates in `YYYY-MM-DD` format.
 - Other editable fields are optional and nullable.
+- `applicationMethod`: `Unknown` (default), `CompanyPortal`, `Email`, `RecruiterDirect`, `LinkedInEasyApply`, or `Other`.
+- `followUpMode`: `Unknown` (default), `Possible`, `NotAvailable`, or `NotNeeded`. Undefined/numeric enum inputs return 400.
+- `contactPerson`: optional, maximum 200 characters. `contactEmail`: optional, maximum 254 characters; requires a non-whitespace local part and dotted domain. Empty contacts normalize to null.
+- Methods and preferences never create contact details. A valid email and no explicit NotAvailable/NotNeeded preference allow frontend follow-up suggestions.
 - PUT replaces all editable fields. Omitted optional fields become null.
 - `createdAt` and `updatedAt` are UTC timestamps with a `Z` suffix.
   They match on create; only `updatedAt` changes on edit.
@@ -253,3 +257,10 @@ before starting the updated API. No inferred interviews or follow-ups are create
 
 See [workflow model, API example and rules](../docs/application-workflow.md),
 including date corrections and intentionally deferred reminder/event management.
+
+Migration `20261002084434_ApplicationContactPreferences` adds method, follow-up mode,
+contact person and contact email. Existing rows receive Unknown/Unknown/null/null;
+ownership, status, dates and events remain unchanged. Apply with `dotnet ef database update`.
+`ContactReceived` is accepted by the existing event POST with required past/present
+`occurredAt`, optional note and no `dueAt`. It preserves status and uses the same
+parent ownership checks. No Next Action or Schedule values are stored by the API.

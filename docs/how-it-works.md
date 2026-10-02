@@ -1,233 +1,302 @@
-# Miten JobTracker toimii nyt
+# How JobTracker works
 
-Tämä dokumentti kuvaa toteutusta 17.9.2026. Tulevaisuuden suunnitelmat löytyvät
-[roadmapista](roadmap.md) ja [arkkitehtuurisuunnitelmasta](architecture.md).
+This document describes the implementation as of 2026-10-02. See the
+[roadmap](roadmap.md) and [architecture](architecture.md) for future plans, and
+[the current feature](current-feature.md) for acceptance criteria.
 
-## Kokonaisuus
+## Overview
 
-JobTrackerilla voi tallentaa työpaikkahakemuksia, muokata niiden tietoja ja seurata
-hakuprosessien tilannetta. React-käyttöliittymä käyttää ASP.NET Core API:a, joka
-tallentaa hakemukset SQLite-tietokantaan Entity Framework Coren avulla.
+JobTracker stores job applications and helps users track each hiring process.
+The React web app calls an ASP.NET Core API, which persists applications and
+workflow events in local SQLite through Entity Framework Core.
 
 ```mermaid
 flowchart LR
-    UI[React ja MUI] --> Query[TanStack Query]
-    Query --> Client[applicationsApi ja Axios]
-    Client --> API[ASP.NET Core ApplicationsController]
+    UI[React and MUI] --> Query[TanStack Query]
+    Query --> Client[applicationsApi and Axios]
+    Client --> API[ASP.NET Core controllers]
     API --> EF[AppDbContext / EF Core]
     EF --> DB[(SQLite)]
 ```
 
-Hakemusten pysyvä tietolähde on tietokanta. TanStack Query pitää API:n vastauksia
-selaimen muistissa. Sivun uudelleenlataus hakee tiedot API:sta uudelleen.
-Teemavalinta säilytetään selaimen localStoragessa.
+The database is the persistent source of application data. TanStack Query caches
+API responses in browser memory; reloading fetches them again. Next Action,
+Schedule, Dashboard, Insights and list filters are frontend calculations over
+that data. Theme preference is stored in localStorage.
 
-Kirjautuminen käyttää Clerkiä. Kirjautumaton käyttäjä näkee kirjautumisnäkymän;
-työtila ja API-haut käynnistyvät vasta valmiin kirjautumisistunnon jälkeen.
-Sivupalkki näyttää käyttäjän nimen, sähköpostin, kuvan ja uloskirjautumisen.
-Teemaprovider säilyy kirjautumisten välillä.
+Clerk handles sign-in. The workspace and its API requests start only after an
+authenticated session is ready. The sidebar shows the user's profile and sign-out
+control. Theme state stays mounted across sign-in and sign-out.
 
-Axios hakee joka pyynnölle nykyisen session tokenin Clerkiltä ja lähettää sen
-Bearer-otsakkeessa. Sovellus ei tallenna tokeneita itse. ASP.NET Core tarkistaa
-allekirjoituksen, issuerin, voimassaolon ja sallitun `azp`-originin; audience
-tarkistetaan, jos se on määritetty oikeaan token-konfiguraatioon. CurrentUser lukee
-validoidun `sub`-claimin. Jokainen käyttäjätietoja käsittelevä endpoint vaatii
-autentikoinnin, ja kaikki haut rajataan kyseiseen omistajaan.
+Axios requests a current Clerk session token for each API call and sends it as a
+Bearer token. The app does not persist tokens itself. The API validates the
+signature, issuer, lifetime and permitted `azp` origin. It validates audience when
+configured. `CurrentUser` reads the validated `sub` claim, and all application
+queries are scoped to that owner.
 
-## Sivut
+## Pages
 
-| Sivu | Osoite | Toiminta |
+| Page | Route | Purpose |
 | --- | --- | --- |
-| Dashboard | `/dashboard` | Hakemusten yhteenveto, tilajakauma, seuraavat toimet ja muistutusten yhteenveto. |
-| Applications | `/applications` | Hakemuslista, lisääminen, haku, suodatus ja järjestäminen. |
-| Application Details | `/applications/:id` | Hakemuksen tiedot, muokkaus, poistaminen ja tallennettu tapahtumahistoria. |
-| Schedule | `/schedule` | Hakemuksista muodostetut muistutukset ja aktiiviset haastattelu-, tehtävä- ja tarjousvaiheet. |
-| Insights | `/insights` | Hakemuksista lasketut tilastot, kuten tilajakauma ja tietojen kattavuus. |
-| Settings | `/settings` | Teeman valinta sekä myöhempien asetusten esikatselu. |
+| Dashboard | `/dashboard` | Application counts, pipeline status, next actions and a Schedule summary. |
+| Applications | `/applications` | Create applications, search, filter and sort the list. |
+| Application Details | `/applications/:id` | View, edit or delete an application; record activity and read its Timeline. |
+| Schedule | `/schedule` | Recorded commitments and a separate Suggested attention section. |
+| Insights | `/insights` | Frontend summaries of status, activity and data coverage. |
+| Settings | `/settings` | Working theme controls and previews of future settings. |
 
-Etusivu `/` ohjaa Dashboardiin. Sivupalkista voi vaihtaa sivua.
+The root route `/` redirects to Dashboard. Sidebar links navigate between pages.
 
-## Hakemuksen käsittely
+## Managing applications
 
-1. Avaa Applications ja valitse **Add Application**.
-2. Täytä vähintään yritys ja tehtävänimike. Muut tiedot ovat valinnaisia.
-3. Tallenna. Selain lähettää POST-pyynnön, ja API palauttaa tallennetun hakemuksen.
-   Lomake sulkeutuu onnistumisen jälkeen ja listan suodattimet tyhjennetään.
-4. Avaa hakemus listalta nähdäksesi sen tiedot. Muokkaus tallentaa muutokset PUT-pyynnöllä.
-5. Poistaminen pyytää vahvistuksen ja lähettää DELETE-pyynnön. Onnistunut poisto
-   palauttaa hakemuslistaan. Poisto poistaa tietueen tietokannasta.
+1. Open Applications and choose **Add Application**.
+2. Enter a company and job title. Other fields are optional, including application
+   method, contact information and follow-up preference.
+3. Save. The browser sends a POST request and receives the saved application.
+   On success, the form closes, the list refreshes and its filters reset.
+4. Open an application for Details. **Edit** saves changes through PUT.
+5. **Delete** asks for confirmation, then sends DELETE. Successful deletion removes
+   the application and its events from the database and returns to the list.
 
-Tallennuksen aikana lomakkeen toiminnot estävät päällekkäiset lähetykset.
-Epäonnistunut tallennus näyttää virheen ja säilyttää syötetyt tiedot.
-Poiston epäonnistuessa vahvistusikkuna jää auki ja näyttää virheen.
+Forms disable saving controls while a request is pending. A failed save displays
+an error and keeps the entered values. A failed deletion keeps the confirmation
+open so the user can retry.
 
-### Haku, suodatus ja järjestäminen
+### Application method and contact preferences
 
-Toiminnot käsittelevät selaimeen haettua listaa. Niille ei ole omia API-pyyntöjä.
+| Field | Values or purpose |
+| --- | --- |
+| `applicationMethod` | `Unknown`, `CompanyPortal`, `Email`, `RecruiterDirect`, `LinkedInEasyApply`, `Other`. Defaults to `Unknown`. |
+| `followUpMode` | `Unknown`, `Possible`, `NotAvailable`, `NotNeeded`. Defaults to `Unknown`. |
+| `contactPerson` | Optional name, maximum 200 characters. |
+| `contactEmail` | Optional direct email address, maximum 254 characters. |
 
-- Haku kohdistuu yrityksen nimeen ja tehtävänimikkeeseen, kirjainkoosta riippumatta.
-- Tilasuodatin valitsee yhden hakemuksen tilan.
-- **Active** sisältää muut kuin `Rejected`, `Ghosted` ja `Withdrawn`.
-- **Archived** sisältää nämä kolme suljettua tilaa. Arkistointi on tässä suodatus, ei erillinen tietokantatoiminto.
-- **Needs follow-up** käyttää Next Action -laskentaa.
-- Järjestysvaihtoehdot ovat viimeksi päivitetty, hakupäivä ja lähin määräpäivä.
-  Puuttuvat määräpäivät sijoitetaan viimeiseksi. Tasatilanteet järjestetään yrityksen ja tehtävänimikkeen perusteella.
+Both the frontend and API validate contact email format: a non-whitespace local
+part, `@`, and a dotted domain. This checks format, not whether the address exists.
+Empty contact fields are stored as null.
 
-Dashboardin **active processes** -mittari laskee vain tilat `Applied`,
-`Interviewing`, `Assignment` ja `Offer`. Sen määritelmä on suppeampi kuin
-Applications-listan Active-suodatin, johon myös luonnokset kuuluvat.
+A follow-up suggestion requires a valid contact email and a preference other than
+`NotAvailable` or `NotNeeded`. `Possible` still requires an email. `Unknown` with
+an explicitly entered valid email allows suggestions; legacy records without a
+contact email do not. An application method or contact name never creates a contact
+channel. Portal and LinkedIn Easy Apply applications without one are monitored
+without a day-14 follow-up.
+
+### Search, filters and sorting
+
+These operations use the list already loaded into the browser; they do not make
+separate API requests.
+
+- Search matches company or job title, ignoring case and surrounding whitespace.
+- The status filter selects one of the nine stored application statuses.
+- **Active** includes all statuses except `Rejected`, `Ghosted` and `Withdrawn`,
+  including Draft and ToApply.
+- **Archived** includes those three closed statuses. It is a list filter, not a
+  separate archive operation in the database.
+- **Needs attention** includes actions the user can take now: preparation, missing
+  details, eligible follow-up, offer review and status review. Waiting and closed
+  applications are excluded.
+- Sorting supports recently updated, applied date and nearest application deadline.
+  Missing deadlines sort last; company and job title break ties.
+
+Dashboard's **Active hiring processes** metric counts only `Applied`,
+`Interviewing`, `Assignment` and `Offer`. It therefore has a narrower definition
+than the Applications Active filter.
 
 ## Next Action
 
-Selain päättelee seuraavan toimen hakemuksen tilasta, yhteydenpitotapahtumista ja
-kirjatuista haastatteluajoista sekä määräpäivistä. Tekninen `updatedAt` ei nollaa laskentaa.
-API ei tallenna Next Action -arvoa eikä muuta tilaa automaattisesti.
+Stored status describes the process. Next Action is a derived suggestion based on
+that status, communication history and recorded dates. The API does not store Next
+Action, and its calculation never changes status.
 
-| Tila | Ehdotettu toiminto |
-| --- | --- |
-| `Draft` | Finish application |
-| `ToApply` | Apply |
-| `Applied`, alle 14 päivää viimeisestä lähetyksestä/follow-upista | Wait for response |
-| `Applied`, vähintään 14 mutta alle 30 päivää viimeisestä lähetyksestä/follow-upista | Follow up |
-| `Applied`, vähintään 30 päivää viimeisestä lähetyksestä/follow-upista | Consider ghosted |
-| `Interviewing` | Prepare interview |
-| `Assignment` | Submit assignment |
-| `Offer` | Respond to offer |
-| `Rejected`, `Ghosted`, `Withdrawn` | No action |
-
-Aika lasketaan viimeisimmän `ApplicationSent`- tai `FollowUpSent`-tapahtuman
-`OccurredAt`-ajasta kokonaisina 24 tunnin jaksoina. Muistiinpanojen tai muiden
-hakemustietojen muokkaus ei vaikuta tähän aikaan. Jos lähetysajankohta puuttuu,
-sovellus pyytää sen lisäämistä. Ghosted-tilaan ei siirrytä automaattisesti.
-
-Haastatteluvaiheessa puuttuva aika tuottaa **Add interview details** -toiminnon.
-Tehtävän puuttuva määräaika tuottaa **Add assignment deadline** -toiminnon; palautettu
-tehtävä tuottaa **Wait for assignment feedback** -toiminnon. Tarjous ilman
-vastausmääräaikaa tuottaa **Review offer** -toiminnon.
-
-## Timeline, Schedule ja Insights
-
-Timeline näyttää tietokantaan tallennetut tapahtumat uusimmasta vanhimpaan.
-Detailsin **Record activity** -painikkeella kirjataan lähetys, follow-up,
-haastattelun sopiminen, tehtävän vastaanotto/palautus tai tarjouksen vastaanotto.
-Tilamuutokset tallentuvat automaattisesti. Tavallinen tekstikentän muokkaus ei luo tapahtumaa.
-
-Lomakkeen Activity occurred at tarkoittaa tapahtuma-aikaa. Haastattelun aika tai
-tehtävän/tarjouksen määräaika annetaan erikseen. Ajat syötetään paikallisessa
-ajassa ja tallennetaan UTC-muodossa. Tapahtuman kirjaaminen voi myös päivittää tilan.
-
-Schedule käyttää oikeita kirjattuja päiviä:
-
-- Follow-up: viimeinen lähetys tai follow-up + 14 päivää.
-- Haastattelu: InterviewScheduled-tapahtuman haastatteluaika.
-- Tehtävä: AssignmentReceived-tapahtuman määräaika. Palautus poistaa tehtävämuistutuksen.
-- Tarjous: OfferReceived-tapahtuman vastausmääräaika.
-- Hakemisen määräpäivä: hakemuksen Deadline, erillään myöhempien vaiheiden määräajoista.
-
-Jos aikaa ei tiedetä, sitä ei arvata. Muistutukset johdetaan näistä tiedoista, eikä
-niille vielä ole omaa tietokantataulua tai kuittaustoimintoa. Suljetut hakemukset
-eivät tuota automaattisia muistutuksia. Schedule ryhmittelee päivät paikallisen kalenterin mukaan.
-
-Vanhoille hakemuksille luodaan migraatiossa vain luonti ja tunnettu lähetyspäivä.
-Pelkkä nykyinen tila ei synnytä oletettua historiaa. Applied date -kentän korjaus
-korjaa saman lähetyksen päivää; tyhjentäminen poistaa kyseisen lähetystiedon.
-Muut tapahtumat säilyvät. Tämä ei ole muuttumaton audit-loki.
-
-Dashboard ja Insights käyttävät samaa hakemuslistaa tapahtumineen. Niille ei ole
-erillisiä backend-endpointteja. Settingsin teemavalinta toimii; profiili-, vienti-
-ja seuranta-asetukset ovat vielä esikatselua.
-
-Tarkat säännöt, rajaukset ja migraatio on kuvattu [workflow-dokumentissa](application-workflow.md).
-
-## API ja tietomalli
-
-API käyttää controllereita. `AppDbContext` käsittelee `JobApplications`-taulua,
-ja EF Core -migraatiot määrittävät tietokannan rakenteen.
-
-| Kentät | Merkitys |
-| --- | --- |
-| `id` | API:n luoma GUID-tunniste. |
-| `UserId` | Validoidun Clerk-tokenin `sub`; ei mukana pyyntö- tai vastaus-DTO:ssa. |
-| `companyName`, `jobTitle` | Pakollinen yritys ja tehtävänimike; pelkkä tyhjä tila ei kelpaa. |
-| `jobUrl`, `location`, `source` | Valinnaiset ilmoituksen osoite, sijainti ja lähde. |
-| `status` | Yksi Next Action -taulukon yhdeksästä tilasta; oletus `Draft`. |
-| `appliedDate`, `deadline` | Valinnaiset päivämäärät muodossa `YYYY-MM-DD`. |
-| `salaryRange`, `notes`, `jobDescription` | Valinnaiset tekstikentät. |
-| `createdAt`, `updatedAt` | API:n asettamat tekniset UTC-aikaleimat. |
-| `events` | Tallennetut työnkulun tapahtumat, mukana API:n vastauksissa. |
-
-Status kulkee JSONissa merkkijonona ja tallentuu tietokantaan tekstinä.
-Luonnissa molemmat aikaleimat saavat saman arvon. Muokkauksessa vain `updatedAt`
-muuttuu. Tyhjät valinnaiset lomakekentät muunnetaan lähetettäessä `null`-arvoiksi.
-
-DTO tarkoittaa API:n sisään tai ulos kulkevan tiedon muotoa. Controller vastaanottaa
-`CreateJobApplicationRequest`- tai `UpdateJobApplicationRequest`-olion ja palauttaa
-`JobApplicationResponse`-olion. Tietokannan `JobApplication`-entiteetti on erillinen.
-Näin selain lähettää vain muokattavat kentät eikä määrää omistajaa, tunnistetta tai aikaleimoja.
-
-| Metodi ja polku | Onnistuminen | Tavallinen virhe |
+| State or condition | Suggested action | Needs attention |
 | --- | --- | --- |
-| `GET /api/applications` | `200`, lista; tyhjässä tietokannassa `[]` | |
-| `GET /api/applications/{id}` | `200`, hakemus | `404`, ei löydy |
-| `POST /api/applications` | `201`, hakemus ja Location-otsake | `400`, virheellinen syöte |
-| `PUT /api/applications/{id}` | `200`, päivitetty hakemus | `400` tai `404` |
-| `DELETE /api/applications/{id}` | `204`, ei vastausrunkoa | `404` |
-| `POST /api/applications/{id}/events` | `201`, päivitetty hakemus tapahtumineen | `400` tai `404` |
+| Draft | Finish application | Yes |
+| ToApply | Apply | Yes |
+| Applied, fewer than 14 full days since the response anchor | Wait for response | No |
+| Applied, 14 to fewer than 30 days, contactable and follow-up allowed | Follow up | Yes |
+| Applied, 14 to fewer than 30 days, follow-up unavailable, unneeded or contact unknown | Wait for response | No |
+| Applied, at least 30 days | Review status | Yes |
+| Applied, no response anchor | Add application activity/details | Yes |
+| Interviewing, future interview | Prepare interview | Yes |
+| Interviewing, interview time reached or passed without a resolving reply | Wait for interview feedback | No |
+| Interviewing, recruiter reply after the interview | Review recruiter reply | Yes |
+| Interviewing, missing interview time | Add interview details | Yes |
+| Assignment, not submitted and deadline known | Submit assignment | Yes |
+| Assignment, not submitted and deadline missing | Add assignment deadline | Yes |
+| Assignment submitted | Wait for assignment feedback | No |
+| Offer, response deadline known | Respond to offer | Yes |
+| Offer, response deadline missing | Review offer | Yes |
+| Rejected, Ghosted or Withdrawn | No action | No |
 
-PUT korvaa muokattavat kentät; pois jätetty valinnainen kenttä muuttuu `null`-arvoksi.
-Ilman kelvollista autentikointia kaikki kuusi endpointtia palauttavat `401`.
-Toisen käyttäjän hakemus-ID palauttaa `404` myös muokkauksessa, poistossa ja tapahtuman
-lisäämisessä. Tapahtumat ja muistutusten lähdetiedot ovat saatavilla vain omistetun
-hakemuksen kautta. Esimerkkipyyntö löytyy [API-ohjeesta](../api/README.md).
+The response anchor is the latest non-future `ApplicationSent`, `FollowUpSent` or
+`ContactReceived` event by `OccurredAt`. Thresholds use full 24-hour periods. Exactly
+14 days starts the middle band; exactly 30 days makes Review status take precedence
+regardless of contactability. A follow-up or recruiter reply resets the clock.
+Notes edits, other unrelated events and `updatedAt` do not reset it. Missing history
+never falls back to a guessed date.
 
-## Frontendin datavirta ja virhetilanteet
+**Review status** offers two choices:
 
-`ApplicationsProvider` jakaa listakyselyn Applications-, Dashboard-, Schedule- ja
-Insights-sivuille. Details hakee yhden hakemuksen omalla kyselyllään.
+- **Keep active** leaves the application unchanged and explains that the review
+  prompt remains. It does not snooze the prompt or create communication history.
+- **Mark as ghosted** saves the user's status choice through the normal authorized
+  application update flow. Elapsed time never causes this transition automatically.
 
-Jokainen käyttäjän ja session yhdistelmä saa oman QueryClientin ja työtilan.
-Uloskirjautuminen tai käyttäjän vaihtuminen purkaa vanhan työtilan, peruu haut ja
-tyhjentää query- ja mutation-välimuistit. Vanhan session myöhäiset vastaukset eivät
-voi täyttää uuden käyttäjän välimuistia. Myös johdetut muistutukset ja yhteenvedot
-poistuvat näkyvistä. Query key -rakenne pysyy ennallaan.
+Within a workflow stage, the latest relevant event determines the current interview,
+assignment or offer details. Leaving and re-entering a stage does not reactivate its
+older events. See the [workflow rules](application-workflow.md) for ordering details.
 
-| Query key | Käyttö |
+## Timeline and recorded activity
+
+Timeline displays persisted events from newest to oldest. **Record activity** can
+record an application sent, follow-up sent, recruiter reply, interview scheduled,
+assignment received or submitted, and offer received. Status changes create events
+automatically. Ordinary text edits do not create activity events.
+
+**Activity occurred at** records when the activity happened. Interview time and
+assignment/offer deadlines are separate inputs. Inputs use local time and are
+saved as UTC. OccurredAt is required and cannot be in the future. DueAt cannot
+precede it; interviews require DueAt, while assignments and offers may omit it.
+Other event types do not accept DueAt.
+
+ApplicationSent, InterviewScheduled, AssignmentReceived and OfferReceived set the
+corresponding workflow status. FollowUpSent is accepted while Applied, and
+AssignmentSubmitted while Assignment. **ContactReceived preserves status** and
+records the actual reply time. Event creation and any status change save together.
+
+There is one ApplicationSent event per application. Editing Applied date corrects
+that event; clearing the date removes it. Other events remain intact. Date-only
+AppliedDate values use midnight UTC; explicit sent times remain unchanged unless
+the date is corrected. This is editable history, not an immutable audit log.
+
+## Schedule, Dashboard and Insights
+
+Schedule separates two categories:
+
+| Category | Source | Behavior |
+| --- | --- | --- |
+| Hard date | Future interview time | Shows the recorded time; leaves the queue when that time is reached. |
+| Hard date | Unsubmitted assignment deadline | Shows the latest recorded deadline; submission removes the entry. |
+| Hard date | Offer response deadline | Shows the recorded response deadline while in Offer. |
+| Hard date | Application deadline | Shown while Draft or ToApply; later stages do not reuse it as their deadline. |
+| Suggested attention | Eligible follow-up | Suggested from response anchor +14 days. |
+| Suggested attention | Status review | Suggested from response anchor +30 days. At day 30 it replaces the follow-up. |
+
+Hard dates are grouped as overdue, today and upcoming using the browser's local
+calendar. Date-only application deadlines retain their entered day. Suggested
+attention appears in its own section and is not presented as an overdue deadline.
+Each entry links to its application.
+
+There is at most one response suggestion per Applied application. A contactable
+application shows its follow-up date until day 30, then its review date. An
+uncontactable portal application shows the review date without a follow-up entry.
+New communication replaces the old suggestion using the new anchor. Missing dates
+are never invented. Closed applications generate no entries in either category.
+
+Reminders remain frontend-derived: there is no reminder table, completion endpoint
+or stored snooze state. Dashboard's Schedule counts cover hard-date commitments;
+its next item identifies whether it is a commitment or suggested attention.
+Dashboard and Insights share the authenticated application list and do not have
+separate summary endpoints. Settings profile, export and tracking controls remain
+previews; theme selection works.
+
+## API and data model
+
+The API uses controllers and `AppDbContext`. EF Core migrations define the
+`JobApplications` and `ApplicationEvents` tables.
+
+| Fields | Meaning |
 | --- | --- |
-| `["applications"]` | Hakemuslista ja siitä lasketut yhteenvedot. |
-| `["applications", id]` | Yksittäisen hakemuksen tiedot. |
+| `id` | Server-generated GUID. |
+| Internal `UserId` | Validated Clerk `sub`; excluded from request and response DTOs. |
+| `companyName`, `jobTitle` | Required, trimmed and non-blank. |
+| `jobUrl`, `location`, `source` | Optional job listing URL, location and source. |
+| `applicationMethod`, `followUpMode` | String enums described above; defaults are `Unknown`. |
+| `contactPerson`, `contactEmail` | Optional contact details with shared POST/PUT validation. |
+| `status` | Draft, ToApply, Applied, Interviewing, Assignment, Offer, Rejected, Ghosted or Withdrawn. Defaults to Draft. |
+| `appliedDate`, `deadline` | Optional dates in `YYYY-MM-DD` format. |
+| `salaryRange`, `notes`, `jobDescription` | Optional text. |
+| `createdAt`, `updatedAt` | Server-controlled UTC timestamps. Equal on create; only UpdatedAt changes on edit. |
+| `events` | Persisted workflow history included in application responses. |
 
-Lisäys päivittää listan. Muokkaus vie API:n palauttaman hakemuksen listan ja Detailsin
-välimuisteihin ja käynnistää niiden uudelleenvalidoinnin. Poisto poistaa hakemuksen
-välimuistista ja päivittää listan. Keskeneräiset haut perutaan tarvittaessa, jotta
-vanha vastaus ei korvaa juuri tallennettua tietoa.
+DTOs define the public request and response shapes separately from EF entities.
+The frontend cannot set ownership, IDs or technical timestamps. String enums are
+stored as text; numeric and undefined enum values are rejected.
 
-Kyselyiden `staleTime` on 30 sekuntia: sen ajan tieto katsotaan tuoreeksi. Tämä ei
-tarkoita 30 sekunnin välein tapahtuvaa taustapollausta. Epäonnistumisia ei yritetä
-automaattisesti uudelleen; käyttöliittymä tarjoaa uudelleenyrityksen.
+| Method and path | Success | Other responses |
+| --- | --- | --- |
+| `GET /api/applications` | 200, list; `[]` when empty | 401 |
+| `GET /api/applications/{id}` | 200, application | 401, 404 |
+| `POST /api/applications` | 201, application and Location header | 400, 401 |
+| `PUT /api/applications/{id}` | 200, updated application | 400, 401, 404 |
+| `DELETE /api/applications/{id}` | 204, no body | 401, 404 |
+| `POST /api/applications/{id}/events` | 201, updated application with events | 400, 401, 404 |
 
-Lataukselle, epäonnistuneelle haulle, tyhjälle listalle ja puuttuvalle hakemukselle
-on omat näkymänsä. API-virhe ei vaihda tietolähteeksi mock-dataa.
-Axios-asiakas käyttää 15 sekunnin aikakatkaisua ja `VITE_API_BASE_URL`-asetusta.
-API:n `401` poistaa työtilan näkyvistä ja ohjaa kirjautumaan uudelleen uloskirjautumisen
-kautta. `403` näyttää käyttöoikeusvirheen. Tokenin hakemisen verkkovirheestä näytetään
-yleinen virheilmoitus. Clerkin lataus- ja virhetiloille on omat näkymänsä.
+PUT replaces editable fields. Omitted optional text/date fields become null;
+omitted method/preference fields default to Unknown. Other-user application IDs
+return 404, including on writes and event creation. Events are accessible only
+through an owned parent. See [API documentation](../api/README.md) for examples.
 
-Aiemmin hakemukset alustettiin localStoragesta tai mock-datasta, ja muutokset
-tallennettiin selaimeen. `mockApplications.ts`, `applicationStorage.ts` ja
-`applicationCrud.ts` ovat yhä vanhana koodina mukana, mutta nykyinen provider ei
-käytä niitä. Vanhoja localStorage-hakemuksia ei tuoda automaattisesti tietokantaan.
+### Migrations and existing data
 
-## Paikallinen käynnistys
+- `20260916123052_ApplicationWorkflow` creates event history and backfills only
+  application creation and known applied dates. It does not infer past stages.
+- `20261002084434_ApplicationContactPreferences` adds method, follow-up mode and
+  contact fields with Unknown/Unknown/null/null defaults. It preserves owners,
+  statuses, timestamps, dates and existing events.
+- Legacy `dev-user` rows remain untouched and invisible to real Clerk users. They
+  are never automatically assigned to a signed-in account.
 
-Tarvitset .NET 10 SDK:n sekä Node.js:n ja npm:n, jotka tukevat projektin riippuvuuksia.
-Aja komennot PowerShellissä. Kumpikin terminaali aloittaa projektin juuresta.
+Migrations are applied explicitly, not on startup. The contact-preference migration
+was applied locally on 2026-10-02 after saving a database backup. Other checkouts
+must apply it before running the updated API.
 
-Ensimmäinen terminaali, API:
+## Frontend data flow and errors
 
-Tallenna oman Clerk-instanssin issuer ja sallitut frontend-originit kerran tiedostoon
-`api/JobTracker.Api/appsettings.Development.json` [API-ohjeen](../api/README.md#clerk-configuration)
-mukaan. Development lukee tiedoston automaattisesti; PowerShell-muuttujia ei tarvita.
-Tiedosto on Gitin ulkopuolella, ja tämä paikallinen checkout on jo konfiguroitu.
+`ApplicationsProvider` shares the list query across Applications, Dashboard,
+Schedule and Insights. Details has a separate query for the selected application.
+
+| Query key | Purpose |
+| --- | --- |
+| `["applications"]` | Application list and derived summaries. |
+| `["applications", id]` | One application's details. |
+
+Each user/session pair receives a separate QueryClient and workspace. Sign-out or
+identity changes unmount the old workspace, cancel reads and clear query/mutation
+caches. Late responses from an old session cannot populate the next user's cache.
+Derived reminders and summaries disappear with the old workspace too.
+
+Create refreshes the list. Update and event creation write the returned aggregate
+to list/detail caches and revalidate queries. Delete removes the cached record and
+refreshes the list. Pending reads are canceled where needed to prevent stale
+responses from overwriting a successful save.
+
+Queries have a 30-second staleTime; this is a freshness window, not background
+polling. Failed requests are not retried automatically. Loading, errors, empty lists
+and missing applications have distinct UI states. API failure never falls back to
+mock data.
+
+The shared Axios client uses `VITE_API_BASE_URL` and a 15-second timeout. A 401 hides
+the workspace and offers sign-out and reauthentication; a 403 displays a permission
+error. Token retrieval failures and Clerk loading/failure states have their own
+handling. Tokens are not stored manually.
+
+The earlier `mockApplications.ts`, `applicationStorage.ts` and `applicationCrud.ts`
+helpers remain as legacy code. The runtime provider no longer uses them, and old
+localStorage applications are not imported into the database automatically.
+
+## Running locally
+
+Use .NET 10 SDK and a Node.js/npm version compatible with the web dependencies.
+Run the following in separate PowerShell terminals, starting at the repository root.
+
+Configure the Clerk issuer and allowed frontend origins in ignored
+`api/JobTracker.Api/appsettings.Development.json` as described in
+[Clerk configuration](../api/README.md#clerk-configuration). Development loads it
+automatically. Preserve any existing local settings.
+
+API:
 
 ```powershell
 cd api/JobTracker.Api
@@ -236,11 +305,10 @@ dotnet ef database update
 dotnet run
 ```
 
-Migraatio luo paikallisen `jobtracker.db`-tietokannan. Migraatioita ei ajeta
-automaattisesti käynnistyksessä, eikä tietokantaan lisätä esimerkkihakemuksia.
-Aja API tästä hakemistosta, jotta suhteellinen tietokantapolku pysyy samana.
+Run from this directory so the relative SQLite path resolves consistently.
+Migrations create or update `jobtracker.db`; startup does not seed sample records.
 
-Toinen terminaali, frontend:
+Web:
 
 ```powershell
 cd web
@@ -249,37 +317,34 @@ if (-not (Test-Path .env.local)) { Copy-Item .env.example .env.local }
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Tarkista, että `web/.env.local` sisältää:
+The ignored `web/.env.local` should contain:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:5080
-VITE_CLERK_PUBLISHABLE_KEY=<oman Clerk-instanssin publishable key>
+VITE_CLERK_PUBLISHABLE_KEY=<your Clerk development instance publishable key>
 ```
 
-Osoitteeseen ei lisätä `/api`-osaa. Käynnistä Vite uudelleen ympäristömuuttujan muuttamisen jälkeen.
+Do not append `/api` to the base URL. Restart Vite after changing environment
+variables. Use the publishable key and issuer from the same Clerk instance.
+Default session tokens need neither a JWT template nor a Clerk secret key.
+Audience is optional and must match the actual token configuration when used.
 
-- Käyttöliittymä: [127.0.0.1:5173](http://127.0.0.1:5173)
+- Web: [127.0.0.1:5173](http://127.0.0.1:5173)
 - Swagger: [localhost:5080/swagger](http://localhost:5080/swagger)
 - OpenAPI: [localhost:5080/swagger/v1/swagger.json](http://localhost:5080/swagger/v1/swagger.json)
 
-Development-tilassa CORS sallii frontendin osoitteista `http://localhost:5173` ja
-`http://127.0.0.1:5173`. Muu portti vaatii CORS-asetuksen muuttamisen.
-Jos hakemukset eivät lataudu, tarkista API:n käynnistys, migraatiot, ympäristömuuttuja
-ja frontendin portti. Tyhjä lista ensimmäisellä käynnistyksellä on normaali.
+Development CORS permits `http://localhost:5173` and `http://127.0.0.1:5173`.
+Another port requires a CORS change. If data does not load, check API startup,
+migrations, environment values and the frontend origin. An empty list is normal
+for a new account.
 
-Clerk Dashboardissa valitaan kehitysinstanssi ja kirjautumistavat. Publishable key
-ja Frontend API URL otetaan saman instanssin API keys -sivulta. JWT-templatea tai
-Clerk secret keytä ei tarvita oletussession tokeneille. Tarkat asetukset ja
-valinnainen audience ovat [API-ohjeessa](../api/README.md#clerk-configuration).
+For a [local database reset](../api/README.md#legacy-development-data), select a
+new SQLite filename and apply migrations. This keeps the previous database intact.
 
-Vanhoja `dev-user`-rivejä ei siirretä kirjautuneelle käyttäjälle. Ne jäävät
-tietokantaan näkymättömäksi kehitysdataksi. [Paikallinen nollaus](../api/README.md#legacy-development-data)
-onnistuu valitsemalla uusi SQLite-tiedosto; vanhaa tietokantaa ei tarvitse poistaa.
+## Tests and verification
 
-## Miten testit ajetaan?
-
-Automatisoituja testejä varten kehityspalvelimien ei tarvitse olla käynnissä.
-Seuraavat komentolohkot aloittavat projektin juuresta omissa terminaaleissaan.
+Development servers are not needed for automated tests. Start each command block
+at the repository root.
 
 Backend:
 
@@ -289,13 +354,12 @@ dotnet test
 dotnet build
 ```
 
-`dotnet test` käyttää `JobTracker.sln`-ratkaisua. xUnit ja WebApplicationFactory
-testaavat CRUD-pyyntöjä, validointia, aikaleimoja, tilojen tekstimuotoa ja omistajarajausta.
-Jokaisella testillä on oma muistissa oleva SQLite-tietokanta, johon ajetaan oikeat
-migraatiot. Testit eivät käytä tavallista kehitystietokantaa.
-Testiautentikointi kattaa kaksi käyttäjää, kaikki 401-reitit, vieraat ID:t,
-tapahtumien ja muistutuspäivien eristyksen sekä omistajan väärentämisen eston.
-JWT-testit käyttävät paikallisia RSA-avaimia eivätkä tee Clerk-verkkopyyntöjä.
+xUnit and WebApplicationFactory use an isolated in-memory SQLite database per test
+and apply real migrations. They do not read or modify the development database.
+Coverage includes CRUD, input validation, timestamps, workflow transitions, contact
+field round trips, migration defaults and preservation, and recruiter replies.
+Ownership tests cover two users, anonymous requests, foreign IDs and forged owner
+fields. JWT tests use local RSA keys and make no real Clerk requests.
 
 Frontend:
 
@@ -306,50 +370,58 @@ npm run build
 npm run lint
 ```
 
-`npm run test` ajaa Vitest-testit kerran. Jatkuva tila, jossa testit ajetaan uudelleen
-tiedostojen muuttuessa (aja edelleen `web`-hakemistossa):
+Vitest runs once; use `npx vitest` from `web/` for watch mode. Tests cover exact
+14/30-day boundaries, contact eligibility and preferences, reply/follow-up clock
+resets, missing history, interview timing, assignments, offers, closed states,
+Needs attention and Schedule categories. React Testing Library covers CRUD,
+contact validation/editing, activity recording, Keep active, manual Ghosted updates,
+Schedule wording/links and cache refresh. HTTP transport is mocked while the real
+providers, pages and QueryClient are used.
 
-```powershell
-npx vitest
-```
+Authentication tests mock Clerk at the boundary. They cover loading and sign-in
+states, tokens, sign-out, user changes, delayed requests, cache/reminder isolation
+and sidebar/theme controls. They do not test Clerk internals or every visual path.
 
-Frontend-testit kattavat Next Action -säännöt ja aikarajat, listan suodatuksen ja
-järjestämisen, lomakkeiden tietomuunnokset sekä valitut lataus-, virhe-, tyhjä lista-,
-lisäys- ja puuttuvan hakemuksen tilanteet. React Testing Library -testeissä käytetään
-oikeaa provideriä ja QueryClientiä, mutta HTTP-liikenne korvataan testivastauksilla.
-Auth-testeissä Clerk korvataan kirjautumisrajalla. Testit kattavat kirjautumistilat,
-Bearer-tokenin, uloskirjautumisen, käyttäjänvaihdon, vanhat keskeneräiset haut,
-välimuistin ja muistutusten eristyksen sekä sivupalkin käyttäjän ja teemakytkimen.
+### Verification recorded on 2026-10-02
 
-Muokkauksen ja poiston frontend-testit kattavat onnistumisen, virheestä palautumisen
-sekä välimuistipäivitykset. Testikerros ei kata kaikkia käyttöliittymäpolkuja tai MUI:n
-sisäistä toteutusta. Oikealla Clerk-istunnolla on tarkistettu sivujen navigointi,
-hakemushaku, Details/Timeline, reload ja teeman säilyminen.
+| Check | Result |
+| --- | --- |
+| `dotnet test` from `api/` | 77 passed. |
+| `dotnet build` from `api/` | Passed, no warnings or errors. |
+| `npm run test` from `web/` | 88 passed. |
+| `npm run build` from `web/` | Passed; Vite still reports a bundle over 500 kB. |
+| `npm run lint` from `web/` | Passed. |
+| Local migration | Applied after a database backup. |
+| Browser checks | Signed-in Dashboard/API loading, Applications navigation and the new form fields inspected. Full feature acceptance remains pending. |
 
-Erillinen `api/scripts/Test-Applications.ps1` on käynnissä olevaa API:a käyttävä
-HTTP-tarkistus. Toisin kuin xUnit-testit, se luo ja poistaa testihakemuksen API:n
-käyttämässä tietokannassa. Ohje on [API-dokumentaatiossa](../api/README.md#verification).
+The browser acceptance run was interrupted before saving its test application.
+Native date entry was not verified successfully, so portal timing, contact resets,
+manual Ghosted, Schedule commitments and reload behavior must not be reported as
+fully browser-verified for this feature. Automated tests cover these rules and the
+main component flows. Two-account browser isolation was not repeated in this run.
 
-## Keskeiset lähdekoodit
+Historical verification on 2026-09-17 covered a real Clerk A -> B -> A session cycle,
+separate application/reminder lists, foreign Details links, create/edit/event saves,
+reload and theme persistence. The test records were retained at the user's request;
+permanent browser deletion was not run. Automated tests cover deletion, foreign
+writes, expired sessions and in-flight cache races.
 
-- [API-asiakas](../web/src/lib/apiClient.ts): osoite, aikakatkaisu ja virheiden käsittely.
-- [Applications API -kutsut](../web/src/features/applications/api/applicationsApi.ts): CRUD ja tapahtuman lisääminen, yhteensä kuusi HTTP-operaatiota.
-- [Next Action](../web/src/features/applications/utils/applicationNextAction.ts): seuraavan toimen säännöt.
-- [Listan käsittely](../web/src/features/applications/utils/applicationList.ts): haku, suodatus ja järjestys.
-- [Timeline ja muistutukset](../web/src/features/applications/utils/applicationWorkflow.ts): tallennettu historia ja päivämääristä johdetut muistutukset.
-- [API:n käynnistys](../api/JobTracker.Api/Program.cs): palvelut, tietokanta, CORS ja Swagger.
+The optional `api/scripts/Test-Applications.ps1` performs HTTP checks against a
+running API using a supplied Clerk session token. It creates and deletes its own
+temporary record in that API's database, unlike the isolated xUnit suite. See
+[API verification](../api/README.md#verification) before running it.
 
-Oikean Clerk-instanssin kahden käyttäjän A -> B -> A -testi tehtiin 17.9.2026
-samassa selainvälilehdessä ulos- ja sisäänkirjautumalla. Molemmat näkivät vain omat
-hakemuksensa ja niistä johdetut muistutukset. Suora linkki toisen hakemukseen näytti
-"Application not found" molempiin suuntiin. Molemmille luotiin testihakemus;
-A:n muistiinpanojen muokkaus ja Application sent -tapahtuman tallennus onnistuivat.
-Timeline, Applied-tila, Next Action ja follow-up-muistutus päivittyivät, ja tiedot
-säilyivät reloadin sekä tilille palaamisen jälkeen.
-AUTH TEST A/B 2026-09-17 -testihakemukset jätettiin paikalliseen tietokantaan.
-Käyttäjä valitsi testihakemuksen säilyttämisen, joten pysyvää poistoa ei ajettu selaimesta.
-Poisto, toisen käyttäjän PUT/DELETE/event POST, vanhentuneen session käsittely ja
-keskeneräisten pyyntöjen välimuistikilpailut on katettu automaattitesteillä;
-niitä ei toistettu tässä oikeiden Clerk-istuntojen selaintestissä.
-Erikseen hallittavat muistutukset, tuotannon PostgreSQL, julkaisu ja mobiilisovellus
-ovat tulevaa työtä.
+## Key implementation files
+
+- [API client](../web/src/lib/apiClient.ts): base URL, timeout and authentication/error handling.
+- [Application API calls](../web/src/features/applications/api/applicationsApi.ts): CRUD and event creation.
+- [Contact eligibility](../web/src/features/applications/utils/applicationContact.ts): labels, email validation and follow-up eligibility.
+- [Next Action](../web/src/features/applications/utils/applicationNextAction.ts): derived action and attention rules.
+- [Activity helpers](../web/src/features/applications/utils/applicationActivity.ts): response anchor and current stage events.
+- [Application list](../web/src/features/applications/utils/applicationList.ts): search, filtering and sorting.
+- [Timeline and Schedule derivation](../web/src/features/applications/utils/applicationWorkflow.ts): persisted history presentation and categorized reminders.
+- [API startup](../api/JobTracker.Api/Program.cs): services, database, authentication, CORS and Swagger.
+
+Separate reminder management, notifications, production PostgreSQL, deployment and
+mobile remain future work. There is no email sending, calendar integration,
+automatic Ghosted classification or background reminder processing.

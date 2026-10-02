@@ -2,6 +2,7 @@ import type { ChipProps } from "@mui/material";
 import type { JobApplication } from "../types/application";
 import type { ApplicationEventType, Reminder, ReminderType, TimelineEvent } from "../types/workflow";
 import { getLastContact, getStageEvent } from "./applicationActivity";
+import { canFollowUp } from "./applicationContact";
 
 type ReminderGroupKey = "overdue" | "today" | "upcoming";
 export type ReminderGroup = { key: ReminderGroupKey; title: string; description: string; reminders: Reminder[] };
@@ -12,6 +13,7 @@ const eventPresentation: Record<ApplicationEventType, { type: TimelineEvent["typ
   ApplicationSent: { type: "applicationSent", title: "Application sent" },
   StatusChanged: { type: "statusChanged", title: "Status changed" },
   FollowUpSent: { type: "followUpSent", title: "Follow-up sent" },
+  ContactReceived: { type: "contactReceived", title: "Recruiter reply received" },
   InterviewScheduled: { type: "interviewScheduled", title: "Interview scheduled" },
   AssignmentReceived: { type: "assignmentReceived", title: "Assignment received" },
   AssignmentSubmitted: { type: "assignmentSubmitted", title: "Assignment submitted" },
@@ -38,20 +40,27 @@ export function getApplicationReminders(application: JobApplication, referenceDa
   const reminders: Reminder[] = [];
   if (application.status === "Applied") {
     const contact = getLastContact(application, referenceDate);
-    if (contact) reminders.push(createReminder(application, "followUp",
-      toDateOnly(new Date(Date.parse(contact.occurredAt) + 14 * 86400000).toISOString()),
-      "Follow up", "Follow up 14 days after the last application or follow-up sent."));
+    if (contact) {
+      const reviewAt = Date.parse(contact.occurredAt) + 30 * 86400000;
+      const followUp = referenceDate.getTime() < reviewAt && canFollowUp(application);
+      reminders.push(createReminder(application, followUp ? "followUp" : "reviewStatus",
+        toDateOnly(new Date(Date.parse(contact.occurredAt) + (followUp ? 14 : 30) * 86400000).toISOString()),
+        followUp ? "Follow up" : "Review status",
+        followUp ? "Suggested follow-up after 14 days without a newer response."
+          : "Suggested review after 30 days. You decide whether to keep this active or mark it as ghosted."));
+    }
   }
   const stage = application.status === "Interviewing" ? getStageEvent(application, ["InterviewScheduled"])
     : application.status === "Assignment" ? getStageEvent(application, ["AssignmentReceived", "AssignmentSubmitted"])
     : application.status === "Offer" ? getStageEvent(application, ["OfferReceived"]) : undefined;
-  if (stage?.dueAt && stage.type !== "AssignmentSubmitted") {
+  if (stage?.dueAt && stage.type !== "AssignmentSubmitted"
+    && (stage.type !== "InterviewScheduled" || Date.parse(stage.dueAt) > referenceDate.getTime())) {
     const type = application.status === "Interviewing" ? "prepareInterview"
       : application.status === "Assignment" ? "submitAssignment" : "respondToOffer";
     reminders.push(createReminder(application, type, toDateOnly(stage.dueAt),
       getReminderPresentation(type).label, `Scheduled / due: ${new Date(stage.dueAt).toLocaleString()}`));
   }
-  if (application.deadline) reminders.push(createReminder(application, "checkDeadline", application.deadline,
+  if (application.deadline && ["Draft", "ToApply"].includes(application.status)) reminders.push(createReminder(application, "checkDeadline", application.deadline,
     "Application deadline", "The application deadline recorded on this application."));
   return reminders.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
@@ -64,8 +73,9 @@ export function getAllReminders(applications: JobApplication[], referenceDate = 
 export function getGroupedReminders(
   applications: JobApplication[],
   referenceDate = new Date(),
+  category?: Reminder["category"],
 ): ReminderGroup[] {
-  const reminders = getAllReminders(applications, referenceDate);
+  const reminders = getAllReminders(applications, referenceDate).filter(item => !category || item.category === category);
   const todayValue = toDateOnly(referenceDate.toISOString());
 
   return [
@@ -99,6 +109,8 @@ export function getUpcomingReminders(applications: JobApplication[], limit = 3):
 
 export function getReminderPresentation(type: ReminderType): ReminderPresentation {
   switch (type) {
+    case "reviewStatus":
+      return { label: "Review status", color: "warning" };
     case "followUp":
       return { label: "Follow up", color: "secondary" };
     case "prepareInterview":
@@ -122,6 +134,7 @@ function createReminder(
   return {
     id: `${application.id}-${type}-${dueDate}`,
     applicationId: application.id,
+    category: type === "followUp" || type === "reviewStatus" ? "suggestedAttention" : "hardDate",
     type,
     status: "open",
     title,

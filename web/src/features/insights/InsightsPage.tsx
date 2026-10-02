@@ -4,7 +4,7 @@ import { Chip, Grid, LinearProgress, Stack, Typography } from "@mui/material";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ApplicationDataState } from "../applications/components/ApplicationDataState";
-import { getApplicationsNeedingFollowUp } from "../applications/utils/applicationNextAction";
+import { getApplicationsNeedingAttention } from "../applications/utils/applicationNextAction";
 import { applicationStatusLabel } from "../applications/utils/applicationStatus";
 import type { ApplicationStatus } from "../applications/types/application";
 
@@ -19,7 +19,7 @@ export function InsightsPage() {
       </PageShell>
     );
   }
-  const followUps = getApplicationsNeedingFollowUp(applications);
+  const followUps = getApplicationsNeedingAttention(applications);
   const activeApplications = applications.filter((application) =>
     ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
   );
@@ -76,7 +76,7 @@ export function InsightsPage() {
         <Grid size={{ xs: 12, lg: 5 }}>
           <SectionCard title="Pipeline pressure" description="Where your attention is most likely needed next.">
             <Stack gap={1.5}>
-              <Chip label={`${followUps.length} need follow-up`} color="secondary" variant="outlined" sx={{ width: "fit-content" }} />
+              <Chip label={`${followUps.length} need attention`} color="secondary" variant="outlined" sx={{ width: "fit-content" }} />
               <Typography color="text.secondary">
                 {followUps.length > 0
                   ? "Your pipeline has items that likely need a check-in or next step soon."

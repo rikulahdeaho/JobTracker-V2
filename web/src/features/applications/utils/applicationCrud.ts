@@ -5,6 +5,8 @@ export function createApplicationFromValues(values: JobApplicationFormValues): J
 
   return {
     id: createApplicationId(values),
+    applicationMethod: values.applicationMethod, followUpMode: values.followUpMode,
+    contactPerson: values.contactPerson.trim() || null, contactEmail: values.contactEmail.trim() || null,
     companyName: values.companyName.trim(),
     jobTitle: values.jobTitle.trim(),
     jobUrl: values.jobUrl.trim(),
@@ -28,6 +30,8 @@ export function updateApplicationFromValues(
 ): JobApplication {
   return {
     ...application,
+    applicationMethod: values.applicationMethod, followUpMode: values.followUpMode,
+    contactPerson: values.contactPerson.trim() || null, contactEmail: values.contactEmail.trim() || null,
     companyName: values.companyName.trim(),
     jobTitle: values.jobTitle.trim(),
     jobUrl: values.jobUrl.trim(),

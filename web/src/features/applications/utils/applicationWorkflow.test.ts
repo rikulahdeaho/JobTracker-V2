@@ -25,7 +25,6 @@ it("keeps the application deadline separate from a real assignment deadline", ()
     eventFixture({ type: "AssignmentReceived", dueAt: "2026-09-25T12:00:00Z" }),
   ] });
   expect(getApplicationReminders(application)).toEqual(expect.arrayContaining([
-    expect.objectContaining({ type: "checkDeadline", dueDate: "2026-09-18" }),
     expect.objectContaining({ type: "submitAssignment", dueDate: "2026-09-25" }),
   ]));
   expect(getApplicationReminders({ ...application, events: [...application.events,
@@ -34,7 +33,7 @@ it("keeps the application deadline separate from a real assignment deadline", ()
 });
 
 it("schedules follow-up from contact and moves it only after another contact", () => {
-  const original = applicationFixture();
+  const original = applicationFixture({ contactEmail: "recruiter@example.com" });
   const now = new Date("2026-09-16T12:00:00Z");
   expect(getApplicationReminders(original, now)[0].dueDate).toBe("2026-09-15");
   expect(getApplicationReminders({ ...original, updatedAt: now.toISOString() }, now)).toEqual(getApplicationReminders(original, now));
@@ -61,7 +60,7 @@ it("groups an explicit timestamp on its local calendar day", () => {
   const application = applicationFixture({ status: "Interviewing", events: [
     eventFixture({ type: "InterviewScheduled", dueAt: interviewAt }),
   ] });
-  const groups = getGroupedReminders([application], new Date(2026, 8, 25, 12));
+  const groups = getGroupedReminders([application], new Date(2026, 8, 25, 0, 15));
   expect(groups.find(group => group.key === "today")?.reminders).toHaveLength(1);
   expect(groups.find(group => group.key === "overdue")?.reminders).toHaveLength(0);
 });

@@ -193,8 +193,8 @@ Make the app more useful than a basic CRUD list.
 
 - Create Next Action helper
 - Show Next Action in Applications list
-- Add Needs follow-up state
-- Add Ghosted logic
+- Add Needs attention state
+- Suggest manual status review after prolonged silence
 - Show simple dashboard summary from mock data
 
 ### Example Rules
@@ -202,7 +202,8 @@ Make the app more useful than a basic CRUD list.
 ```text
 Draft -> Finish application
 ToApply -> Apply
-Applied + 14 days without activity -> Follow up
+Applied + 14 days without response -> Follow up only if contactable and appropriate
+Applied + 30 days without response -> Review status (no automatic status change)
 Interviewing -> Prepare interview
 Assignment -> Submit assignment
 Offer -> Respond to offer
@@ -456,7 +457,7 @@ GET /api/dashboard/summary
 - Active applications
 - Interviews
 - Offers
-- Needs follow-up
+- Needs attention
 - Ghosted
 - Upcoming actions
 - Recent activity
@@ -477,7 +478,7 @@ Make the Applications page usable with a larger amount of data.
 
 - Search by company or job title
 - Filter by status
-- Filter by needs follow-up
+- Filter by needs attention
 - Sort by applied date
 - Sort by deadline
 - Sort by last updated

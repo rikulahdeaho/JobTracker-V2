@@ -34,8 +34,8 @@ import { formatApplicationDate } from "../applications/utils/applicationPresenta
 import { applicationStatusLabel } from "../applications/utils/applicationStatus";
 import {
   getApplicationNextAction,
-  getApplicationsNeedingFollowUp,
-  getGhostedRiskApplications,
+  getApplicationsNeedingAttention,
+  getStatusReviewApplications,
 } from "../applications/utils/applicationNextAction";
 import { getAllReminders, getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
@@ -50,9 +50,9 @@ export function DashboardPage() {
       </PageShell>
     );
   }
-  const followUpApplications = getApplicationsNeedingFollowUp(applications);
-  const ghostedRiskApplications = getGhostedRiskApplications(applications);
-  const reminderGroups = getGroupedReminders(applications);
+  const followUpApplications = getApplicationsNeedingAttention(applications);
+  const statusReviewApplications = getStatusReviewApplications(applications);
+  const reminderGroups = getGroupedReminders(applications, new Date(), "hardDate");
   const reminders = getAllReminders(applications);
   const topActionItems = applications
     .map((application) => ({
@@ -61,12 +61,12 @@ export function DashboardPage() {
     }))
     .filter(({ nextAction }) => nextAction.title !== "No action")
     .sort((left, right) => {
-      if (left.nextAction.isGhostedRisk !== right.nextAction.isGhostedRisk) {
-        return left.nextAction.isGhostedRisk ? -1 : 1;
+      if (left.nextAction.needsStatusReview !== right.nextAction.needsStatusReview) {
+        return left.nextAction.needsStatusReview ? -1 : 1;
       }
 
-      if (left.nextAction.isNeedsFollowUp !== right.nextAction.isNeedsFollowUp) {
-        return left.nextAction.isNeedsFollowUp ? -1 : 1;
+      if (left.nextAction.needsAttention !== right.nextAction.needsAttention) {
+        return left.nextAction.needsAttention ? -1 : 1;
       }
 
       return left.application.companyName.localeCompare(right.application.companyName);
@@ -83,7 +83,7 @@ export function DashboardPage() {
       icon: <BusinessCenterOutlinedIcon color="primary" />,
     },
     {
-      label: "Active processes",
+      label: "Active hiring processes",
       value: applications.filter((application) =>
         ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
       ).length,
@@ -103,15 +103,15 @@ export function DashboardPage() {
       icon: <AssignmentTurnedInOutlinedIcon color="primary" />,
     },
     {
-      label: "Needs follow-up",
+      label: "Needs attention",
       value: followUpApplications.length,
       helper: followUpApplications.length > 0 ? "Action suggested" : "No action needed",
       icon: <MarkEmailUnreadOutlinedIcon color="primary" />,
     },
     {
-      label: "Ghosted risk",
-      value: ghostedRiskApplications.length,
-      helper: ghostedRiskApplications.length > 0 ? "Long silence" : "No risk",
+      label: "Status review",
+      value: statusReviewApplications.length,
+      helper: statusReviewApplications.length > 0 ? "Long silence" : "No review needed",
       icon: <WatchLaterOutlinedIcon color="primary" />,
     },
   ];
@@ -213,7 +213,7 @@ export function DashboardPage() {
         <Grid size={{ xs: 12, xl: 4 }}>
           <SectionCard
             title="Schedule summary"
-            description="A compact reminder snapshot. Schedule keeps the full grouped view."
+            description="Counts show hard-date commitments. Suggested attention is listed separately in Schedule."
             action={
               <Button component={RouterLink} to="/schedule" variant="contained" endIcon={<ChevronRightOutlinedIcon />}>
                 View schedule
@@ -254,7 +254,7 @@ export function DashboardPage() {
                 <Divider />
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Next reminder
+                    {nextReminder?.category === "suggestedAttention" ? "Suggested attention" : "Next commitment"}
                   </Typography>
                   <Typography fontWeight={700} sx={{ mt: 0.5 }}>
                     {nextReminder

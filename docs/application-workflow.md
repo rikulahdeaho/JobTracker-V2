@@ -19,7 +19,7 @@ collection with cascade deletion. `ApplicationEvents` has:
 | `CreatedAt` | When the event was recorded, UTC. Separate from the activity date. |
 
 Event types are `ApplicationCreated`, `ApplicationSent`, `StatusChanged`,
-`FollowUpSent`, `InterviewScheduled`, `AssignmentReceived`, `AssignmentSubmitted`
+`FollowUpSent`, `ContactReceived`, `InterviewScheduled`, `AssignmentReceived`, `AssignmentSubmitted`
 and `OfferReceived`. No generic notes event, notifications or interview-completion
 workflow is included in this slice.
 
@@ -95,28 +95,51 @@ is subsequently corrected through the date-only field.
 | --- | --- |
 | Draft | Finish application. |
 | ToApply | Apply; use JobApplication.Deadline when known. |
-| Applied | Use the latest non-future ApplicationSent or FollowUpSent by OccurredAt. Before 14 full days: wait; from 14 days: follow up; from 30 days: consider ghosted. |
-| Applied with no contact event | Ask for the application sent date. Do not fall back to CreatedAt or UpdatedAt. |
-| Interviewing | Prepare interview if an explicit interview date exists; otherwise ask for interview details. |
+| Applied | Latest non-future ApplicationSent, FollowUpSent or ContactReceived by OccurredAt. Before 14 full days: wait. Days 14–29: follow up only with a valid contact email and no NotAvailable/NotNeeded preference; otherwise wait. From day 30: Review status. |
+| Applied with no contact event | Add application activity/details. Do not fall back to CreatedAt or UpdatedAt. |
+| Interviewing | Future interview: Prepare interview. Past interview: Wait for interview feedback. A reply after the interview: Review recruiter reply. Missing time: Add interview details. |
 | Assignment | Submit by the explicit assignment deadline; otherwise ask for a deadline. After AssignmentSubmitted: wait for feedback and remove the submission reminder. |
 | Offer | Respond by the explicit response deadline; otherwise review offer. |
 | Rejected / Ghosted / Withdrawn | No action and no automatically derived reminders. |
 
-Follow-up reminders are due 14 full 24-hour periods after the latest contact and
-appear before they become overdue too. Follow-up resets the waiting period; metadata
-and status events do not. Ghosted is a recommendation, never an automatic status change.
+Follow-up suggestions use the response anchor +14 full 24-hour periods when contactable.
+Otherwise the next suggestion is a status review at +30 days. At day 30 the review
+replaces the follow-up, so there is only one response suggestion per application.
+Both FollowUpSent and ContactReceived reset the clock; metadata and status events do not.
+ContactReceived requires an explicit OccurredAt, accepts no DueAt, and never changes status.
+Mark as ghosted uses the normal authorized application PUT. Keep active performs no write
+and leaves future review prompts visible; it does not snooze or invent contact history.
+
+Schedule separates hard-date commitments from suggested attention. Suggestions are
+labeled as suggestions, never overdue deadlines. Dashboard's overdue/today/upcoming
+counts cover hard dates only. Schedule entries link to the application.
 
 Interview/assignment/offer dates come only from their corresponding stage events.
-JobApplication.Deadline remains a separate application deadline, not a substitute
-for a later-stage deadline. No `updatedAt + 2/3 days` estimates remain.
+JobApplication.Deadline is shown for Draft and ToApply, then retired when submission
+is no longer pending. It never substitutes for a later-stage deadline.
 
 When a status is left and entered again, events recorded before the latest entry
 are historical and do not reactivate the old stage's reminders. Within that stage,
 the latest relevant occurrence wins, with recording time breaking ties. Recording
 another scheduled/received event can update that stage's date while retaining history.
 Schedule groups timestamp-based dates by the browser's local calendar day; date-only
-application deadlines retain their entered day. Past interviews remain overdue until
-the user records a new step or changes status; completion is not implemented here.
+application deadlines retain their entered day. Past interviews leave Schedule;
+Next Action waits for feedback until a newer interview, reply or phase resolves it.
+
+## Application contact preferences (2026-10-02)
+
+ApplicationMethod: Unknown, CompanyPortal, Email, RecruiterDirect, LinkedInEasyApply, Other.
+FollowUpMode: Unknown, Possible, NotAvailable, NotNeeded. Both default to Unknown.
+ContactPerson is optional (maximum 200 characters). ContactEmail is optional (maximum
+254 characters), with a non-whitespace local part, @, and a dotted domain. Both web
+and API validate this format. Empty contact fields persist as null.
+Only a valid email establishes a direct channel. A name or application method never
+implies contactability. Possible still needs an email; Unknown with an explicit valid
+email can receive follow-up suggestions. Unknown legacy records without one cannot.
+
+Migration `20261002084434_ApplicationContactPreferences` adds these four columns with
+Unknown/null defaults. It preserves owners, statuses, timestamps and historical events.
+Run `dotnet ef database update` before using the updated API. No reminder table is added.
 
 ## Migration
 
@@ -142,7 +165,7 @@ dotnet run
 - Removed from all synthetic Timeline status/activity generation.
 - Removed from follow-up reminders and interview/assignment/offer date guesses.
 - Schedule's active pipeline now orders by persisted workflow activity.
-- Dashboard/Insights counters, chips and Needs follow-up filtering inherit the new rules.
+- Dashboard/Insights counters, chips and Needs attention filtering inherit the shared rules.
 - Retained for Updated labels, Recently updated sorting and the recent-record list:
   these describe record edits, not workflow activity.
 - Unused legacy mock/storage/CRUD files remain inactive; their types now include events.

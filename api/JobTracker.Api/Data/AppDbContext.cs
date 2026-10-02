@@ -35,6 +35,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         application.Property(item => item.CompanyName).IsRequired();
         application.Property(item => item.JobTitle).IsRequired();
         application.Property(item => item.Status).HasConversion<string>().IsRequired();
+        application.Property(item => item.ApplicationMethod).HasConversion<string>().HasDefaultValue(ApplicationMethod.Unknown);
+        application.Property(item => item.FollowUpMode).HasConversion<string>().HasDefaultValue(FollowUpMode.Unknown);
+        application.Property(item => item.ContactPerson).HasMaxLength(200);
+        application.Property(item => item.ContactEmail).HasMaxLength(254);
         application.HasIndex(item => item.UserId);
 
         // SQLite does not preserve DateTime.Kind; restore UTC when reading timestamps.

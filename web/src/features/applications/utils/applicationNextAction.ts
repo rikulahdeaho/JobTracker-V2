@@ -1,12 +1,13 @@
 import type { ChipProps } from "@mui/material";
 import type { JobApplication } from "../types/application";
 import { getLastContact, getStageEvent } from "./applicationActivity";
+import { canFollowUp } from "./applicationContact";
 
 type NextActionKind =
   | "draft"
   | "toApply"
   | "followUp"
-  | "ghostedRisk"
+  | "statusReview"
   | "interview"
   | "assignment"
   | "offer"
@@ -17,12 +18,12 @@ export type ApplicationNextAction = {
   description: string;
   kind: NextActionKind;
   color: ChipProps["color"];
-  isNeedsFollowUp: boolean;
-  isGhostedRisk: boolean;
+  needsAttention: boolean;
+  needsStatusReview: boolean;
 };
 
 const FOLLOW_UP_THRESHOLD_DAYS = 14;
-const GHOSTED_THRESHOLD_DAYS = 30;
+const REVIEW_THRESHOLD_DAYS = 30;
 
 export function getApplicationNextAction(
   application: JobApplication,
@@ -35,8 +36,8 @@ export function getApplicationNextAction(
         description: "Complete the draft and prepare it for submission.",
         kind: "draft",
         color: "warning",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: true,
+        needsStatusReview: false,
       };
     case "ToApply":
       return {
@@ -46,37 +47,37 @@ export function getApplicationNextAction(
           : "Submit the application when your materials are ready.",
         kind: "toApply",
         color: "info",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: true,
+        needsStatusReview: false,
       };
     case "Applied": {
       const contact = getLastContact(application, referenceDate);
       if (!contact) return {
-        title: "Add application sent date", description: "Record when you sent the application to start follow-up timing.",
-        kind: "followUp", color: "info", isNeedsFollowUp: false, isGhostedRisk: false,
+        title: "Add application activity/details", description: "Record when you sent the application or received a reply to start response timing.",
+        kind: "followUp", color: "info", needsAttention: true, needsStatusReview: false,
       };
       const lastActivityDate = new Date(contact.occurredAt);
       const daysSinceActivity = getDaysBetween(lastActivityDate, referenceDate);
 
-      if (daysSinceActivity >= GHOSTED_THRESHOLD_DAYS) {
+      if (daysSinceActivity >= REVIEW_THRESHOLD_DAYS) {
         return {
-          title: "Consider ghosted",
-          description: `No activity since ${formatDisplayDate(lastActivityDate.toISOString())}. Consider one final follow-up or marking this as ghosted.`,
-          kind: "ghostedRisk",
+          title: "Review status",
+          description: `No response activity since ${formatDisplayDate(lastActivityDate.toISOString())}. Keep the process active or manually mark it as ghosted.`,
+          kind: "statusReview",
           color: "warning",
-          isNeedsFollowUp: true,
-          isGhostedRisk: true,
+          needsAttention: true,
+          needsStatusReview: true,
         };
       }
 
-      if (daysSinceActivity >= FOLLOW_UP_THRESHOLD_DAYS) {
+      if (daysSinceActivity >= FOLLOW_UP_THRESHOLD_DAYS && canFollowUp(application)) {
         return {
           title: "Follow up",
           description: `No activity since ${formatDisplayDate(lastActivityDate.toISOString())}. Send a polite follow-up.`,
           kind: "followUp",
           color: "secondary",
-          isNeedsFollowUp: true,
-          isGhostedRisk: false,
+          needsAttention: true,
+          needsStatusReview: false,
         };
       }
 
@@ -85,18 +86,24 @@ export function getApplicationNextAction(
         description: `Recent activity was ${formatDisplayDate(lastActivityDate.toISOString())}. Monitor for a reply before following up.`,
         kind: "followUp",
         color: "primary",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: false,
+        needsStatusReview: false,
       };
     }
     case "Interviewing": {
       const interview = getStageEvent(application, ["InterviewScheduled"]);
+      const past = !!interview?.dueAt && Date.parse(interview.dueAt) <= referenceDate.getTime();
+      const reply = getLastContact(application, referenceDate);
+      const resolved = past && reply?.type === "ContactReceived"
+        && Date.parse(reply.occurredAt) >= Date.parse(interview!.dueAt!);
       return {
-        title: interview?.dueAt ? "Prepare interview" : "Add interview details",
-        description: interview?.dueAt
-          ? `Interview: ${new Date(interview.dueAt).toLocaleString()}.`
+        title: resolved ? "Review recruiter reply" : past ? "Wait for interview feedback"
+          : interview?.dueAt ? "Prepare interview" : "Add interview details",
+        description: resolved ? "Review the reply and record the next agreed step."
+          : past ? "The interview has passed. Wait for feedback or record the reply."
+          : interview?.dueAt ? `Interview: ${new Date(interview.dueAt).toLocaleString()}.`
           : "Record the actual interview date and time.",
-        kind: "interview", color: "secondary", isNeedsFollowUp: false, isGhostedRisk: false,
+        kind: "interview", color: "secondary", needsAttention: !past || !!resolved, needsStatusReview: false,
       };
     }
     case "Assignment": {
@@ -106,7 +113,7 @@ export function getApplicationNextAction(
         title: submitted ? "Wait for assignment feedback" : assignment?.dueAt ? "Submit assignment" : "Add assignment deadline",
         description: submitted ? "The assignment was submitted. Wait for feedback."
           : assignment?.dueAt ? `Assignment due ${new Date(assignment.dueAt).toLocaleString()}.` : "Record the actual assignment deadline.",
-        kind: "assignment", color: "warning", isNeedsFollowUp: false, isGhostedRisk: false,
+        kind: "assignment", color: "warning", needsAttention: !submitted, needsStatusReview: false,
       };
     }
     case "Offer": {
@@ -114,7 +121,7 @@ export function getApplicationNextAction(
       return {
         title: offer?.dueAt ? "Respond to offer" : "Review offer",
         description: offer?.dueAt ? `Respond by ${new Date(offer.dueAt).toLocaleString()}.` : "Review the offer and record a response deadline if one is agreed.",
-        kind: "offer", color: "success", isNeedsFollowUp: false, isGhostedRisk: false,
+        kind: "offer", color: "success", needsAttention: true, needsStatusReview: false,
       };
     }
     case "Rejected":
@@ -123,8 +130,8 @@ export function getApplicationNextAction(
         description: "This process is closed.",
         kind: "none",
         color: "default",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: false,
+        needsStatusReview: false,
       };
     case "Ghosted":
       return {
@@ -132,8 +139,8 @@ export function getApplicationNextAction(
         description: "This application is already marked as ghosted.",
         kind: "none",
         color: "default",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: false,
+        needsStatusReview: false,
       };
     case "Withdrawn":
       return {
@@ -141,18 +148,18 @@ export function getApplicationNextAction(
         description: "You have already withdrawn from this process.",
         kind: "none",
         color: "default",
-        isNeedsFollowUp: false,
-        isGhostedRisk: false,
+        needsAttention: false,
+        needsStatusReview: false,
       };
   }
 }
 
-export function getApplicationsNeedingFollowUp(applications: JobApplication[]): JobApplication[] {
-  return applications.filter((application) => getApplicationNextAction(application).isNeedsFollowUp);
+export function getApplicationsNeedingAttention(applications: JobApplication[]): JobApplication[] {
+  return applications.filter((application) => getApplicationNextAction(application).needsAttention);
 }
 
-export function getGhostedRiskApplications(applications: JobApplication[]): JobApplication[] {
-  return applications.filter((application) => getApplicationNextAction(application).isGhostedRisk);
+export function getStatusReviewApplications(applications: JobApplication[]): JobApplication[] {
+  return applications.filter((application) => getApplicationNextAction(application).needsStatusReview);
 }
 
 function getDaysBetween(olderDate: Date, newerDate: Date): number {

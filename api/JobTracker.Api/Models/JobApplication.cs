@@ -10,6 +10,10 @@ public sealed class JobApplication
     public string? JobUrl { get; set; }
     public string? Location { get; set; }
     public string? Source { get; set; }
+    public ApplicationMethod ApplicationMethod { get; set; } = ApplicationMethod.Unknown;
+    public FollowUpMode FollowUpMode { get; set; } = FollowUpMode.Unknown;
+    public string? ContactPerson { get; set; }
+    public string? ContactEmail { get; set; }
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Draft;
     public DateOnly? AppliedDate { get; set; }
     public DateOnly? Deadline { get; set; }

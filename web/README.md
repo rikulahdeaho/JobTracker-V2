@@ -1,6 +1,6 @@
 # JobTracker web
 
-See [Miten sovellus toimii nyt](../docs/how-it-works.md) for a Finnish guide to
+See [How JobTracker works](../docs/how-it-works.md) for a guide to
 the current pages, data flow, application rules and test commands.
 
 ## Local setup
@@ -80,7 +80,11 @@ failed saves, and delete failures keep the confirmation open.
 - Search, filters, sorting, Next Action and summary calculations remain local.
 - Timeline displays persisted application events. Schedule derives reminders from explicit event dates and contact history.
 - Details can record activity through POST /api/applications/{id}/events. The returned aggregate refreshes list and detail caches.
-- Next Action uses sent/follow-up events, never generic updatedAt. See [workflow rules](../docs/application-workflow.md).
+- Next Action uses sent/follow-up/recruiter-reply events, never generic updatedAt. From day 14 it suggests follow-up only with a valid contact email and no NotAvailable/NotNeeded preference; from day 30 it suggests Review status. See [workflow rules](../docs/application-workflow.md).
+- Add/edit/details expose application method, optional contact information and follow-up preference. Unknown defaults do not invent contactability.
+- Needs attention includes actionable preparation, missing details, follow-up and status review; waiting and closed processes are excluded.
+- Schedule separates recorded hard dates from suggested attention. Past interviews and submitted assignments leave the hard-date queue. Application deadlines apply to Draft/ToApply.
+- Review status offers Keep active (no write or snooze) and Mark as ghosted (normal authorized update).
 - Theme preference still uses localStorage.
 - Existing localStorage application records are untouched and are not imported.
 - `mockApplications.ts`, `applicationStorage.ts` and `applicationCrud.ts` remain

@@ -1,7 +1,7 @@
 import type { ApplicationStatus } from "./application";
 
 export type ApplicationEventType = "ApplicationCreated" | "ApplicationSent" | "StatusChanged"
-  | "FollowUpSent" | "InterviewScheduled" | "AssignmentReceived" | "AssignmentSubmitted" | "OfferReceived";
+  | "FollowUpSent" | "ContactReceived" | "InterviewScheduled" | "AssignmentReceived" | "AssignmentSubmitted" | "OfferReceived";
 
 export type ApplicationEvent = {
   id: string;
@@ -27,6 +27,7 @@ export type TimelineEventType =
   | "applicationSent"
   | "statusChanged"
   | "followUpSent"
+  | "contactReceived"
   | "assignmentSubmitted"
   | "interviewScheduled"
   | "assignmentReceived"
@@ -43,6 +44,7 @@ export type TimelineEvent = {
 };
 
 export type ReminderType =
+  | "reviewStatus"
   | "followUp"
   | "prepareInterview"
   | "submitAssignment"
@@ -52,6 +54,7 @@ export type ReminderType =
 export type ReminderStatus = "open";
 
 export type Reminder = {
+  category: "hardDate" | "suggestedAttention";
   id: string;
   applicationId: string;
   type: ReminderType;

@@ -41,6 +41,7 @@ public sealed class WorkflowTests : IDisposable
 
     [Theory]
     [InlineData("FollowUpSent", "Applied", null)]
+    [InlineData("ContactReceived", "Applied", null)]
     [InlineData("InterviewScheduled", "Interviewing", "2026-09-25T14:00:00+03:00")]
     [InlineData("AssignmentReceived", "Assignment", "2026-09-28T18:00:00Z")]
     [InlineData("OfferReceived", "Offer", "2026-09-30T18:00:00Z")]
@@ -74,6 +75,9 @@ public sealed class WorkflowTests : IDisposable
     [InlineData("Unknown", "2026-09-01T00:00:00Z", null)]
     [InlineData("FollowUpSent", "2999-01-01T00:00:00Z", null)]
     [InlineData("FollowUpSent", null, null)]
+    [InlineData("ContactReceived", null, null)]
+    [InlineData("ContactReceived", "2999-01-01T00:00:00Z", null)]
+    [InlineData("ContactReceived", "2026-09-01T00:00:00Z", "2026-09-20T00:00:00Z")]
     [InlineData("InterviewScheduled", "2026-09-01T00:00:00Z", null)]
     [InlineData("InterviewScheduled", "2026-09-01T00:00:00Z", "2026-08-01T00:00:00Z")]
     [InlineData("FollowUpSent", "2026-09-01T00:00:00Z", "2026-09-20T00:00:00Z")]
@@ -139,12 +143,28 @@ public sealed class WorkflowTests : IDisposable
         var application = new JobApplication { Id = Guid.NewGuid(), UserId = "dev-user", CompanyName = "Legacy", JobTitle = "Developer",
             Status = ApplicationStatus.Interviewing, AppliedDate = new DateOnly(2026, 8, 1),
             CreatedAt = new DateTime(2026, 7, 30, 12, 0, 0, DateTimeKind.Utc), UpdatedAt = DateTime.UtcNow };
-        db.JobApplications.Add(application);
-        db.JobApplications.Add(new JobApplication { Id = Guid.NewGuid(), UserId = "dev-user", CompanyName = "Unknown date", JobTitle = "Developer",
-            Status = ApplicationStatus.Offer, CreatedAt = application.CreatedAt, UpdatedAt = application.UpdatedAt });
-        await db.SaveChangesAsync();
+        // Seed the historical schema directly: the current EF model has newer columns.
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO JobApplications (Id, UserId, CompanyName, JobTitle, Status, AppliedDate, CreatedAt, UpdatedAt)
+            VALUES ({application.Id}, {application.UserId}, {application.CompanyName}, {application.JobTitle},
+                {application.Status.ToString()}, {application.AppliedDate}, {application.CreatedAt}, {application.UpdatedAt})
+            """);
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO JobApplications (Id, UserId, CompanyName, JobTitle, Status, CreatedAt, UpdatedAt)
+            VALUES ({Guid.NewGuid()}, {"dev-user"}, {"Unknown date"}, {"Developer"}, {"Offer"}, {application.CreatedAt}, {application.UpdatedAt})
+            """);
         await db.Database.MigrateAsync();
         db.ChangeTracker.Clear();
+        var migrated = await db.JobApplications.SingleAsync(item => item.Id == application.Id);
+        Assert.Equal(ApplicationMethod.Unknown, migrated.ApplicationMethod);
+        Assert.Equal(FollowUpMode.Unknown, migrated.FollowUpMode);
+        Assert.Null(migrated.ContactEmail);
+        Assert.Null(migrated.ContactPerson);
+        Assert.Equal(application.UserId, migrated.UserId);
+        Assert.Equal(application.Status, migrated.Status);
+        Assert.Equal(application.AppliedDate, migrated.AppliedDate);
+        Assert.Equal(application.CreatedAt, migrated.CreatedAt);
+        Assert.Equal(application.UpdatedAt, migrated.UpdatedAt);
         var events = await db.ApplicationEvents.ToListAsync();
         Assert.Equal(3, events.Count);
         Assert.Equal(2, events.Count(item => item.Type == ApplicationEventType.ApplicationCreated));

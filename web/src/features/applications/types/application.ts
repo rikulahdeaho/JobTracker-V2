@@ -12,6 +12,10 @@ export type ApplicationStatus =
   | "Withdrawn";
 
 export type JobApplication = {
+  applicationMethod: ApplicationMethod;
+  followUpMode: FollowUpMode;
+  contactPerson: string | null;
+  contactEmail: string | null;
   id: string;
   companyName: string;
   jobTitle: string;
@@ -32,6 +36,10 @@ export type JobApplication = {
 export type JobApplicationRequest = Omit<JobApplication, "id" | "createdAt" | "updatedAt" | "events">;
 
 export type JobApplicationFormValues = {
+  applicationMethod: ApplicationMethod;
+  followUpMode: FollowUpMode;
+  contactPerson: string;
+  contactEmail: string;
   companyName: string;
   jobTitle: string;
   jobUrl: string;
@@ -44,3 +52,6 @@ export type JobApplicationFormValues = {
   notes: string;
   jobDescription: string;
 };
+
+export type ApplicationMethod = "Unknown" | "CompanyPortal" | "Email" | "RecruiterDirect" | "LinkedInEasyApply" | "Other";
+export type FollowUpMode = "Unknown" | "Possible" | "NotAvailable" | "NotNeeded";

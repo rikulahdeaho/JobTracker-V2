@@ -9,7 +9,8 @@ public enum ApplicationEventType
     InterviewScheduled,
     AssignmentReceived,
     AssignmentSubmitted,
-    OfferReceived
+    OfferReceived,
+    ContactReceived
 }
 
 public sealed class ApplicationEvent

@@ -14,6 +14,14 @@ public abstract class JobApplicationRequest
     public string? JobUrl { get; init; }
     public string? Location { get; init; }
     public string? Source { get; init; }
+    [EnumDataType(typeof(ApplicationMethod))]
+    public ApplicationMethod ApplicationMethod { get; init; } = ApplicationMethod.Unknown;
+    [EnumDataType(typeof(FollowUpMode))]
+    public FollowUpMode FollowUpMode { get; init; } = FollowUpMode.Unknown;
+    [MaxLength(200)]
+    public string? ContactPerson { get; init; }
+    [MaxLength(254), RegularExpression(@"[^\s@]+@[^\s@]+\.[^\s@]+", ErrorMessage = "Enter a valid contact email address.")]
+    public string? ContactEmail { get; init; }
 
     [EnumDataType(typeof(ApplicationStatus))]
     public ApplicationStatus Status { get; init; } = ApplicationStatus.Draft;

@@ -1,6 +1,10 @@
 import type { JobApplication, JobApplicationFormValues, JobApplicationRequest } from "../types/application";
 
 export const emptyApplicationFormValues: JobApplicationFormValues = {
+  applicationMethod: "Unknown",
+  followUpMode: "Unknown",
+  contactPerson: "",
+  contactEmail: "",
   companyName: "",
   jobTitle: "",
   jobUrl: "",
@@ -16,6 +20,10 @@ export const emptyApplicationFormValues: JobApplicationFormValues = {
 
 export function toApplicationFormValues(application: JobApplication): JobApplicationFormValues {
   return {
+    applicationMethod: application.applicationMethod ?? "Unknown",
+    followUpMode: application.followUpMode ?? "Unknown",
+    contactPerson: application.contactPerson ?? "",
+    contactEmail: application.contactEmail ?? "",
     companyName: application.companyName,
     jobTitle: application.jobTitle,
     jobUrl: application.jobUrl ?? "",
@@ -32,6 +40,10 @@ export function toApplicationFormValues(application: JobApplication): JobApplica
 
 export function toApplicationRequest(values: JobApplicationFormValues): JobApplicationRequest {
   return {
+    applicationMethod: values.applicationMethod,
+    followUpMode: values.followUpMode,
+    contactPerson: values.contactPerson.trim() || null,
+    contactEmail: values.contactEmail.trim() || null,
     companyName: values.companyName.trim(),
     jobTitle: values.jobTitle.trim(),
     status: values.status,

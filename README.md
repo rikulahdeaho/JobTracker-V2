@@ -4,7 +4,7 @@ JobTracker is a job application tracker built with React, TypeScript and an ASP.
 
 ## Documentation
 
-- [Miten sovellus toimii nyt](docs/how-it-works.md) — suomenkielinen ohje sivuista, datavirrasta, API:sta, käynnistyksestä ja testeistä.
+- [How JobTracker works](docs/how-it-works.md) — current pages, workflow rules, data flow, API, local setup and verification.
 - [Web setup and tests](web/README.md)
 - [API setup, endpoints and tests](api/README.md)
 - [Current feature](docs/current-feature.md)

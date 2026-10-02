@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { type ReactNode, useState } from "react";
+import { applicationMethodLabels, followUpModeLabels } from "../utils/applicationContact";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "../../../components/ui/PageSection";
 import { ApplicationEventDialog } from "../components/ApplicationEventDialog";
@@ -52,6 +53,9 @@ export function ApplicationDetailsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [isReviewSaving, setIsReviewSaving] = useState(false);
   const application = query.data;
 
   if (query.isPending || isNotFoundError(query.error) || !application) {
@@ -191,13 +195,26 @@ export function ApplicationDetailsPage() {
                   {nextAction.description}
                 </Typography>
                 <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
-                  {nextAction.isNeedsFollowUp ? (
-                    <Chip label="Needs follow-up" color="secondary" variant="outlined" />
+                  {nextAction.needsAttention ? (
+                    <Chip label="Needs attention" color="secondary" variant="outlined" />
                   ) : null}
-                  {nextAction.isGhostedRisk ? (
-                    <Chip label="Ghosted risk" color="warning" variant="outlined" />
-                  ) : null}
+                  {nextAction.needsStatusReview ? <>
+                    <Button disabled={isReviewSaving} onClick={() => {
+                      setReviewMessage("Kept active. Review status remains available until you record new communication or change status.");
+                    }}>Keep active</Button>
+                    <Button disabled={isReviewSaving} color="warning" onClick={async () => {
+                      setIsReviewSaving(true);
+                      setReviewError(null);
+                      try {
+                        await updateApplication(application.id, { ...toApplicationFormValues(application), status: "Ghosted" });
+                        setReviewMessage(null);
+                      } catch (error) { setReviewError(getApiErrorMessage(error)); }
+                      finally { setIsReviewSaving(false); }
+                    }}>Mark as ghosted</Button>
+                  </> : null}
                 </Stack>
+                {reviewMessage && <Alert severity="info" sx={{ mt: 1 }}>{reviewMessage}</Alert>}
+                {reviewError && <Alert severity="error" sx={{ mt: 1 }}>{reviewError}</Alert>}
               </Box>
             </Stack>
           </CardContent>
@@ -261,6 +278,10 @@ export function ApplicationDetailsPage() {
                   <Stack gap={1.75}>
                     <Typography variant="h6">Quick facts</Typography>
                     <Divider />
+                    <DetailCard label="Application method" value={applicationMethodLabels[application.applicationMethod] ?? "Unknown"} />
+                    <DetailCard label="Contact person" value={application.contactPerson || "Not specified"} />
+                    <DetailCard label="Contact email" value={application.contactEmail || "Not specified"} />
+                    <DetailCard label="Follow-up preference" value={followUpModeLabels[application.followUpMode] ?? "Unknown"} />
                     <FactRow icon={<PlaceOutlinedIcon fontSize="small" />} label="Location" value={application.location || "Location not specified"} />
                     <FactRow icon={<SourceOutlinedIcon fontSize="small" />} label="Source" value={application.source || "Source not specified"} />
                     <FactRow

@@ -111,7 +111,7 @@ export function ApplicationsPage() {
                   <ToggleButton value="all">All</ToggleButton>
                   <ToggleButton value="active">Active</ToggleButton>
                   <ToggleButton value="archived">Archived</ToggleButton>
-                  <ToggleButton value="needsFollowUp">Needs follow-up</ToggleButton>
+                  <ToggleButton value="needsAttention">Needs attention</ToggleButton>
                 </ToggleButtonGroup>
                 <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
                   <TextField
@@ -165,8 +165,8 @@ export function ApplicationsPage() {
                   {statusFilter !== "all" ? (
                     <Chip label={`Status: ${applicationStatusLabel[statusFilter]}`} variant="outlined" />
                   ) : null}
-                  {listFilter === "needsFollowUp" ? (
-                    <Chip label="Needs follow-up only" color="secondary" variant="outlined" />
+                  {listFilter === "needsAttention" ? (
+                    <Chip label="Needs attention only" color="secondary" variant="outlined" />
                   ) : null}
                   {listFilter === "active" ? (
                     <Chip label="Active pipeline" color="primary" variant="outlined" />
@@ -218,7 +218,7 @@ export function ApplicationsPage() {
               </div>
               <Divider />
               <Alert severity="info">
-                Search matches company names and job titles. Filters can narrow by status or follow-up needs.
+                Search matches company names and job titles. Active includes drafts and all open statuses. Needs attention shows actions you can take now.
               </Alert>
               <Stack direction={{ xs: "column", sm: "row" }} gap={1.5}>
                 <Button variant="outlined" onClick={clearFilters}>

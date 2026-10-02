@@ -3,7 +3,7 @@ import type { ApplicationEvent, ApplicationEventType } from "../types/workflow";
 
 export function getLastContact(application: JobApplication, referenceDate = new Date()): ApplicationEvent | undefined {
   return application.events
-    .filter(event => ["ApplicationSent", "FollowUpSent"].includes(event.type)
+    .filter(event => ["ApplicationSent", "FollowUpSent", "ContactReceived"].includes(event.type)
       && Date.parse(event.occurredAt) <= referenceDate.getTime())
     .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt))[0];
 }

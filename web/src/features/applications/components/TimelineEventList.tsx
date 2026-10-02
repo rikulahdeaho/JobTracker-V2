@@ -64,6 +64,7 @@ function getTimelineEventIcon(type: TimelineEvent["type"]) {
     case "statusChanged":
       return <AccessTimeOutlinedIcon fontSize="small" />;
     case "followUpSent":
+    case "contactReceived":
       return <MarkEmailUnreadOutlinedIcon fontSize="small" />;
     case "interviewScheduled":
       return <RecordVoiceOverOutlinedIcon fontSize="small" />;

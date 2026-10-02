@@ -4,6 +4,7 @@ import type { JobApplication } from "../features/applications/types/application"
 export function applicationFixture(overrides: Partial<JobApplication> = {}): JobApplication {
   return {
     id: "11111111-1111-1111-1111-111111111111",
+    applicationMethod: "Unknown", followUpMode: "Unknown", contactPerson: null, contactEmail: null,
     companyName: "Example Company",
     jobTitle: "Backend Developer",
     status: "Applied",
