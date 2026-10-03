@@ -56,19 +56,21 @@ After configuration and migrations, start the API with `dotnet run` from
 `api/JobTracker.Api` and Vite with `npm run dev` from `web`.
 See the setup guides above for complete instructions.
 
-Latest verification on 2026-09-17: 57 backend tests and 61 frontend tests passed;
+See [current verification results and remaining checks](docs/current-feature.md#release-preparation-2026-10-03).
+
+Historical verification on 2026-09-17: 57 backend tests and 61 frontend tests passed;
 both builds and frontend lint passed. Real Clerk sign-in, API reads, page navigation,
 search, reload, themes and sign-out were verified in the browser. A real two-account
 A -> B -> A session cycle verified separate lists/reminders and blocked direct foreign
 Details links in both directions. Browser creation, editing and workflow event writes
-passed; test records were retained at the user's request, so browser deletion remains
-unverified. Automated tests cover ownership isolation and CRUD. See the
+passed; test records were retained at the user's request, so browser deletion was not verified in that run. A disposable-record deletion
+was verified on 2026-10-03; see the current results above. Automated tests cover ownership isolation and CRUD. See the
 [detailed verification scope](docs/current-feature.md). Vite reports a bundle-size warning.
 
 ## Project Structure
 
 - `web/` — React web application
 - `api/` — ASP.NET Core Web API
-- `db/` — database notes, seed data and schema docs
+- `db/` — reserved for future database notes and seed data; no tracked files yet.
 - `docs/` — project documentation
-- `mobile/` — future Expo mobile app
+- `mobile/` — planned Expo mobile app; no tracked implementation yet.

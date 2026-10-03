@@ -1,6 +1,6 @@
 # JobTracker Roadmap
 
-## Current progress (2026-09-17)
+## Current progress (2026-10-03)
 
 The phases below are the original build plan, not a list of wholly unfinished work.
 Current implementation:
@@ -10,18 +10,19 @@ Current implementation:
 | Web foundation and mock/local-state milestones | Completed; runtime now uses API data. |
 | API, EF Core, SQLite and Applications CRUD | Implemented. |
 | TanStack Query and Axios integration | Implemented; inactive legacy mock helpers remain. |
-| Clerk authentication and user ownership | Implemented; real A -> B -> A browser isolation and create/edit/event writes verified. Browser deletion remains unverified. |
+| Clerk authentication and user ownership | Implemented; real A -> B -> A browser isolation and create/edit/event writes verified. Disposable-record browser deletion verified on 2026-10-03. |
 | Workflow events and Timeline | Implemented with ApplicationEvent, including status-change history. |
 | Next Action | Implemented using contact events and explicit stage dates. |
 | Reminders and Schedule | Derived from applications/events; separate reminder CRUD/completion is not implemented. |
 | Dashboard and Insights | Implemented as frontend summaries of authenticated API data; no summary endpoint. |
 | Search, filters and sorting | Implemented in the frontend, not as API query parameters. |
+| Application form | Shared Add/Edit form with expandable Contact and More details, date visibility and reversible description cleanup. |
 | Light/dark theme | Implemented with browser persistence. |
 | Production database, deployment and mobile | Not implemented. |
 
-Latest checks: 57 backend tests and 61 frontend tests passed; both builds and frontend
-lint passed. See [current behavior and limits](how-it-works.md) and
-[the completed feature](current-feature.md). Future work requires a separately scoped task.
+See the [latest verification results](current-feature.md#release-preparation-2026-10-03).
+Historical checks on 2026-09-17 passed 57 backend and 61 frontend tests. See [current behavior and limits](how-it-works.md) and
+[the current feature](current-feature.md). Future work requires a separately scoped task.
 
 ## Goal
 
@@ -31,7 +32,7 @@ The first goal is to build the React web app with MUI and hardcoded/mock data. A
 
 ---
 
-## Current Build Strategy
+## Original Build Strategy (historical)
 
 ```text
 1. React + MUI Web prototype with mock data
@@ -281,7 +282,7 @@ DELETE /api/applications/{id}
 - Add DTOs
 - Add basic validation
 - Add CreatedAt / UpdatedAt handling
-- Use `dev-user` as temporary UserId
+- Historical only: the pre-auth milestone used `dev-user`; the current API requires validated Clerk ownership.
 - Test endpoints in Swagger
 
 ### Done When

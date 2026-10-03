@@ -4,7 +4,7 @@ This document describes the target architecture and staged implementation plan.
 For the current API-connected web app, local SQLite persistence and testing,
 see [How JobTracker works](how-it-works.md).
 
-## Implemented architecture (2026-09-17)
+## Implemented architecture (2026-10-03)
 
 ```text
 React + MUI + Clerk -> TanStack Query -> Axios + session token
@@ -94,7 +94,7 @@ Expo Mobile ─────┘
 
 ---
 
-## Repository Structure
+## Target Repository Structure
 
 ```text
 jobtracker/
@@ -268,9 +268,11 @@ and contacts remain future work. The sections below describe broader target capa
 
 ## Later Models
 
-### TimelineEvent
+### TimelineEvent (original concept; implemented as ApplicationEvent)
 
-Represents a historical event for a job application.
+This concept is already implemented as `ApplicationEvent`, with creation through
+`POST /api/applications/{id}/events` and history included in application responses.
+It does not require a second timeline model.
 
 Examples:
 
@@ -325,9 +327,10 @@ PUT    /api/reminders/{id}
 DELETE /api/reminders/{id}
 ```
 
-## Query Examples
+## Future API Query Examples
 
 ```text
+# Not implemented: current search, filtering and sorting run in the frontend.
 GET /api/applications?search=react
 GET /api/applications?status=Applied
 GET /api/applications?search=react&status=Applied&sort=deadline
@@ -418,17 +421,8 @@ api/JobTracker.Api/
 
 ## Local Development
 
-Use either:
-
-```text
-SQLite
-```
-
-or:
-
-```text
-PostgreSQL
-```
+The current API uses SQLite. PostgreSQL is a future migration, not an
+implemented configuration switch.
 
 SQLite is acceptable for early local development because it is fast and simple.
 

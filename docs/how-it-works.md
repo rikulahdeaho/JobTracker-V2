@@ -1,6 +1,6 @@
 # How JobTracker works
 
-This document describes the implementation as of 2026-10-02. See the
+This document describes the implementation as of 2026-10-03. See the
 [roadmap](roadmap.md) and [architecture](architecture.md) for future plans, and
 [the current feature](current-feature.md) for acceptance criteria.
 
@@ -64,22 +64,27 @@ open so the user can retry.
 
 ### Add and Edit form layout
 
-Both dialogs use the same form, with four sections:
+Both dialogs use the same form, with five sections:
 
 - **Basic Info:** Company, Job title, Job URL and Location.
-- **Tracking:** Status, Applied date when relevant, Application deadline, Source and Salary range.
-- **Application & Contact:** Application method, Follow-up preference, Contact person and Contact email.
-- **Details:** Job description first, followed by Notes.
+- **Application:** Status, Applied date when relevant, Application due date, Source and Application method.
+- **Contact:** Expandable Contact person, Contact email and Follow-up preference.
+- **Job Description:** Advertisement text, Clean formatting and Undo formatting.
+- **More details:** Expandable Salary range and Notes.
 
-The visible **Application deadline** label still maps to the API's `deadline` field.
+Contact and More details start collapsed for Add. Edit opens each section when
+its saved fields contain data; a non-default follow-up preference also opens Contact.
+Collapsing a section preserves its values.
+
+The visible **Application due date** label still maps to the API's `deadline` field.
 An empty Applied date is hidden for Draft and ToApply, and shown for Applied,
 Interviewing, Assignment, Offer, Rejected, Ghosted and Withdrawn. A date already
 present stays visible in Add or Edit, including after switching back to Draft or
 ToApply. Changing status never fills or clears the date. Explicit date corrections
 continue to use the existing ApplicationSent synchronization described below.
 
-Job description is a full-width, expanding field with eight initial rows for a
-pasted advertisement. Notes starts with three rows and is for personal observations.
+Job description is a full-width field that grows from eight to sixteen rows, then
+scrolls internally for a longer pasted advertisement. Notes starts with three rows and is for personal observations.
 **Clean formatting** normalizes line endings, removes trailing spaces and reduces
 excessive blank lines to one blank line between paragraphs. It preserves wording,
 bullets and indentation, uses no AI or dependencies, and only changes the unsaved
@@ -431,9 +436,17 @@ Authentication tests mock Clerk at the boundary. They cover loading and sign-in
 states, tokens, sign-out, user changes, delayed requests, cache/reminder isolation
 and sidebar/theme controls. They do not test Clerk internals or every visual path.
 
-### Form UX verification on 2026-10-02
+### Current verification
 
-The form refinement passes 123 frontend tests across nine files, plus build and
+The 2026-10-03 checks passed 131 frontend tests, frontend build/lint, and 77
+backend tests with a clean backend build. Browser checks confirmed Applied date
+entry/persistence and disposable-record deletion. Native application-deadline entry
+and activity datetime pickers still require a manual pass. See
+[release preparation](current-feature.md#release-preparation-2026-10-03) for exact scope.
+
+### Historical Form UX verification on 2026-10-02
+
+The historical form refinement run passed 123 frontend tests across nine files, plus build and
 lint. Vite still reports the existing bundle-size warning. The 35 added tests cover
 required fields, API enum mappings, Applied date visibility/preservation, Edit
 values, contact validation, formatting content preservation and Undo.
@@ -458,7 +471,7 @@ were not repeated in this browser run. Backend files were unchanged.
 | Browser checks | Signed-in Dashboard/API loading, Applications navigation and the new form fields inspected. Full feature acceptance remains pending. |
 
 The browser acceptance run was interrupted before saving its test application.
-Native date entry was not verified successfully, so portal timing, contact resets,
+In that historical run, native date entry was not verified successfully, so portal timing, contact resets,
 manual Ghosted, Schedule commitments and reload behavior must not be reported as
 fully browser-verified for this feature. Automated tests cover these rules and the
 main component flows. Two-account browser isolation was not repeated in this run.

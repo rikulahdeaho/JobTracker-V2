@@ -7,7 +7,8 @@ the current pages, data flow, application rules and test commands.
 
 Configure a Clerk development application first (see [API setup](../api/README.md#clerk-configuration)).
 Set `VITE_CLERK_PUBLISHABLE_KEY` in `.env.local` to its publishable key. Never put a
-Clerk secret key in a `VITE_` variable. Node.js 20.9+ is required by `@clerk/react`.
+Clerk secret key in a `VITE_` variable. Use Node.js 22.12+ (or a compatible newer LTS release). Vite requires
+`^20.19.0 || >=22.12.0`; Clerk's lower minimum alone is not sufficient.
 
 Run the existing API in one terminal:
 
@@ -24,6 +25,7 @@ In another terminal, from the repository root:
 cd web
 npm install
 Copy-Item .env.example .env.local
+# Set VITE_CLERK_PUBLISHABLE_KEY in .env.local before starting Vite.
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
@@ -149,8 +151,8 @@ browser tab verified separate lists and derived reminders, restored A's persiste
 notes/events, and blocked foreign Details links in both directions. Application
 creation for both users, editing A's notes and recording A's Application sent event
 passed; Timeline, status, Next Action and Schedule updated accordingly.
-Test records were retained at the user's request; permanent browser deletion remains
-unverified. Real-session expiry and in-flight race scenarios were not manually induced;
+Test records were retained at the user's request; deletion was not verified in that
+run. A new disposable record was created and deleted in the browser on 2026-10-03. Real-session expiry and in-flight race scenarios were not manually induced;
 automated tests cover those auth/cache paths and deletion/error recovery.
 
 Intentionally outside this small suite: visual/MUI internals, snapshots,
@@ -161,4 +163,5 @@ UI coverage. Backend update/delete behavior is covered in the xUnit suite.
 Frontend integration tests also cover edit success updating both caches, failed edits
 preserving input, and failed deletion followed by retry, cache removal and list navigation.
 
-See `docs/current-feature.md` for the feature acceptance checklist.
+See [current verification and remaining checks](../docs/current-feature.md#release-preparation-2026-10-03)
+for the latest test totals, browser coverage and the feature acceptance checklist.

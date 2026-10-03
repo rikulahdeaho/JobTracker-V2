@@ -115,6 +115,12 @@ spacing:
   margin-md: 32px
 ---
 
+> Design reference, not an implementation specification. The palette and layout
+> ideas below include original concepts. Current navigation is Dashboard,
+> Applications, Schedule, Insights and Settings; small screens use a drawer,
+> not bottom navigation. Networking and the progress widgets described below
+> are not implemented. See [current behavior](how-it-works.md).
+
 ## Brand & Style
 
 The design system is engineered for **JobTracker**, a platform where high-stakes career management meets streamlined productivity. The brand personality is authoritative yet encouraging—acting as a reliable co-pilot during the job search process.

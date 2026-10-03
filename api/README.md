@@ -197,6 +197,10 @@ Example POST or PUT body:
 
 ## Verification
 
+The 2026-10-03 review passed all 77 backend tests and the build without warnings.
+For cross-stack checks and remaining browser limits, see
+[release preparation](../docs/current-feature.md#release-preparation-2026-10-03).
+
 Run the isolated automated suite from `api/` (the solution includes API and tests):
 
 ```powershell
@@ -239,7 +243,8 @@ Real Clerk browser acceptance on 2026-09-17 verified an A -> B -> A session cycl
 separate lists/derived reminders, and "Application not found" for direct foreign
 Details links in both directions. Browser creation, editing and Application sent
 event recording persisted through reload/re-login. Test records were retained at
-the user's request, so browser deletion was not executed. Cross-user PUT/DELETE/event
+the user's request, so browser deletion was not executed in that run. A separate
+disposable-record browser deletion passed on 2026-10-03. Cross-user PUT/DELETE/event
 POST and exact 404 status assertions are covered by the automated API suite;
 these HTTP mutations were not manually replayed with real Clerk tokens.
 

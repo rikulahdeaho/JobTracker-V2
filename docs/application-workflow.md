@@ -191,6 +191,7 @@ Action refresh, persisted Timeline, and an explicit interview displayed on Sched
 Native datetime-picker interaction still needs a manual check because the browser
 automation fill operation failed; component tests cover input state and UTC conversion.
 
-Latest full-suite validation on 2026-09-17: backend 57 tests and frontend 61 tests
+Historical full-suite validation on 2026-09-17: backend 57 tests and frontend 61 tests
 passed, with both builds and frontend lint passing. The authenticated browser checks
 and remaining acceptance limits are summarized in [the project README](../README.md).
+For current automated results, see [release preparation](current-feature.md#release-preparation-2026-10-03).

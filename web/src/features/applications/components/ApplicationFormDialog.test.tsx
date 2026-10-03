@@ -81,7 +81,7 @@ it("Edit populates and preserves all saved values, including a date on a Draft",
   for (const [label, value] of [
     ["Company", original.companyName], ["Job title", original.jobTitle], ["Job URL", original.jobUrl],
     ["Location", original.location], ["Source", original.source], ["Salary range", original.salaryRange],
-    ["Applied date", original.appliedDate], ["Application deadline", original.deadline],
+    ["Applied date", original.appliedDate], ["Application due date", original.deadline],
     ["Contact person", original.contactPerson], ["Contact email", original.contactEmail],
     ["Job description", original.jobDescription], ["Notes", original.notes],
   ]) expect(screen.getByLabelText(label, { exact: false })).toHaveValue(value);

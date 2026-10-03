@@ -6,15 +6,45 @@ Application Form UX Refinement
 
 ## Status
 
-Implemented; automated checks pass. Native date entry and the full manual
-workflow matrix remain to be verified in the browser.
+Implemented; automated checks pass. Applied date entry/persistence and deletion
+have browser coverage. Native application-deadline entry, activity datetime pickers
+and the full manual workflow matrix still need a manual browser pass.
 
-### Implementation and verification (2026-10-02)
+### Release preparation (2026-10-03)
 
-- Add and Edit share the four sections below, updated labels and contact helper text.
+- Updated the Edit preservation test to the current `Application due date` label.
+  No application behavior or API code changed.
+- Frontend: 131 tests passed across nine files; build and lint passed.
+- Backend: 77 tests passed; build passed with zero warnings and errors during
+  the same-day review. Backend code was unchanged during this preparation.
+- Vite still reports the existing large-bundle warning (about 881 kB JavaScript,
+  268 kB gzip). This is a performance follow-up, not a failed build.
+- Browser: signed-in application loading, creating a disposable Applied record,
+  entering Applied date through the native field, saving, reloading and reopening
+  Edit preserved `2026-10-02`. Its Timeline and Next Action reflected that date.
+- Browser deletion: the disposable record was removed through its confirmation
+  dialog. Navigation returned to Applications, and searching after reload found
+  no matching record. Existing records were left unchanged.
+- Browser limitation: automatic date filling did not populate the application
+  deadline, and attempts with native input did not produce a value. The deadline
+  was left blank; its native entry/persistence is not marked as verified. No
+  production defect was established by that automation limitation.
+- Current form layout, setup requirements and historical/current verification
+  notes were aligned across the documentation. Design concepts remain explicitly
+  separate from implemented behavior.
+- Repository cleanup removes the generated TypeScript cache from tracking and
+  ignores SQLite sidecar/journal files. Git history was not rewritten: the old
+  database and commit email addresses remain accessible in historical commits.
+- No deployment, commit, push or repository visibility change was performed.
+
+### Historical implementation and verification (2026-10-02)
+
+- Historical initial layout: Add and Edit shared four sections. The 2026-10-03
+  layout below supersedes that arrangement and its deadline label.
 - Applied date is visible for submitted statuses or whenever a value exists;
   changing status never clears or invents the date.
-- Job description starts at eight rows and grows with content; Notes starts at three.
+- Job description starts at eight rows (now capped at sixteen before scrolling);
+  Notes starts at three.
 - Clean formatting normalizes line endings, trims trailing spaces and reduces extra
   blank lines. It preserves words, paragraphs, bullets and indentation. Undo restores
   the original text; further manual description edits dismiss that undo action.
@@ -79,7 +109,7 @@ The form currently supports:
 - Location
 - Status
 - Applied date
-- Application deadline
+- Application due date
 - Source
 - Salary range
 - Application method
@@ -121,9 +151,10 @@ Organize the form into these sections:
 
 ```text
 Basic Info
-Tracking
-Application & Contact
-Details
+Application
+Contact (expandable)
+Job Description
+More details (expandable)
 ```
 
 A future `Documents` section may be added later, but it is not part of this feature.
@@ -153,16 +184,16 @@ Requirements:
 
 ---
 
-## Tracking
+## Application
 
 Fields:
 
 ```text
 Status
 Applied date
-Application deadline
+Application due date
 Source
-Salary range
+Application method
 ```
 
 ### Deadline Label
@@ -176,7 +207,7 @@ Deadline
 to:
 
 ```text
-Application deadline
+Application due date
 ```
 
 Do not rename the backend/database field.
@@ -223,16 +254,19 @@ Important:
 
 ---
 
-## Application & Contact
+## Contact
 
 Fields:
 
 ```text
-Application method
-Follow-up preference
 Contact person
 Contact email
+Follow-up preference
 ```
+
+Application method is in the Application section. Contact starts collapsed in Add;
+Edit expands it for existing contact details or a non-default follow-up preference.
+Collapsing the section preserves its values.
 
 Keep the existing stored enum values.
 
@@ -292,9 +326,11 @@ alone provide a direct follow-up channel.
 
 ---
 
-## Details
+## Job Description and More details
 
-Organize the Details section so Job Description and Notes have visibly different purposes.
+Job Description has its own always-visible section. More details contains Salary
+range and Notes. More details starts collapsed in Add and expands in Edit when
+either field has saved content. Collapsing it preserves its values.
 
 Preferred order:
 
@@ -315,7 +351,7 @@ Suggested helper text:
 Paste the relevant job advertisement text here for later reference.
 ```
 
-Do not impose a small fixed visual height that makes long job descriptions difficult to edit.
+The textarea grows from eight to sixteen rows, then scrolls internally for longer text.
 
 ### Notes
 
@@ -562,7 +598,7 @@ Verify workflow behavior:
 - portal application without direct email does not incorrectly gain a follow-up suggestion
 - valid contact email still enables the existing eligible follow-up behavior
 - unrelated form edits do not reset workflow timing
-- Application deadline continues to behave as an application deadline
+- Application due date continues to behave as an application deadline
 - Next Action remains correct
 
 ---
@@ -618,7 +654,7 @@ This feature is complete when:
 
 - Add/Edit forms are easier to scan
 - sections have clear purposes
-- `Application deadline` is clearly named in the UI
+- `Application due date` is clearly named in the UI
 - Application Method labels are user-friendly
 - Follow-up Preference labels are user-friendly
 - persisted enum/API values remain unchanged
@@ -647,18 +683,20 @@ BASIC INFO
 Company              Job title
 Job URL              Location
 
-TRACKING
+APPLICATION
 Status               Applied date
-Application deadline Source
-Salary range
+Application due date Source
+Application method
 
-APPLICATION & CONTACT
-Application method   Follow-up preference
+CONTACT (expandable)
 Contact person       Contact email
+Follow-up preference
 
-DETAILS
+JOB DESCRIPTION
 Job description
 
+MORE DETAILS (expandable)
+Salary range
 Notes
 ```
 
