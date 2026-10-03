@@ -33,7 +33,7 @@ switch (databaseProvider)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options => options.AddPolicy("LocalFrontend", policy =>
-    policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+    policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173", "https://job-tracker-nine-bay.vercel.app")
         .AllowAnyHeader()
         .AllowAnyMethod()));
 
