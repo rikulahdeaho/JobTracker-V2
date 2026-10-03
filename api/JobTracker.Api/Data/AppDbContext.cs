@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobTracker.Api.Data;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext : DbContext
 {
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    protected AppDbContext(DbContextOptions options) : base(options) { }
+
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
 
     public DbSet<ApplicationEvent> ApplicationEvents => Set<ApplicationEvent>();

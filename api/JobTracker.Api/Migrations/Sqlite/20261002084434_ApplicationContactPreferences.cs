@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace JobTracker.Api.Migrations
+namespace JobTracker.Api.Migrations.Sqlite
 {
     /// <inheritdoc />
     public partial class ApplicationContactPreferences : Migration
