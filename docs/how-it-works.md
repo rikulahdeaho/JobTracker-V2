@@ -62,6 +62,33 @@ Forms disable saving controls while a request is pending. A failed save displays
 an error and keeps the entered values. A failed deletion keeps the confirmation
 open so the user can retry.
 
+### Add and Edit form layout
+
+Both dialogs use the same form, with four sections:
+
+- **Basic Info:** Company, Job title, Job URL and Location.
+- **Tracking:** Status, Applied date when relevant, Application deadline, Source and Salary range.
+- **Application & Contact:** Application method, Follow-up preference, Contact person and Contact email.
+- **Details:** Job description first, followed by Notes.
+
+The visible **Application deadline** label still maps to the API's `deadline` field.
+An empty Applied date is hidden for Draft and ToApply, and shown for Applied,
+Interviewing, Assignment, Offer, Rejected, Ghosted and Withdrawn. A date already
+present stays visible in Add or Edit, including after switching back to Draft or
+ToApply. Changing status never fills or clears the date. Explicit date corrections
+continue to use the existing ApplicationSent synchronization described below.
+
+Job description is a full-width, expanding field with eight initial rows for a
+pasted advertisement. Notes starts with three rows and is for personal observations.
+**Clean formatting** normalizes line endings, removes trailing spaces and reduces
+excessive blank lines to one blank line between paragraphs. It preserves wording,
+bullets and indentation, uses no AI or dependencies, and only changes the unsaved
+description. **Undo formatting** restores the pre-cleanup value; manually editing
+the description dismisses that undo option. Cleanup never changes Notes.
+
+Fields stack on small screens. The dialog content scrolls while footer actions
+remain outside the scroll area. No document uploads or Cover Letter fields are added.
+
 ### Application method and contact preferences
 
 | Field | Values or purpose |
@@ -70,6 +97,28 @@ open so the user can retry.
 | `followUpMode` | `Unknown`, `Possible`, `NotAvailable`, `NotNeeded`. Defaults to `Unknown`. |
 | `contactPerson` | Optional name, maximum 200 characters. |
 | `contactEmail` | Optional direct email address, maximum 254 characters. |
+
+Display labels retain their existing API values:
+
+| Application method value | Display label |
+| --- | --- |
+| `Unknown` | Not specified |
+| `CompanyPortal` | Company portal |
+| `Email` | Email |
+| `RecruiterDirect` | Direct recruiter contact |
+| `LinkedInEasyApply` | LinkedIn Easy Apply |
+| `Other` | Other |
+
+| Follow-up mode value | Display label |
+| --- | --- |
+| `Unknown` | Default |
+| `Possible` | Follow-up possible |
+| `NotAvailable` | No direct follow-up channel |
+| `NotNeeded` | Do not suggest follow-up |
+
+Helper text explains the direct-email requirement and when suggestions are disabled.
+Selecting Follow-up possible without an email is still allowed; it does not make
+the application eligible for follow-up. Contact validation and eligibility are unchanged.
 
 Both the frontend and API validate contact email format: a non-whitespace local
 part, `@`, and a dotted domain. This checks format, not whether the address exists.
@@ -382,7 +431,21 @@ Authentication tests mock Clerk at the boundary. They cover loading and sign-in
 states, tokens, sign-out, user changes, delayed requests, cache/reminder isolation
 and sidebar/theme controls. They do not test Clerk internals or every visual path.
 
-### Verification recorded on 2026-10-02
+### Form UX verification on 2026-10-02
+
+The form refinement passes 123 frontend tests across nine files, plus build and
+lint. Vite still reports the existing bundle-size warning. The 35 added tests cover
+required fields, API enum mappings, Applied date visibility/preservation, Edit
+values, contact validation, formatting content preservation and Undo.
+
+Signed-in browser checks covered minimal Draft creation, Edit/save/reload,
+conditional Applied date display, a portal without contact details, invalid email
+rejection, valid contact email persistence, description cleanup/Undo and responsive
+stacking at 390px with usable footer actions. The local `Form UX QA` record was
+retained. Native date entry/persistence and the full workflow acceptance matrix
+were not repeated in this browser run. Backend files were unchanged.
+
+### Earlier contact-preferences verification on 2026-10-02
 
 | Check | Result |
 | --- | --- |

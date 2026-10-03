@@ -2,144 +2,698 @@
 
 ## Feature Name
 
-Reminder / Schedule Product Refinement and Next Action Logic
+Application Form UX Refinement
 
 ## Status
 
-Implemented; browser acceptance in progress.
+Implemented; automated checks pass. Native date entry and the full manual
+workflow matrix remain to be verified in the browser.
 
-Automated verification on 2026-10-02: 77 backend tests and 88 frontend tests passed;
-both builds and frontend lint passed. Full browser acceptance remains pending.
-See [current behavior and verification limits](how-it-works.md#tests-and-verification).
+### Implementation and verification (2026-10-02)
+
+- Add and Edit share the four sections below, updated labels and contact helper text.
+- Applied date is visible for submitted statuses or whenever a value exists;
+  changing status never clears or invents the date.
+- Job description starts at eight rows and grows with content; Notes starts at three.
+- Clean formatting normalizes line endings, trims trailing spaces and reduces extra
+  blank lines. It preserves words, paragraphs, bullets and indentation. Undo restores
+  the original text; further manual description edits dismiss that undo action.
+- Added 35 frontend tests for required fields, enum mappings, date visibility and
+  preservation, Edit values, contact validation, formatting and Undo.
+- `npm run test`: 123 tests passed across nine files.
+- `npm run build` and `npm run lint`: passed. Vite retains its bundle-size warning.
+- Signed-in browser checks covered minimal Draft creation, Edit/save/reload,
+  Applied date appearing on status change, portal without contact details, valid
+  and invalid contact email, description cleanup/Undo, and responsive stacking at
+  390px with visible footer actions.
+- Native date entry/persistence and the complete workflow matrix below were not
+  repeated in the browser. Date preservation and eligibility have automated coverage.
+- One browser QA record, `Form UX QA / Draft verification`, was retained locally.
+- Backend, API contracts and workflow rules were unchanged; backend checks were not
+  rerun for this frontend-only feature. Application Documents remains separate.
 
 ## Scope
 
-Refine the existing JobTracker web application and ASP.NET Core API, mainly in `web/`, `api/`, and `docs/`. Preserve Clerk authentication, per-user ownership, existing CRUD and event endpoints, React/TanStack Query/Axios data flow, EF Core/SQLite persistence, and the current nine application statuses. Do not modify `mobile/` or deploy.
+Improve the existing Add Application and Edit Application forms.
+
+Work mainly inside:
+
+- `web/`
+- `docs/`
+
+Minimal API changes are allowed only if a clear integration issue is discovered.
+
+Do not modify the current application workflow rules or persistence model unless required to fix a bug.
+
+Do not implement CV/file uploads or Cover Letter persistence during this feature.
+
+---
 
 ## Goal
 
-Make Next Action and Schedule useful for applications submitted through portals where a follow-up may be impossible. Show real dated commitments separately from suggested attention. Never infer a terminal status from elapsed time.
+Make Add Application and Edit Application easier to scan, faster to use and clearer about what each field represents.
 
-## Behavior Before This Feature
+The current application model and workflow are already functional.
 
-Previously, Applied applications received a follow-up suggestion and a Schedule reminder 14 days after the latest `ApplicationSent` or `FollowUpSent`; after 30 days, Next Action said `Consider ghosted`. Interviewing generally said `Prepare interview`. The implementation now follows the rules below. Reminders and Next Action remain frontend-derived, with no database table or endpoint for reminders.
+This feature should improve:
 
-## Product Language
+- information hierarchy
+- section organization
+- field labels
+- conditional field visibility
+- helper text
+- Job Description usability
+- Add vs Edit usability
 
-- Rename the Applications filter `Needs follow-up` to **Needs attention**. It should select applications with a meaningful action that the user can take now, including `Review status`, rather than treating every aging application as contactable.
-- Replace `Consider ghosted` with **Review status**. The user may then keep the process active or manually set status to `Ghosted`.
-- If the Dashboard's `Active` or `active processes` metric is ambiguous beside the Applications `Active` filter, label it **Active hiring processes** and retain its current count definition (`Applied`, `Interviewing`, `Assignment`, `Offer`). Keep the list filter's definition clear.
+without redesigning the whole application.
 
-## Model Changes
+---
 
-Add `applicationMethod` to the application create/update/response model. Supported values: `CompanyPortal`, `Email`, `RecruiterDirect`, `LinkedInEasyApply`, `Other`, and `Unknown`. New records should ask for a method without requiring it; old records migrate to `Unknown`.
+## Existing Behavior to Preserve
 
-Add optional `contactPerson` and `contactEmail`. Add an explicit follow-up preference such as `followUpMode` (`Possible`, `NotAvailable`, `NotNeeded`, `Unknown`) or an equivalent model with the same distinctions. `Unknown` is the safe migration/default value. A valid direct contact channel and no `NotNeeded`/`NotAvailable` preference makes a follow-up appropriate; `Possible` may explicitly enable it when a usable channel exists. An application method alone, including `Email` or `RecruiterDirect`, must not invent contact details. `CompanyPortal` and `LinkedInEasyApply` without a usable direct contact channel must not generate a follow-up. If the implementation supports another direct channel, define and validate it consistently.
+The form currently supports:
 
-Consider adding a `ContactReceived` or `RecruiterContact` event with `OccurredAt` for an actual recruiter reply. Prefer an event so the timing is auditable and does not depend on `updatedAt`. Its creation follows existing event ownership and validation rules. It may update the workflow status only through the existing explicit event workflow rules, never through derived Next Action or Schedule calculation.
+- Company
+- Job title
+- Job URL
+- Location
+- Status
+- Applied date
+- Application deadline
+- Source
+- Salary range
+- Application method
+- Follow-up preference
+- Contact person
+- Contact email
+- Notes
+- Job description
 
-## Timing Rules
+Application method values currently are:
 
-Use the latest relevant communication event (`ApplicationSent`, `FollowUpSent`, or `ContactReceived` when added) as the unanswered-response anchor. A recruiter reply resets the stale-response clock. Do not use `updatedAt`, notes edits, or unrelated events. Use the existing whole-24-hour elapsed-day convention for response thresholds and the existing local-calendar convention for dated Schedule entries. If the response anchor is missing, ask the user to record the relevant activity rather than inventing a date.
+```text
+Unknown
+CompanyPortal
+Email
+RecruiterDirect
+LinkedInEasyApply
+Other
+```
 
-| Situation | Next Action | Needs attention? |
-| --- | --- | --- |
-| `Applied`, fewer than 14 days since response anchor | Wait for response | No |
-| `Applied`, 14 to fewer than 30 days, follow-up appropriate and contactable | Follow up | Yes |
-| `Applied`, 14 to fewer than 30 days, follow-up unavailable, unneeded, or contact unknown | Wait for response | No |
-| `Applied`, at least 30 days without a newer response | Review status | Yes |
-| `Applied`, missing response anchor | Add application activity/details | Yes |
-| `Draft` / `ToApply` | Finish application / Apply | Yes, under existing actionable rules |
-| `Rejected`, `Ghosted`, `Withdrawn` | No action | No |
+Follow-up mode values currently are:
 
-At exactly 14 days, the middle band begins; at exactly 30 days, `Review status` takes precedence regardless of follow-up eligibility. A `FollowUpSent` event resets the clock. A `ContactReceived` event resets it and should prevent an immediately stale follow-up. Do not automatically mark an application `Ghosted` at any age. Status remains a stored user/workflow choice; Next Action remains a derived suggestion.
+```text
+Unknown
+Possible
+NotAvailable
+NotNeeded
+```
 
-| Workflow state | Condition | Next Action |
-| --- | --- | --- |
-| `Interviewing` | Future interview time | Prepare interview |
-| `Interviewing` | Interview time has passed, no newer phase/contact resolving it | Wait for interview feedback |
-| `Interviewing` | No interview time | Add interview details |
-| `Assignment` | Assignment submitted | Wait for assignment feedback |
-| `Assignment` | Assignment not submitted, deadline known | Submit assignment |
-| `Assignment` | Assignment not submitted, deadline missing | Add assignment deadline |
-| `Offer` | Response deadline known | Respond to offer |
-| `Offer` | Response deadline missing | Review offer |
+The stored enum/API values must remain compatible with the existing backend.
 
-Use the latest relevant event when multiple interviews or assignments exist. An actual recruiter reply or newer phase event should prevent an obsolete interview-feedback suggestion. Keep existing sensible behavior for closed applications.
+Do not change workflow behavior simply to improve labels.
 
-## Schedule Rules
+---
 
-Separate two kinds of entries in the UI and in the derivation code:
+## Form Structure
 
-| Kind | Sources | Behavior |
-| --- | --- | --- |
-| Hard-date commitments | Future interview time, unsubmitted assignment deadline, offer response deadline, application deadline | Show the recorded date/time; never fabricate one. Remove or supersede entries when the workflow event shows completion or a newer date. |
-| Derived attention | Eligible follow-up at response anchor + 14 days; review status at +30 days; other genuinely actionable review prompts if already supported | Label as suggested attention, not a deadline. Do not create follow-up for uncontactable portal applications. Do not create `Ghosted` automatically. |
+Organize the form into these sections:
 
-An aging portal application may appear as `Review status` at day 30 without a follow-up at day 14. Avoid duplicate or contradictory entries when a new communication event resets the clock. Closed applications produce no future derived attention. Preserve the current frontend-derived reminder design unless a concrete requirement requires storage; do not introduce a reminder table or completion API for this feature.
+```text
+Basic Info
+Tracking
+Application & Contact
+Details
+```
 
-## Frontend Changes
+A future `Documents` section may be added later, but it is not part of this feature.
 
-- Extend add/edit forms and application display with method, optional contact details, and follow-up preference. Use clear defaults and explain that portal applications without a contact will simply be monitored.
-- Update shared types, API mapping, form validation, Next Action derivation, list filtering, Schedule derivation and grouping, Dashboard labels/count presentation, and any related Insights wording.
-- Show hard dates and suggested attention as visibly distinct sections or types. Keep links from entries to the owning application.
-- Offer `Mark as ghosted` and `Keep active` from the review flow if practical; `Mark as ghosted` must invoke the normal authorized status update. `Keep active` must not silently change status or hide later review without a defined persisted choice.
-- Allow recording a recruiter reply if the new event is implemented. Make the event timestamp explicit.
-- Keep authentication loading, signed-out state, query-cache isolation, error handling, theme behavior, and CRUD flows intact.
+---
 
-## Backend Changes
+## Basic Info
 
-- Extend the entity, DTOs, enum/string validation, mapping, and EF Core migration only for fields/events actually added.
-- Preserve owner scoping through the validated authenticated subject on all existing endpoints. Never accept a writable `UserId`.
-- Validate new fields and event payloads consistently on POST and PUT. Keep existing request/response conventions.
-- Do not calculate or persist Next Action, Schedule entries, or automatic `Ghosted` transitions on the backend.
+Fields:
 
-## Migration Guidance
+```text
+Company *
+Job title *
+Job URL
+Location
+```
 
-Migrate existing applications with `applicationMethod = Unknown` and `followUpMode = Unknown` (or equivalent). Keep existing contact fields null and existing statuses, dates, and events untouched. Unknown follow-up eligibility must not generate an automatic follow-up. Do not synthesize recruiter replies, change ownership, or rewrite historical events. Document the migration and any changed behavior for old records. Add an EF Core migration only when schema changes require it.
+Requirements:
+
+- Company remains required.
+- Job title remains required.
+- Keep Job URL optional.
+- Keep Location optional.
+- Preserve existing validation.
+- Keep two-column layout on desktop where practical.
+- Stack cleanly on smaller screens.
+
+---
+
+## Tracking
+
+Fields:
+
+```text
+Status
+Applied date
+Application deadline
+Source
+Salary range
+```
+
+### Deadline Label
+
+Rename the user-facing label:
+
+```text
+Deadline
+```
+
+to:
+
+```text
+Application deadline
+```
+
+Do not rename the backend/database field.
+
+The purpose is to distinguish the application deadline from:
+
+- interview time
+- assignment deadline
+- offer response deadline
+
+which already belong to workflow events.
+
+### Applied Date
+
+Make Applied date context-aware.
+
+For Add Application:
+
+- hide or de-emphasize Applied date while status is `Draft` or `ToApply`
+- show it when the selected status represents an application that has already been submitted or progressed further
+
+Relevant statuses include:
+
+```text
+Applied
+Interviewing
+Assignment
+Offer
+Rejected
+Ghosted
+Withdrawn
+```
+
+For Edit Application:
+
+- show Applied date when it already contains a value
+- also show it when the current status implies the application has been submitted
+
+Important:
+
+- never silently clear an existing Applied date because the field becomes hidden
+- do not invent an Applied date
+- preserve current API behavior around ApplicationSent events
+
+---
+
+## Application & Contact
+
+Fields:
+
+```text
+Application method
+Follow-up preference
+Contact person
+Contact email
+```
+
+Keep the existing stored enum values.
+
+Improve only the user-facing labels.
+
+### Application Method Labels
+
+Suggested UI labels:
+
+```text
+Unknown             -> Not specified
+CompanyPortal       -> Company portal
+Email               -> Email
+RecruiterDirect     -> Direct recruiter contact
+LinkedInEasyApply   -> LinkedIn Easy Apply
+Other               -> Other
+```
+
+The API values must remain unchanged.
+
+### Follow-Up Preference Labels
+
+Suggested UI labels:
+
+```text
+Unknown       -> Default
+Possible      -> Follow-up possible
+NotAvailable  -> No direct follow-up channel
+NotNeeded     -> Do not suggest follow-up
+```
+
+These are display labels only.
+
+Do not rename the persisted enum values during this feature.
+
+### Helper Text
+
+Make the relationship between follow-up preference and contact email easier to understand.
+
+For example:
+
+```text
+Follow-up suggestions require a valid contact email.
+```
+
+If a user selects a follow-up option that requires direct contact but no valid email is available, preserve the existing validation/business rules and explain the situation clearly.
+
+Do not imply that:
+
+```text
+Company portal
+LinkedIn Easy Apply
+Contact person name
+```
+
+alone provide a direct follow-up channel.
+
+---
+
+## Details
+
+Organize the Details section so Job Description and Notes have visibly different purposes.
+
+Preferred order:
+
+```text
+Job description
+Notes
+```
+
+### Job Description
+
+Job Description should be the larger field.
+
+The field may contain a full copied job advertisement, so give it noticeably more vertical space than Notes.
+
+Suggested helper text:
+
+```text
+Paste the relevant job advertisement text here for later reference.
+```
+
+Do not impose a small fixed visual height that makes long job descriptions difficult to edit.
+
+### Notes
+
+Notes should remain a smaller field intended for the user's own observations.
+
+Suggested helper text:
+
+```text
+Your own notes about the application, company or hiring process.
+```
+
+Do not mix Notes and Job Description content.
+
+---
+
+## Job Description Formatting
+
+Add a small deterministic formatting utility if it can be implemented cleanly without adding dependencies.
+
+Suggested action:
+
+```text
+Clean formatting
+```
+
+This action may:
+
+- normalize line endings
+- trim leading/trailing whitespace
+- reduce excessive blank lines
+- remove trailing spaces
+- preserve meaningful paragraph breaks
+- preserve bullet-style lines where possible
+
+It must not:
+
+- rewrite content
+- summarize the job advertisement
+- invent missing information
+- use AI
+- remove meaningful text
+
+The cleanup should be reversible before saving through normal form editing, because it only changes the textarea value.
+
+If a safe implementation would require significant complexity, leave the button out and only improve the textarea UX.
+
+---
+
+## Add Application Behavior
+
+Add Application should feel fast.
+
+Required information remains only:
+
+```text
+Company
+Job title
+```
+
+Do not make optional fields required.
+
+Avoid overwhelming the user with unnecessary explanatory text.
+
+The form should still support entering all available information before saving.
+
+Do not add a separate multi-step wizard.
+
+---
+
+## Edit Application Behavior
+
+Edit Application should use the same underlying form and field structure where practical.
+
+Existing saved values must populate correctly.
+
+Editing must preserve:
+
+- application method
+- follow-up preference
+- contact information
+- dates
+- status
+- job description
+- notes
+- source
+- salary
+- URL
+- location
+
+Do not reset optional fields when opening Edit.
+
+---
+
+## Add vs Edit Consistency
+
+Prefer shared field components/form logic rather than maintaining two divergent forms.
+
+Differences between Add and Edit should be limited to things such as:
+
+```text
+dialog title
+submit button text
+existing field values
+context-aware Applied date visibility
+```
+
+Avoid duplicated business logic.
+
+---
+
+## Layout
+
+Keep the current MUI visual direction.
+
+Requirements:
+
+- clear section headings
+- consistent spacing
+- readable helper text
+- two-column layout where useful
+- full-width long-text fields
+- responsive stacking
+- footer actions remain easy to reach
+
+Do not make the dialog unnecessarily wider.
+
+If the form exceeds the available viewport height:
+
+- allow the content area to scroll
+- keep actions usable
+- avoid making the whole browser page scroll behind the dialog
+
+---
+
+## Documents
+
+Do not implement Documents during this feature.
+
+A future feature may add:
+
+```text
+Saved CVs
+CV versions
+CV selection per application
+Cover Letter
+Original file storage
+Extracted document text
+```
+
+Do not add temporary Base64/PDF fields to JobApplication.
+
+Do not add placeholder database columns for future document functionality yet.
+
+---
+
+## Workflow Rules
+
+Do not change the current Next Action rules.
+
+Preserve the existing behavior where:
+
+- metadata edits do not reset response timing
+- ApplicationSent, FollowUpSent and ContactReceived drive response timing
+- contactability affects follow-up suggestions
+- application deadline is separate from interview, assignment and offer dates
+- status is not automatically changed to Ghosted
+
+Form UX changes must not alter these rules.
+
+---
+
+## API Compatibility
+
+Preserve the existing API contracts unless an actual bug requires a change.
+
+Do not rename API fields such as:
+
+```text
+deadline
+applicationMethod
+followUpMode
+contactPerson
+contactEmail
+jobDescription
+notes
+```
+
+UI labels may differ from backend property names.
+
+---
 
 ## Tests
 
-Backend tests should cover new field round-trips and validation, defaults/migration behavior, event persistence if added, and cross-user ownership for the new event and data. Existing authentication and CRUD tests must keep passing.
+Update frontend tests where necessary.
 
-Frontend tests should cover the 14- and 30-day boundaries, portal/no-contact cases, direct contact and explicit preference cases, unknown legacy data, follow-up and recruiter-reply clock resets, missing timestamps, future/past interviews, submitted assignments, Schedule category and date behavior, closed statuses, `Needs attention`, and manual Ghosted status changes. Test the user-visible flow without mirroring internal helpers.
+Test important behavior such as:
 
-## Validation
+- Company remains required
+- Job title remains required
+- Add form maps application method correctly
+- Add form maps follow-up mode correctly
+- Edit form preserves existing values
+- user-facing enum labels map to the correct API values
+- Applied date visibility follows the intended status rules
+- hidden Applied date is not silently cleared
+- contact validation still works
+- Job Description formatting utility preserves content correctly, if implemented
 
-Run backend `dotnet test` and `dotnet build` from `api/`. Run frontend `npm run test`, `npm run build`, and `npm run lint` from `web/`. Report any failures and their cause; do not claim checks passed unless run.
+Do not add tests for MUI implementation details.
+
+Do not use snapshot tests just to capture the form layout.
+
+---
 
 ## Manual Validation
 
-- Create a portal application without contact information; verify no day-14 follow-up on Next Action or Schedule and a day-30 `Review status` prompt.
-- Create a contactable application; verify day-14 follow-up, then record a follow-up and recruiter reply and verify the response clock resets.
-- Verify `Review status` does not change status. Manually mark Ghosted and confirm closed-state behavior; keep another application active.
-- Verify future and past interviews, submitted assignments, and each hard deadline appear correctly and separately from suggested attention.
-- Verify add/edit/detail, list filter, Dashboard, Schedule, Insights, reload, signed-in ownership isolation, and theme behavior remain functional.
+Test Add Application:
 
-## Out of Scope
+1. Open Add Application.
+2. Verify the section hierarchy is clear.
+3. Create a Draft application with only Company and Job title.
+4. Create a ToApply application with an application deadline.
+5. Create an Applied application with an Applied date.
+6. Create an Email application with a contact email.
+7. Create a portal application without contact details.
+8. Verify all saved values after reopening the application.
 
-- Automatic email or portal messages, email/push notifications, calendar sync, AI-generated outreach, background jobs, stored reminder completion, automatic Ghosted classification, new statuses, production deployment, mobile implementation, and unrelated visual redesigns.
+Test Edit Application:
+
+1. Open an existing application.
+2. Verify all saved values populate.
+3. Change Status.
+4. Verify Applied date behavior.
+5. Change Application method.
+6. Change Follow-up preference.
+7. Change Contact person/email.
+8. Edit Job Description and Notes.
+9. Save.
+10. Reload the page.
+11. Verify values persist.
+
+Verify workflow behavior:
+
+- portal application without direct email does not incorrectly gain a follow-up suggestion
+- valid contact email still enables the existing eligible follow-up behavior
+- unrelated form edits do not reset workflow timing
+- Application deadline continues to behave as an application deadline
+- Next Action remains correct
+
+---
+
+## Not Included
+
+Do not implement:
+
+- CV uploads
+- CV selection
+- CV versioning
+- Cover Letter persistence
+- file storage
+- Base64 file storage
+- PDF parsing
+- AI job-description parsing
+- AI rewriting
+- AI cover-letter generation
+- document comparison
+- reminder persistence
+- deployment
+- production PostgreSQL
+- mobile changes
+
+---
+
+## Validation
+
+Frontend:
+
+```powershell
+cd web
+npm run test
+npm run build
+npm run lint
+```
+
+Backend should not normally require changes.
+
+If backend code is changed:
+
+```powershell
+cd api
+dotnet test
+dotnet build
+```
+
+---
 
 ## Definition of Done
 
-- The model records application method and enough contact/follow-up information to avoid impossible follow-ups.
-- `Needs attention` replaces `Needs follow-up` throughout the relevant UI and uses actionable rules.
-- Applied timing, recruiter reply, interview, assignment, and Schedule behavior match the tables above.
-- Hard dates and derived attention are visually and logically separate.
-- Only a user action or existing explicit workflow transition changes stored status; derived logic never does.
-- Migration preserves existing data and ownership; automated checks and manual scenarios pass or documented blockers remain.
-- Relevant product and API documentation is updated.
+This feature is complete when:
+
+- Add/Edit forms are easier to scan
+- sections have clear purposes
+- `Application deadline` is clearly named in the UI
+- Application Method labels are user-friendly
+- Follow-up Preference labels are user-friendly
+- persisted enum/API values remain unchanged
+- Applied date is presented contextually without data loss
+- Job Description is easier to enter and review
+- Notes remain clearly separate from Job Description
+- optional deterministic formatting works safely if implemented
+- existing validation still works
+- existing contact/follow-up logic still works
+- existing workflow rules still work
+- Add Application works
+- Edit Application works
+- frontend tests pass
+- frontend build passes
+- lint passes
+- no document/file-storage system was added
+
+---
 
 ## Expected Result
 
-JobTracker presents real deadlines as dates, suggests follow-up only when the user can actually contact someone, and asks for a status review after prolonged silence. The user decides whether a process is Ghosted.
+The form should feel like:
+
+```text
+BASIC INFO
+Company              Job title
+Job URL              Location
+
+TRACKING
+Status               Applied date
+Application deadline Source
+Salary range
+
+APPLICATION & CONTACT
+Application method   Follow-up preference
+Contact person       Contact email
+
+DETAILS
+Job description
+
+Notes
+```
+
+The form remains comprehensive without making the initial application creation unnecessarily difficult.
+
+---
+
+## Next Possible Feature
+
+A separate future feature can be:
+
+```text
+Application Documents
+```
+
+Possible scope:
+
+```text
+Reusable CV library
+CV versions
+Select CV version per application
+Cover Letter text
+Optional original files
+Extracted document text
+Job Description normalization
+```
+
+Do not implement it as part of the current feature.
+
+---
 
 ## History
 
-- Completed Web App Mock Data Foundation
-- Completed Web CRUD Flow with Local State
-- Completed Frontend Applications API Integration
-- Completed Applications Automated Test Layer
+- Completed Applications API Integration
 - Completed Application Workflow Model
 - Completed Authentication and User Ownership
-- Planned Reminder / Schedule Product Refinement and Next Action Logic
+- Completed Application Contact Preferences
+- Started Application Form UX Refinement

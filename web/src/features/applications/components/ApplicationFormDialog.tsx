@@ -1,6 +1,9 @@
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -15,9 +18,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { PropsWithChildren } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import type { PropsWithChildren, ReactNode } from "react";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import { emptyApplicationFormValues } from "../utils/applicationForm";
+import { cleanJobDescriptionFormatting } from "../utils/jobDescriptionFormatting";
 import { applicationMethodLabels, followUpModeLabels, isValidContactEmail } from "../utils/applicationContact";
 import { applicationStatusLabel } from "../utils/applicationStatus";
 import { getApiErrorMessage } from "../../../lib/apiClient";
@@ -46,9 +51,24 @@ export function ApplicationFormDialog({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const submitting = useRef(false);
+  const [descriptionBeforeCleanup, setDescriptionBeforeCleanup] = useState<string | null>(null);
+  const [contactExpanded, setContactExpanded] = useState(mode === "edit" && Boolean(
+    initialValues?.contactPerson || initialValues?.contactEmail ||
+    (initialValues?.followUpMode && initialValues.followUpMode !== "Unknown"),
+  ));
+  const [detailsExpanded, setDetailsExpanded] = useState(mode === "edit" && Boolean(
+    initialValues?.salaryRange || initialValues?.notes,
+  ));
+  const showAppliedDate = Boolean(values.appliedDate) || !["Draft", "ToApply"].includes(values.status);
+  const followUpHelp = values.followUpMode === "NotNeeded"
+    ? "Follow-up suggestions are off; status reviews still apply."
+    : values.followUpMode === "NotAvailable"
+      ? "No direct follow-up channel; response monitoring still applies."
+      : "Follow-up suggestions require a valid contact email.";
 
   const handleFieldChange =
     (field: keyof JobApplicationFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
+      if (field === "jobDescription") setDescriptionBeforeCleanup(null);
       setValues((currentValues) => ({
         ...currentValues,
         [field]: event.target.value,
@@ -79,6 +99,7 @@ export function ApplicationFormDialog({
     }
     if (values.contactPerson.length > 200) nextErrors.contactPerson = "Use at most 200 characters.";
     setErrors(nextErrors);
+    if (nextErrors.contactEmail || nextErrors.contactPerson) setContactExpanded(true);
 
     if (Object.keys(nextErrors).length > 0) {
       return;
@@ -102,18 +123,18 @@ export function ApplicationFormDialog({
       open={open}
       onClose={isSaving ? undefined : onClose}
       fullWidth
-      maxWidth="xl"
+      maxWidth={false}
       PaperProps={{
         sx: {
-          maxHeight: "calc(100vh - 48px)",
+          width: "calc(100% - 32px)",
+          maxWidth: 1280,
+          m: 2,
+          maxHeight: "calc(100dvh - 32px)",
         },
       }}
     >
       <DialogTitle sx={{ pb: 1.5, fontSize: "1.25rem", fontWeight: 750 }}>
         {mode === "add" ? "Add Application" : "Edit Application"}
-        <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mt: 0.5, fontWeight: 400 }}>
-          Capture the essentials now and refine the details as the process moves.
-        </Typography>
       </DialogTitle>
       <DialogContent
         dividers
@@ -124,10 +145,7 @@ export function ApplicationFormDialog({
       >
         <Stack gap={2.5}>
           {submitError ? <Alert severity="error">{submitError}</Alert> : null}
-          <FormSection
-            title="Basic info"
-            description="The minimum information needed to create a useful application card."
-          >
+          <FormSection title="Basic Info">
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
@@ -138,7 +156,7 @@ export function ApplicationFormDialog({
                   fullWidth
                   required
                   error={Boolean(errors.companyName)}
-                  helperText={errors.companyName || "Required"}
+                  helperText={errors.companyName}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -150,7 +168,7 @@ export function ApplicationFormDialog({
                   fullWidth
                   required
                   error={Boolean(errors.jobTitle)}
-                  helperText={errors.jobTitle || "Required"}
+                  helperText={errors.jobTitle}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -176,12 +194,9 @@ export function ApplicationFormDialog({
             </Grid>
           </FormSection>
 
-          <FormSection
-            title="Tracking info"
-            description="Status and dates power the local next-action and reminder views."
-          >
+          <FormSection title="Application">
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   disabled={isSaving}
                   select
@@ -197,7 +212,7 @@ export function ApplicationFormDialog({
                   ))}
                 </TextField>
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              {showAppliedDate && <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   disabled={isSaving}
                   label="Applied date"
@@ -206,12 +221,13 @@ export function ApplicationFormDialog({
                   onChange={handleFieldChange("appliedDate")}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  helperText="Submission date. Leave blank if unknown."
                 />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              </Grid>}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   disabled={isSaving}
-                  label="Deadline"
+                  label="Application due date"
                   type="date"
                   value={values.deadline}
                   onChange={handleFieldChange("deadline")}
@@ -232,54 +248,47 @@ export function ApplicationFormDialog({
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   disabled={isSaving}
-                  label="Salary range"
-                  value={values.salaryRange}
-                  onChange={handleFieldChange("salaryRange")}
-                  fullWidth
-                  placeholder="EUR 5,000 - 6,000 / month"
-                />
-              </Grid>
-            </Grid>
-          </FormSection>
-
-          <FormSection title="Application and contact" description="Optional. Portal applications without a direct contact are monitored without suggesting follow-ups.">
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField select fullWidth disabled={isSaving} label="Application method" value={values.applicationMethod} onChange={handleFieldChange("applicationMethod")}>
+                  select fullWidth label="Application method" value={values.applicationMethod}
+                  onChange={handleFieldChange("applicationMethod")}
+                >
                   {Object.entries(applicationMethodLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
                 </TextField>
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField select fullWidth disabled={isSaving} label="Follow-up preference" value={values.followUpMode} onChange={handleFieldChange("followUpMode")} helperText="Follow-up suggestions require a valid contact email, even when Possible is selected.">
-                  {Object.entries(followUpModeLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField fullWidth disabled={isSaving} label="Contact person" value={values.contactPerson} onChange={handleFieldChange("contactPerson")} error={!!errors.contactPerson} helperText={errors.contactPerson || "Optional"} />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField fullWidth disabled={isSaving} label="Contact email" type="email" value={values.contactEmail} onChange={handleFieldChange("contactEmail")} error={!!errors.contactEmail} helperText={errors.contactEmail || "Optional direct contact channel"} />
-              </Grid>
             </Grid>
           </FormSection>
 
+          <OptionalFormSection title="Contact" expanded={contactExpanded} onChange={setContactExpanded} disabled={isSaving}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth disabled={isSaving} label="Contact person" value={values.contactPerson} onChange={handleFieldChange("contactPerson")} error={!!errors.contactPerson} helperText={errors.contactPerson} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth disabled={isSaving} label="Contact email" type="email" value={values.contactEmail} onChange={handleFieldChange("contactEmail")} error={!!errors.contactEmail} helperText={errors.contactEmail} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField select fullWidth disabled={isSaving} label="Follow-up preference" value={values.followUpMode} onChange={handleFieldChange("followUpMode")} helperText={followUpHelp}>
+                  {Object.entries(followUpModeLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+                </TextField>
+              </Grid>
+            </Grid>
+          </OptionalFormSection>
+
           <FormSection
-            title="Details"
-            description="Optional context for tailoring follow-ups, interviews and decisions."
+            title="Job Description"
+            actions={<Stack direction="row" gap={0.5} flexWrap="wrap">
+              <Button size="small" disabled={isSaving || !values.jobDescription.trim()} onClick={() => {
+                const cleaned = cleanJobDescriptionFormatting(values.jobDescription);
+                if (cleaned === values.jobDescription) return;
+                setDescriptionBeforeCleanup(values.jobDescription);
+                setValues(current => ({ ...current, jobDescription: cleaned }));
+              }}>Clean formatting</Button>
+              {descriptionBeforeCleanup !== null && <Button size="small" disabled={isSaving} onClick={() => {
+                setValues(current => ({ ...current, jobDescription: descriptionBeforeCleanup }));
+                setDescriptionBeforeCleanup(null);
+              }}>Undo formatting</Button>}
+            </Stack>}
           >
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  disabled={isSaving}
-                  label="Notes"
-                  value={values.notes}
-                  onChange={handleFieldChange("notes")}
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  placeholder="Portfolio angle, recruiter notes, next prep ideas..."
-                />
-              </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   disabled={isSaving}
@@ -288,12 +297,38 @@ export function ApplicationFormDialog({
                   onChange={handleFieldChange("jobDescription")}
                   fullWidth
                   multiline
-                  minRows={3}
-                  placeholder="Paste the most relevant role details here."
+                  minRows={8}
+                  maxRows={16}
+                  placeholder="Paste the job advertisement, including responsibilities and requirements..."
+                  helperText="Paste the job advertisement for later reference."
                 />
               </Grid>
             </Grid>
           </FormSection>
+          <OptionalFormSection title="More details" expanded={detailsExpanded} onChange={setDetailsExpanded} disabled={isSaving}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  disabled={isSaving} label="Salary range" value={values.salaryRange}
+                  onChange={handleFieldChange("salaryRange")} fullWidth
+                  placeholder="EUR 5,000 - 6,000 / month"
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  disabled={isSaving}
+                  label="Notes"
+                  value={values.notes}
+                  onChange={handleFieldChange("notes")}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Questions to ask, company impressions, or preparation ideas..."
+                  helperText="Your own observations and questions."
+                />
+              </Grid>
+            </Grid>
+          </OptionalFormSection>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: { xs: 2.5, md: 3 }, py: 2 }}>
@@ -308,22 +343,41 @@ export function ApplicationFormDialog({
 
 type FormSectionProps = PropsWithChildren<{
   title: string;
-  description: string;
+  actions?: ReactNode;
 }>;
 
-function FormSection({ title, description, children }: FormSectionProps) {
+function FormSection({ title, actions, children }: FormSectionProps) {
   return (
     <Box>
-      <Stack gap={0.5} sx={{ mb: 1.5 }}>
-        <Typography variant="overline" color="primary.main">
+      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" sx={{ mb: 1 }}>
+        <Typography component="h3" variant="overline" color="text.secondary">
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
+        {actions}
       </Stack>
       <Divider sx={{ mb: 2 }} />
       {children}
     </Box>
+  );
+}
+
+type OptionalFormSectionProps = PropsWithChildren<{
+  title: string;
+  expanded: boolean;
+  onChange: (expanded: boolean) => void;
+  disabled: boolean;
+}>;
+
+function OptionalFormSection({ title, expanded, onChange, disabled, children }: OptionalFormSectionProps) {
+  const sectionId = title.toLowerCase().replaceAll(" ", "-");
+  return (
+    <Accordion expanded={expanded} onChange={(_, next) => onChange(next)} disabled={disabled}
+      disableGutters elevation={0} slotProps={{ transition: { unmountOnExit: true } }}
+      sx={{ border: 1, borderColor: "divider", borderRadius: 1, "&::before": { display: "none" } }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} id={`${sectionId}-heading`} aria-controls={`${sectionId}-content`}>
+        <Typography component="h3" variant="body2" fontWeight={600} color="text.secondary">{title}</Typography>
+      </AccordionSummary>
+      <AccordionDetails id={`${sectionId}-content`}>{children}</AccordionDetails>
+    </Accordion>
   );
 }

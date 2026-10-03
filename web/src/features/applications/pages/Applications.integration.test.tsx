@@ -53,8 +53,9 @@ it("edits contact information and validates the direct channel before saving", a
   const dialog = within(screen.getByRole("dialog"));
   await user.click(dialog.getByRole("combobox", { name: "Application method" }));
   await user.click(screen.getByRole("option", { name: "Company portal" }));
+  await user.click(dialog.getByRole("button", { name: "Contact" }));
   await user.click(dialog.getByRole("combobox", { name: "Follow-up preference" }));
-  await user.click(screen.getByRole("option", { name: "Possible with a direct contact" }));
+  await user.click(screen.getByRole("option", { name: "Follow-up possible" }));
   await user.type(dialog.getByRole("textbox", { name: "Contact person" }), "Recruiter");
   await user.type(dialog.getByRole("textbox", { name: "Contact email" }), "invalid");
   await user.click(dialog.getByRole("button", { name: "Save changes" }));
