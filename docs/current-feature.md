@@ -90,6 +90,56 @@ Independent finish review: **ship**, no material fixes. The reviewer inspected
 Populated Schedule and authentication/error/save-failure states rely on source
 and automated tests rather than a separate live reviewer session.
 
+## Search agenda personality refinements (2026-10-05)
+
+The five requested refinements strengthen the existing Search agenda identity.
+Shared ApplicationIdentity leads with a 700-weight role and secondary company text,
+replacing company-initial avatars in Applications and Details and aligning action
+and suggestion rows. Dashboard makes the application identity primary and its
+task secondary, with a 1280px maximum reading width; Details uses 1200px.
+
+Details puts Next Action and Timeline ahead of Description & notes. Quick facts
+groups compact Dates, Contact and populated Reference fields; one collapsed
+Missing optional details disclosure retains all absent optional fields without
+a count. Add details opens the existing Edit form. Timeline and Schedule use
+aligned date columns and group dividers, stacking at small widths. Dashboard's
+View schedule action has its own row below the Schedule summary heading.
+
+Validation: the full frontend suite passed 166 tests across 13 files. After the
+final changes, 32 targeted tests across two files passed. Final lint and production
+build passed; the existing large-chunk warning remains. The UI detector returned
+no findings.
+
+Local browser inspection produced 26 valid captures of the five changed pages
+at 1440px desktop and 390px mobile in light/dark, plus Dashboard at 1280 × 720
+in both modes. Filled and sparse Details were checked; Missing optional details
+expanded, and Add details opened the prefilled Edit form, which was canceled
+unchanged. Sparse Details had no page-level horizontal overflow at 320px.
+No application records were saved or deleted. Populated Schedule and authentication,
+error and save-failure states rely on source and automated tests in this pass.
+Zoom, screen-reader and production checks were not performed. Independent finish
+review: **ship**, no material fixes for the five authorized refinements. The fresh
+reviewer inspected all 26 captures and source against the incumbent product,
+design system and surface contract; no separate QUALITY BAR card was supplied.
+The processed critique snapshot was closed; its historical score was not recalculated.
+This pass does not close the remaining native date or combined-workflow checks.
+
+## Inline sign-in (2026-10-05)
+
+The signed-out page displays Clerk's native SignIn component directly, removing
+the extra modal-launch step. An open, narrow layout and theme-aware Clerk
+appearance use the existing Search agenda typography and colors. Authentication
+options, API ownership, session expiration and cache isolation remain unchanged.
+Hash routing supports embedded steps; Dashboard is the authentication fallback.
+
+Validation: all 11 authentication/session tests, lint and production build passed.
+The detector returned no findings. The real signed-out Clerk form was inspected
+at desktop and 390px mobile in both themes, with no horizontal mobile overflow.
+No credentials were submitted or accounts created; completing a new sign-in and
+recovery/sign-up remain outside this browser check. Existing bundle warnings remain.
+Independent finish review: **ship**, no material fixes for the inline login scope,
+after inspecting five valid screenshots and the authentication source.
+
 ## Implemented form behavior
 
 - Shared Add/Edit form: Basic Info, Application, expandable Contact, Job Description

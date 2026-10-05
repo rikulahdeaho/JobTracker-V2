@@ -40,19 +40,29 @@ retains semantic green. The signature mark belongs only to Next Action headings.
 
 - Dashboard opens with Next Action beside recorded Schedule from md. Mobile order
   is Next Action, Schedule, the six summary counts, then other next actions.
+  Its reading width is capped at 1280px. Role and company lead the priority panel
+  and action rows, with the task beneath or beside them. View schedule sits on its
+  own row below Schedule summary so the header stays readable at intermediate widths.
   Counts remain Total applications, Active hiring processes, Interviews, Offers,
   Needs attention and Status review. Pipeline snapshot is removed; saved-stage
   distribution remains in Insights. Open space is intentional.
 - Applications keeps search and the four list views visible. Below md, Status
   and Sort are disclosed by Filters; selected status remains visible and removable.
-  Cards repeat role/company, saved stage and a separate Next Action row. Optional
+  Cards use shared ApplicationIdentity: role at 700 weight, company in secondary
+  text, without company-initial avatars; saved stage and Next Action stay separate. Optional
   location/source metadata is omitted when absent and remains available in Details.
-- Details places Record activity beside Next Action. Delete is a secondary text
-  action; Quick facts values stack below labels to accommodate long addresses.
+- Details uses the same role/company identity and a 1200px reading width. Next Action
+  with Record activity and Timeline precede Description & notes. Delete is a secondary
+  text action. Quick facts groups compact fields into Dates, Contact and populated
+  Reference information. One collapsed Missing optional details section retains
+  every absent optional field without a count; Add details opens the existing Edit form.
   Missing Applied date reads Not applied yet only for Draft and To Apply, and
-  Applied date not recorded for other stages. Timeline is a quiet event list.
+  Applied date not recorded for other stages. Timeline aligns dates with events in
+  a fixed column from sm and stacks dates above events below sm.
 - Schedule groups recorded dates first and suggestions separately. Empty sections
   use neutral text; overdue/today colors apply only when those groups contain dates.
+  Group headers share a divider and aligned count. Dated records align their date
+  column beside application identity from sm and stack on smaller screens.
 - Insights presents counts and their active-process denominator before percentages.
   A missing denominator is explained in words. Suggestions link to existing
   application details; optional recorded context is presented without failure language.
@@ -60,6 +70,11 @@ retains semantic green. The signature mark belongs only to Next Action headings.
   remain inside a collapsed, clearly labeled preview section.
 
 ## Component and accessibility conventions
+
+- Authentication uses an open neutral workspace with one narrow centered column:
+  JobTracker identity, a short product description and the native Clerk form.
+  The Clerk form is the only container; theme switching is available at the top.
+  Typography and light/dark colors follow the application theme.
 
 - Use MUI and the existing shared page/section components. Choose open sections
   for summaries rather than creating nested cards or one KPI tile per count.

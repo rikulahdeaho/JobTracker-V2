@@ -3,6 +3,7 @@ import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Stack, Typo
 import { Link as RouterLink } from "react-router-dom";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { NextActionMark } from "../../components/ui/NextActionMark";
+import { ApplicationIdentity } from "../applications/components/ApplicationIdentity";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ApplicationDataState } from "../applications/components/ApplicationDataState";
 import { StatusChip } from "../applications/components/StatusChip";
@@ -46,21 +47,20 @@ export function DashboardPage() {
   ];
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1280}>
       <PageHeader title="Your job search" description="Your applications and what to do next." actions={<Button component={RouterLink} to="/applications" variant="outlined">Manage applications</Button>} />
       <Grid container spacing={{ xs: 3, md: 4 }}>
         <Grid size={{ xs: 12, md: 8 }}>
-              <Stack gap={2}>
+              <Stack gap={2.5} sx={{ bgcolor: "action.hover", borderRadius: 1, p: { xs: 2.5, md: 3 } }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
                   <Stack direction="row" alignItems="center" gap={1.5}><NextActionMark /><Typography component="h2" variant="h6">Next Action</Typography></Stack>
                   {priorityItem?.nextAction.needsAttention ? <Typography variant="body2" color="text.secondary">Action suggested</Typography> : null}
                 </Stack>
                 {priorityItem ? <>
                   <Box>
-                    <Typography component="h3" variant="h4" sx={{ fontSize: { xs: "1.625rem", md: "1.875rem" }, maxWidth: "28ch", textWrap: "balance" }}>{priorityItem.nextAction.title}</Typography>
-                    <Typography sx={{ mt: 0.75 }}>{priorityItem.application.jobTitle}</Typography>
-                    <Typography sx={{ mt: 0.75 }} fontWeight={600}>{priorityItem.application.companyName}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, maxWidth: "65ch" }}>{priorityItem.nextAction.description}</Typography>
+                    <ApplicationIdentity jobTitle={priorityItem.application.jobTitle} companyName={priorityItem.application.companyName} heading="h3" size="page" />
+                    <Typography component="h3" variant="h6" sx={{ mt: 2.5 }}>{priorityItem.nextAction.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, maxWidth: "65ch" }}>{priorityItem.nextAction.description}</Typography>
                   </Box>
                   <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
                     <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
@@ -73,7 +73,11 @@ export function DashboardPage() {
               </Stack>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }} sx={theme => ({ borderLeft: { md: `1px solid ${theme.palette.divider}` }, pl: { md: 3 } })}>
-          <SectionCard variant="plain" title="Schedule summary" action={<Button component={RouterLink} to="/schedule" endIcon={<ChevronRightOutlinedIcon />}>View schedule</Button>}>
+          <Stack gap={2.25}>
+            <Box>
+              <Typography component="h2" variant="h6">Schedule summary</Typography>
+              <Button component={RouterLink} to="/schedule" endIcon={<ChevronRightOutlinedIcon />} sx={{ ml: -1, mt: 0.5 }}>View schedule</Button>
+            </Box>
             <Stack direction="row" gap={2} justifyContent="space-between">
               {reminderGroups.map((group, index) => <Box key={group.key}>
                 <Typography fontWeight={650} sx={{ fontVariantNumeric: "tabular-nums" }} color={index === 0 && group.reminders.length > 0 ? "error.main" : "text.primary"}>{group.reminders.length}</Typography>
@@ -85,7 +89,7 @@ export function DashboardPage() {
               <Typography variant="body2" sx={{ minWidth: 86, fontVariantNumeric: "tabular-nums" }}>{formatApplicationDate(reminder.dueDate, "No due date")}</Typography>
               <Box><Typography fontWeight={600}>{reminder.title}</Typography><Typography variant="body2" color="text.secondary">{reminder.companyName} · {reminder.jobTitle}</Typography></Box>
             </Stack>) : <Typography color="text.secondary">No dates scheduled. Recorded deadlines and interviews will appear here.</Typography>}
-          </SectionCard>
+          </Stack>
         </Grid>
       </Grid>
       <Box component="dl" aria-label="Application summary" sx={{ m: 0, display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" }, borderTop: 1, borderBottom: 1, borderColor: "divider", py: 1 }}>
@@ -100,8 +104,7 @@ export function DashboardPage() {
               {nextActionItems.map(({ application, nextAction }, index) => <ListItem key={application.id} disablePadding sx={{ borderTop: index > 0 ? 1 : 0, borderColor: "divider" }}>
                 <ListItemButton component={RouterLink} to={`/applications/${application.id}`} sx={{ px: 0, py: 2, gap: 2, alignItems: "start", display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) auto", md: "minmax(0, 1fr) minmax(0, 1.4fr) minmax(140px, .7fr) auto" } }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography fontWeight={600}>{application.jobTitle}</Typography>
-                    <Typography variant="body2" color="text.secondary">{application.companyName}</Typography>
+                    <ApplicationIdentity jobTitle={application.jobTitle} companyName={application.companyName} heading="h3" />
                   </Box>
                   <Box sx={{ minWidth: 0, gridColumn: { xs: 1, md: "auto" } }}>
                     <Typography sx={{ mt: 0.5 }}>{nextAction.title}</Typography>

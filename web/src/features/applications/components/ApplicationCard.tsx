@@ -2,9 +2,7 @@ import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
 import {
-  Avatar,
   Box,
-  Divider,
   Card,
   CardActionArea,
   CardContent,
@@ -17,6 +15,7 @@ import { getApplicationNextAction } from "../utils/applicationNextAction";
 import { formatApplicationDate } from "../utils/applicationPresentation";
 import { NextActionChip } from "./NextActionChip";
 import { StatusChip } from "./StatusChip";
+import { ApplicationIdentity } from "./ApplicationIdentity";
 
 type ApplicationCardProps = {
   application: JobApplication;
@@ -38,7 +37,6 @@ function formatKeyDate(application: JobApplication) {
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const nextAction = getApplicationNextAction(application);
-  const companyInitial = application.companyName.trim().charAt(0).toUpperCase();
 
   return (
     <Card
@@ -57,27 +55,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       >
         <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1.75, height: "100%", p: { xs: 2, md: 2.5 } }}>
           <Stack gap={1.5}>
-            <Stack direction="row" gap={1.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
-              <Avatar
-                variant="rounded"
-                sx={{
-                  width: 40,
-                  height: 40,
-                  flexShrink: 0,
-                  bgcolor: "action.hover",
-                  color: "text.secondary",
-                  fontWeight: 600,
-                }}
-              >
-                {companyInitial}
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography component="h2" variant="h6" sx={{ overflowWrap: "anywhere" }}>
-                  {application.jobTitle}
-                </Typography>
-                <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{application.companyName}</Typography>
-              </Box>
-            </Stack>
+            <ApplicationIdentity jobTitle={application.jobTitle} companyName={application.companyName} />
             <Box><StatusChip status={application.status} /></Box>
           </Stack>
           <Stack direction="row" flexWrap="wrap" gap={1.5} color="text.secondary">
@@ -92,7 +70,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
               <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>{formatKeyDate(application)}</Typography>
             </Stack>
           </Stack>
-          <Stack gap={1} sx={{ pt: 1.5, borderTop: 1, borderColor: "divider" }}>
+          <Stack gap={1} sx={{ pt: 1.75, mt: 0.5, borderTop: 1, borderColor: "divider" }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
               <Typography variant="body2" fontWeight={600}>
                 Next action
@@ -103,11 +81,10 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
               {nextAction.description}
             </Typography>
           </Stack>
-          <Divider />
-          <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1.5} flexWrap="wrap" sx={{ mt: "auto" }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-end" gap={1.5} flexWrap="wrap" sx={{ mt: "auto", pt: 1 }}>
             <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
-              {application.source ? <Typography variant="body2" color="text.secondary">Source: {application.source}</Typography> : null}
-              <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+              {application.source ? <Typography variant="caption" color="text.secondary">Source: {application.source}</Typography> : null}
+              <Typography variant="caption" display="block" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
                 Updated {formatApplicationDate(application.updatedAt, "recently")}
               </Typography>
             </Box>

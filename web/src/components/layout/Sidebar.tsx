@@ -3,6 +3,7 @@ import { useClerk, useUser } from "@clerk/react";
 import { useState } from "react";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import TodayOutlinedIcon from "@mui/icons-material/TodayOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
@@ -12,7 +13,6 @@ import {
   Alert,
   Box,
   Button,
-  Divider,
   Drawer,
   List,
   ListItemButton,
@@ -55,6 +55,17 @@ export function Sidebar({
   const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Your account";
   const { mode, toggleMode } = useThemeMode();
   const sidebarColors = getSidebarColors(theme.palette.mode);
+  const footerButtonSx = {
+    minHeight: 44,
+    justifyContent: "flex-start",
+    color: sidebarColors.text,
+    borderColor: sidebarColors.border,
+    bgcolor: sidebarColors.workspaceBackground,
+    "&:hover": {
+      borderColor: "primary.main",
+      bgcolor: sidebarColors.hoverBackground,
+    },
+  };
   const drawerContent = (
     <Box
       sx={{
@@ -111,7 +122,7 @@ export function Sidebar({
       </List>
       </Box>
       <Box sx={{ mt: "auto", p: 2.5, borderTop: 1, borderColor: sidebarColors.border }}>
-        <Stack gap={2}>
+        <Stack gap={1.5}>
           <Stack direction="row" gap={1.25} alignItems="center">
             <Avatar
               src={user?.imageUrl}
@@ -137,39 +148,18 @@ export function Sidebar({
             </Box>
           </Stack>
           {signOutError && <Alert severity="error">Sign out failed. Please try again.</Alert>}
-          <Button size="small" disabled={signingOut} onClick={() => {
+          <Button variant="outlined" size="small" fullWidth startIcon={<LogoutOutlinedIcon />} sx={footerButtonSx} disabled={signingOut} onClick={() => {
             setSigningOut(true);
             setSignOutError(false);
             void signOut().catch(() => { setSignOutError(true); setSigningOut(false); });
           }}>Sign out</Button>
-          <Divider sx={{ borderColor: sidebarColors.border }} />
-          <Stack direction="row" gap={0.75} alignItems="flex-start">
-            <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: "success.main", flexShrink: 0, mt: 0.75 }} />
-            <Box>
-              <Typography variant="body2" sx={{ color: sidebarColors.text, fontWeight: 700 }}>
-                Application storage
-              </Typography>
-              <Typography variant="caption" sx={{ display: "block", color: sidebarColors.muted, mt: 0.25 }}>
-                Saved to your tracker
-              </Typography>
-            </Box>
-          </Stack>
           <Button
             variant="outlined"
             size="small"
             fullWidth
             startIcon={mode === "dark" ? <WbSunnyOutlinedIcon /> : <DarkModeOutlinedIcon />}
             onClick={toggleMode}
-            sx={{
-              justifyContent: "flex-start",
-              color: sidebarColors.text,
-              borderColor: sidebarColors.border,
-              bgcolor: sidebarColors.workspaceBackground,
-              "&:hover": {
-                borderColor: "primary.main",
-                bgcolor: sidebarColors.hoverBackground,
-              },
-            }}
+            sx={footerButtonSx}
           >
             {mode === "dark" ? "Use light mode" : "Use dark mode"}
           </Button>

@@ -36,6 +36,39 @@ it.each(["Draft", "ToApply"] as const)("keeps the unapplied date context for %s"
   expect(screen.queryByText("Applied date not recorded")).not.toBeInTheDocument();
 });
 
+it("keeps saved facts visible and lets missing optional details open the existing edit form", async () => {
+  const user = userEvent.setup();
+  const application = applicationFixture({ location: "Helsinki", contactPerson: "Recruiter" });
+  http.mockImplementation(async config => response(config, config.url === "/api/applications" ? [application] : application));
+  renderPage(`/applications/${application.id}`);
+  expect(await screen.findByText("Helsinki")).toBeVisible();
+  expect(screen.getByText("Recruiter")).toBeVisible();
+  const disclosure = screen.getByRole("button", { name: /Missing optional details/ });
+  expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByRole("button", { name: "Add details" })).not.toBeInTheDocument();
+  await user.click(disclosure);
+  expect(disclosure).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByText("Contact email")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Add details" }));
+  expect(within(screen.getByRole("dialog")).getByRole("textbox", { name: "Location" })).toHaveValue("Helsinki");
+  expect(http.mock.calls.some(([config]) => config.method !== "get")).toBe(false);
+});
+
+it("places the newest recorded history before the saved job description", async () => {
+  const application = applicationFixture({ jobDescription: "Saved role requirements", events: [
+    eventFixture({ id: "older", occurredAt: "2026-08-01T12:00:00Z" }),
+    eventFixture({ id: "newer", type: "ContactReceived", occurredAt: "2026-09-01T12:00:00Z" }),
+  ] });
+  http.mockImplementation(async config => response(config, config.url === "/api/applications" ? [application] : application));
+  renderPage(`/applications/${application.id}`);
+  const history = await screen.findByRole("list", { name: "Application history" });
+  const events = within(history).getAllByRole("listitem");
+  expect(events[0]).toHaveTextContent("Recruiter reply received");
+  expect(events[1]).toHaveTextContent("Application sent");
+  expect(history.compareDocumentPosition(screen.getByText("Saved role requirements")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(http.mock.calls.some(([config]) => config.method !== "get")).toBe(false);
+});
+
 it("keeps review active without a write, then manually marks Ghosted through the normal update", async () => {
   const user = userEvent.setup();
   let application = applicationFixture({ events: [eventFixture({ occurredAt: "2020-01-01T00:00:00Z" })] });

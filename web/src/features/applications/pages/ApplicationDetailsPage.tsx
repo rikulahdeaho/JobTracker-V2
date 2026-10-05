@@ -1,10 +1,13 @@
+import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LaunchOutlinedIcon from "@mui/icons-material/LaunchOutlined";
 import {
   Alert,
-  Avatar,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -25,6 +28,7 @@ import { applicationMethodLabels, followUpModeLabels } from "../utils/applicatio
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "../../../components/ui/PageSection";
 import { NextActionMark } from "../../../components/ui/NextActionMark";
+import { ApplicationIdentity } from "../components/ApplicationIdentity";
 import { ApplicationEventDialog } from "../components/ApplicationEventDialog";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { ApplicationDataState } from "../components/ApplicationDataState";
@@ -56,7 +60,7 @@ export function ApplicationDetailsPage() {
 
   if (query.isPending || isNotFoundError(query.error) || !application) {
     return (
-      <PageShell>
+      <PageShell maxWidth={1200}>
         <Stack gap={2}>
           <Button
             component={RouterLink}
@@ -82,7 +86,16 @@ export function ApplicationDetailsPage() {
 
   const nextAction = getApplicationNextAction(application);
   const timelineEvents = getApplicationTimelineEvents(application);
-  const companyInitial = application.companyName.trim().charAt(0).toUpperCase();
+  const optionalFacts = [
+    { label: "Contact person", value: application.contactPerson, group: "Contact" },
+    { label: "Contact email", value: application.contactEmail, group: "Contact" },
+    { label: "Location", value: application.location, group: "Reference" },
+    { label: "Source", value: application.source, group: "Reference" },
+    { label: "Salary range", value: application.salaryRange, group: "Reference" },
+    { label: "Deadline", value: application.deadline ? formatApplicationDate(application.deadline, "No deadline") : null, group: "Dates" },
+    { label: "Job URL", value: application.jobUrl, group: "Reference" },
+  ];
+  const missingFacts = optionalFacts.filter(fact => !fact.value);
 
   const handleUpdateApplication = async (values: JobApplicationFormValues) => {
     await updateApplication(application.id, values);
@@ -104,7 +117,7 @@ export function ApplicationDetailsPage() {
   };
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1200}>
       <Stack gap={{ xs: 3, md: 4 }}>
         <ApplicationDataState isPending={false} error={query.error} onRetry={() => { void query.refetch(); }} />
         <Button
@@ -124,30 +137,9 @@ export function ApplicationDetailsPage() {
               alignItems={{ xs: "flex-start", md: "center" }}
               gap={2.5}
             >
-              <Stack direction="row" gap={2} alignItems="flex-start" sx={{ minWidth: 0 }}>
-                <Avatar
-                  variant="rounded"
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    flexShrink: 0,
-                    bgcolor: "action.hover",
-                    color: "text.secondary",
-                    fontWeight: 600,
-                    fontSize: 22,
-                  }}
-                >
-                  {companyInitial}
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography component="h1" variant="h4" gutterBottom sx={{ overflowWrap: "anywhere" }}>
-                    {application.jobTitle}
-                  </Typography>
-                  <Stack gap={1.5}>
-                    <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{application.companyName}</Typography>
-                    <Box><StatusChip status={application.status} /></Box>
-                  </Stack>
-                </Box>
+              <Stack gap={1.5} sx={{ minWidth: 0 }}>
+                <ApplicationIdentity jobTitle={application.jobTitle} companyName={application.companyName} heading="h1" size="page" />
+                <Box><StatusChip status={application.status} /></Box>
               </Stack>
               <Stack direction="row" gap={1.5} flexWrap="wrap">
                 <Button variant="outlined" startIcon={<EditOutlinedIcon />} onClick={() => setEditOpen(true)}>
@@ -166,52 +158,64 @@ export function ApplicationDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                <Typography component="h2" variant="h6" sx={{ display: "flex", gap: 1.5, alignItems: "center", overflowWrap: "anywhere" }}>
-                  <NextActionMark />
-                  <span>Next Action · {nextAction.title}</span>
-                </Typography>
-                <Typography sx={{ mt: 0.75, maxWidth: "65ch" }}>
-                  {nextAction.description}
-                </Typography>
-                <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
-                  {nextAction.needsAttention ? (
-                    <Chip label="Needs attention" variant="outlined" />
-                  ) : null}
-                  {nextAction.needsStatusReview ? <>
-                    <Button disabled={isReviewSaving} onClick={() => {
-                      setReviewMessage("Kept active. Review status remains available until you record new communication or change status.");
-                    }}>Keep active</Button>
-                    <Button disabled={isReviewSaving} onClick={async () => {
-                      setIsReviewSaving(true);
-                      setReviewError(null);
-                      try {
-                        await updateApplication(application.id, { ...toApplicationFormValues(application), status: "Ghosted" });
-                        setReviewMessage(null);
-                      } catch (error) { setReviewError(getApiErrorMessage(error)); }
-                      finally { setIsReviewSaving(false); }
-                    }}>Mark as ghosted</Button>
-                  </> : null}
-                </Stack>
-                {reviewMessage && <Alert severity="info" sx={{ mt: 1 }}>{reviewMessage}</Alert>}
-                {reviewError && <Alert severity="error" sx={{ mt: 1 }}>{reviewError}</Alert>}
-              </Box>
-              <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => setEventOpen(true)} sx={{ flexShrink: 0 }}>Record activity</Button>
-            </Stack>
-          </CardContent>
-        </Card>
-
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, lg: 8 }}>
             <Stack gap={4}>
+              <Card sx={{ bgcolor: "action.hover", border: 0, boxShadow: "none" }}>
+                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+                  <Stack
+                    direction="column"
+                    alignItems="flex-start"
+                    gap={2}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography component="h2" variant="h6" sx={{ display: "flex", gap: 1.5, alignItems: "center", overflowWrap: "anywhere" }}>
+                        <NextActionMark />
+                        <span>Next Action · {nextAction.title}</span>
+                      </Typography>
+                      <Typography sx={{ mt: 0.75, maxWidth: "65ch" }}>
+                        {nextAction.description}
+                      </Typography>
+                      <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
+                        {nextAction.needsAttention ? (
+                          <Chip label="Needs attention" variant="outlined" />
+                        ) : null}
+                        {nextAction.needsStatusReview ? <>
+                          <Button disabled={isReviewSaving} onClick={() => {
+                            setReviewMessage("Kept active. Review status remains available until you record new communication or change status.");
+                          }}>Keep active</Button>
+                          <Button disabled={isReviewSaving} onClick={async () => {
+                            setIsReviewSaving(true);
+                            setReviewError(null);
+                            try {
+                              await updateApplication(application.id, { ...toApplicationFormValues(application), status: "Ghosted" });
+                              setReviewMessage(null);
+                            } catch (error) { setReviewError(getApiErrorMessage(error)); }
+                            finally { setIsReviewSaving(false); }
+                          }}>Mark as ghosted</Button>
+                        </> : null}
+                      </Stack>
+                      {reviewMessage && <Alert severity="info" sx={{ mt: 1 }}>{reviewMessage}</Alert>}
+                      {reviewError && <Alert severity="error" sx={{ mt: 1 }}>{reviewError}</Alert>}
+                    </Box>
+                    <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => setEventOpen(true)} sx={{ flexShrink: 0 }}>Record activity</Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card sx={{ border: 0, bgcolor: "transparent" }}>
+                <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+                  <Stack gap={1.5}>
+                    <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
+                      <Typography component="h2" variant="h6">Timeline</Typography>
+                    </Stack>
+                    <Typography color="text.secondary">
+                      Your application history, newest first. Status changes are recorded automatically.
+                    </Typography>
+                    <TimelineEventList events={timelineEvents} />
+                  </Stack>
+                </CardContent>
+              </Card>
               <Card sx={{ border: 0, bgcolor: "transparent" }}>
                 <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
                   <Stack gap={2}>
@@ -241,19 +245,6 @@ export function ApplicationDetailsPage() {
                   </Stack>
                 </CardContent>
               </Card>
-              <Card sx={{ border: 0, bgcolor: "transparent" }}>
-                <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
-                  <Stack gap={1.5}>
-                    <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
-                      <Typography component="h2" variant="h6">Timeline</Typography>
-                    </Stack>
-                    <Typography color="text.secondary">
-                      Recorded application activity. Status changes are saved automatically.
-                    </Typography>
-                    <TimelineEventList events={timelineEvents} />
-                  </Stack>
-                </CardContent>
-              </Card>
             </Stack>
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
@@ -263,35 +254,34 @@ export function ApplicationDetailsPage() {
                   <Stack gap={1.75}>
                     <Typography component="h2" variant="h6">Quick facts</Typography>
                     <Divider />
-                    <DetailCard label="Application method" value={applicationMethodLabels[application.applicationMethod] ?? "Unknown"} />
-                    <DetailCard label="Contact person" value={application.contactPerson || "Not specified"} />
-                    <DetailCard label="Contact email" value={application.contactEmail || "Not specified"} />
-                    <DetailCard label="Follow-up preference" value={followUpModeLabels[application.followUpMode] ?? "Unknown"} />
-                    <DetailCard label="Location" value={application.location || "Location not specified"} />
-                    <DetailCard label="Source" value={application.source || "Source not specified"} />
-                    <DetailCard
-                      label="Deadline"
-                      value={formatApplicationDate(application.deadline, "No deadline")}
-                    />
-                    <DetailCard label="Salary range" value={application.salaryRange || "Not specified"} />
-                    <DetailCard label="Applied date" value={formatApplicationDate(application.appliedDate,
-                      application.status === "Draft" || application.status === "ToApply" ? "Not applied yet" : "Applied date not recorded")} />
-                    <DetailCard label="Created" value={formatApplicationDate(application.createdAt, "Unknown")} />
-                    <DetailCard label="Updated" value={formatApplicationDate(application.updatedAt, "Unknown")} />
-                    {application.jobUrl ? (
-                      <Button
-                        href={application.jobUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        variant="outlined"
-                        endIcon={<LaunchOutlinedIcon />}
-                        fullWidth
-                      >
-                        Open job ad
-                      </Button>
-                    ) : (
-                      <Typography color="text.secondary">No job URL saved for this application.</Typography>
-                    )}
+                    <Box>
+                      <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>Dates</Typography>
+                      <DetailRow label="Applied date" value={formatApplicationDate(application.appliedDate,
+                        application.status === "Draft" || application.status === "ToApply" ? "Not applied yet" : "Applied date not recorded")} />
+                      {optionalFacts.filter(fact => fact.group === "Dates" && fact.value).map(fact => <DetailRow key={fact.label} label={fact.label} value={fact.value!} />)}
+                      <DetailRow label="Created" value={formatApplicationDate(application.createdAt, "Unknown")} />
+                      <DetailRow label="Updated" value={formatApplicationDate(application.updatedAt, "Unknown")} />
+                    </Box>
+                    <Box>
+                      <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>Contact</Typography>
+                      <DetailRow label="Application method" value={applicationMethodLabels[application.applicationMethod] ?? "Unknown"} />
+                      {optionalFacts.filter(fact => fact.group === "Contact" && fact.value).map(fact => <DetailRow key={fact.label} label={fact.label} value={fact.value!} />)}
+                      <DetailRow label="Follow-up preference" value={followUpModeLabels[application.followUpMode] ?? "Unknown"} />
+                    </Box>
+                    {optionalFacts.some(fact => fact.group === "Reference" && fact.value) ? <Box>
+                      <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>Reference</Typography>
+                      {optionalFacts.filter(fact => fact.group === "Reference" && fact.label !== "Job URL" && fact.value).map(fact => <DetailRow key={fact.label} label={fact.label} value={fact.value!} />)}
+                      {application.jobUrl ? <Button href={application.jobUrl} target="_blank" rel="noreferrer" variant="text" endIcon={<LaunchOutlinedIcon />} sx={{ mt: 0.5, px: 0 }}>Open job ad</Button> : null}
+                    </Box> : null}
+                    {missingFacts.length > 0 ? <Accordion disableGutters elevation={0} sx={{ bgcolor: "transparent", border: 0, "&:before": { display: "none" } }}>
+                      <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />} aria-controls="missing-optional-facts" id="missing-optional-summary" sx={{ px: 0, minHeight: 44 }}>
+                        <Typography variant="body2" color="text.secondary">Missing optional details</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails id="missing-optional-facts" sx={{ px: 0, pt: 0 }}>
+                        {missingFacts.map(fact => <DetailRow key={fact.label} label={fact.label} value="Not specified" />)}
+                        <Button size="small" onClick={() => setEditOpen(true)} sx={{ mt: 1 }}>Add details</Button>
+                      </AccordionDetails>
+                    </Accordion> : null}
                   </Stack>
                 </CardContent>
               </Card>
@@ -334,21 +324,21 @@ type DetailItemProps = {
   value: string;
 };
 
-function DetailCard({ label, value }: DetailItemProps) {
+function DetailRow({ label, value }: DetailItemProps) {
   return (
     <Stack
-      direction="column"
+      direction="row"
       justifyContent="space-between"
       alignItems="flex-start"
-      gap={0.5}
-      sx={{ py: 0.25, minWidth: 0 }}
+      gap={2}
+      sx={{ py: 0.75, minWidth: 0 }}
     >
-      <Box>
+      <Box sx={{ flex: "0 0 44%" }}>
         <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
       </Box>
-      <Typography sx={{ overflowWrap: "anywhere", fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
+      <Typography variant="body2" sx={{ minWidth: 0, textAlign: "right", overflowWrap: "anywhere", fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
     </Stack>
   );
 }

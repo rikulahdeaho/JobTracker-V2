@@ -37,6 +37,19 @@ an interview sets it to Interviewing. Suggestions themselves never change status
 The desktop sidebar becomes a navigation drawer on smaller screens. The app opens
 on Dashboard. Signing out hides the workspace and clears its cached application data.
 
+Signed-out users see Clerk's sign-in component directly on the page, without an
+extra button or modal. The page and form follow the selected light/dark theme.
+Google, password, recovery and sign-up options remain controlled by Clerk.
+The embedded component uses hash routing for its steps and Dashboard as the
+fallback destination after authentication.
+
+Application cards and action lists lead with the job title and show the company
+below it. Dashboard places that identity before the suggested task. Details shows
+Next Action and Timeline before Description & notes. Its Quick facts groups Dates,
+Contact and saved Reference information; missing optional fields remain available
+inside **Missing optional details**. **Add details** opens the usual Edit form.
+These fields are optional reference information, with no completeness score.
+
 ## Adding and editing
 
 Only **Company** and **Job title** are required. The shared Add/Edit form has five

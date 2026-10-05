@@ -5,7 +5,7 @@ import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutl
 import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
-import { Avatar, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
+import { Box, List, ListItem, Typography } from "@mui/material";
 import type { TimelineEvent } from "../types/workflow";
 import { formatApplicationDate } from "../utils/applicationPresentation";
 
@@ -16,42 +16,24 @@ type TimelineEventListProps = {
 export function TimelineEventList({ events }: TimelineEventListProps) {
   if (events.length === 0) return <Typography color="text.secondary">No recorded events yet.</Typography>;
   return (
-    <List disablePadding>
+    <List disablePadding aria-label="Application history">
       {events.map((event, index) => (
         <ListItem
           key={event.id}
           disableGutters
-          sx={{ py: 1.5, borderTop: index === 0 ? 0 : 1, borderColor: "divider", alignItems: "flex-start" }}
+          sx={{ py: 1.5, borderTop: index === 0 ? 0 : 1, borderColor: "divider", alignItems: "flex-start", display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: { xs: 0.75, sm: 2 } }}
         >
-          <ListItemAvatar>
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                bgcolor: "transparent",
-                color: "text.secondary",
-                border: 1,
-                borderColor: "divider",
-              }}
-            >
-              {getTimelineEventIcon(event.type)}
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText
-            sx={{ minWidth: 0, m: 0, overflowWrap: "anywhere" }}
-            slotProps={{ primary: { fontWeight: 600 } }}
-            primary={event.title}
-            secondary={
-              <>
-                <Typography component="span" variant="body2" display="block" color="text.secondary" sx={{ mt: 0.5, mb: 0.75, fontVariantNumeric: "tabular-nums" }}>
-                  {formatApplicationDate(event.occurredAt, "Recently")}
-                </Typography>
-                <Typography component="span" display="block" color="text.secondary">
-                  {event.description}
-                </Typography>
-              </>
-            }
-          />
+          <Typography component="time" dateTime={event.occurredAt} variant="body2" color="text.secondary"
+            sx={{ width: { xs: "100%", sm: 104 }, flexShrink: 0, pt: 0.25, fontVariantNumeric: "tabular-nums" }}>
+            {formatApplicationDate(event.occurredAt, "Recently")}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0, flex: 1 }}>
+            <Box sx={{ color: "text.secondary", display: "flex", pt: 0.25 }}>{getTimelineEventIcon(event.type)}</Box>
+            <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+              <Typography sx={{ fontWeight: 600 }}>{event.title}</Typography>
+              <Typography color="text.secondary" sx={{ mt: 0.5 }}>{event.description}</Typography>
+            </Box>
+          </Box>
         </ListItem>
       ))}
     </List>

@@ -4,6 +4,7 @@ import { Link as RouterLink } from "react-router-dom";
 import type { Reminder } from "../types/workflow";
 import { formatApplicationDate } from "../utils/applicationPresentation";
 import { getReminderPresentation } from "../utils/applicationWorkflow";
+import { ApplicationIdentity } from "./ApplicationIdentity";
 
 type ReminderListItemProps = { reminder: Reminder; borderTop?: boolean };
 
@@ -21,7 +22,7 @@ export function ReminderListItem({ reminder, borderTop = false }: ReminderListIt
       <Box sx={{ width: { sm: 150 }, flexShrink: 0 }}>
         <Stack direction="row" gap={0.75} alignItems="center" color={overdue ? "error.main" : dueToday ? "warning.main" : "text.secondary"}>
           <CalendarTodayOutlinedIcon sx={{ fontSize: 20 }} />
-          <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>{formatApplicationDate(reminder.dueDate, "No date")}</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{formatApplicationDate(reminder.dueDate, "No date")}</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{dated ? overdue ? "Overdue commitment" : dueToday ? "Due today" : "Scheduled for" : "Suggested attention from"}</Typography>
       </Box>
@@ -30,8 +31,8 @@ export function ReminderListItem({ reminder, borderTop = false }: ReminderListIt
           <Typography fontWeight={600}>{reminder.title}</Typography>
           <Chip label={presentation.label} size="small" variant="outlined" />
         </Stack>
-        <Link component={RouterLink} to={`/applications/${reminder.applicationId}`}>
-          {reminder.jobTitle} · {reminder.companyName}
+        <Link component={RouterLink} to={`/applications/${reminder.applicationId}`} aria-label={`${reminder.jobTitle} · ${reminder.companyName}`} underline="always" color="primary">
+          <ApplicationIdentity jobTitle={reminder.jobTitle} companyName={reminder.companyName} heading="h3" />
         </Link>
         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: "65ch" }}>{reminder.description}</Typography>
       </Stack>

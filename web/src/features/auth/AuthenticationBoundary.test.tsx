@@ -2,7 +2,7 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AxiosError, AxiosHeaders, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
-import { StrictMode, useEffect, type PropsWithChildren } from "react";
+import { StrictMode, useEffect } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ThemeModeProvider } from "../../app/ThemeModeContext";
@@ -22,7 +22,7 @@ vi.mock("@clerk/react", () => ({
   useAuth: () => clerk,
   useClerk: () => ({ signOut: clerk.signOut }),
   useUser: () => ({ user: { fullName: "User A", primaryEmailAddress: { emailAddress: "a@example.test" } } }),
-  SignInButton: ({ children }: PropsWithChildren) => children,
+  SignIn: ({ routing }: { routing: string }) => <section aria-label="Clerk sign in" data-routing={routing}><button>Continue</button></section>,
 }));
 const originalAdapter = apiClient.defaults.adapter;
 const http = vi.fn<AxiosAdapter>();
@@ -69,7 +69,8 @@ it("does not render the workspace or call the API while loading or signed out", 
   clerk.isLoaded = true;
   clerk.isSignedIn = false;
   view.rerender(<Tree />);
-  expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "Clerk sign in" })).toHaveAttribute("data-routing", "hash");
+  expect(screen.queryByRole("button", { name: "Sign in" })).not.toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Workspace" })).not.toBeInTheDocument();
   expect(http).not.toHaveBeenCalled();
 });

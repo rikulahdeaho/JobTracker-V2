@@ -3,6 +3,7 @@ import { Box, Chip, Divider, Grid, List, Stack, Typography } from "@mui/material
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ApplicationDataState } from "../applications/components/ApplicationDataState";
+import { ApplicationIdentity } from "../applications/components/ApplicationIdentity";
 import { ReminderListItem } from "../applications/components/ReminderListItem";
 import { StatusChip } from "../applications/components/StatusChip";
 import { formatApplicationDate } from "../applications/utils/applicationPresentation";
@@ -25,9 +26,9 @@ export function SchedulePage() {
       <Grid container spacing={{ xs: 4, md: 5 }}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Stack gap={3}>
-            {reminderGroups.map((group, index) => <Box key={group.key} sx={{ pb: 3, borderBottom: 1, borderColor: "divider" }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ mb: 1.5 }}>
-                <Typography component="h2" variant="h6">{index === 0 ? "Overdue commitments" : index === 1 ? "Today" : "Upcoming commitments"}</Typography>
+            {reminderGroups.map((group, index) => <Box key={group.key} sx={{ pb: 1 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={1} sx={{ pb: 1.5, borderBottom: 1, borderColor: "divider", mb: group.reminders.length > 0 ? 0 : 2 }}>
+                <Typography component="h2" variant="h6" sx={{ fontWeight: 700 }}>{index === 0 ? "Overdue commitments" : index === 1 ? "Today" : "Upcoming commitments"}</Typography>
                 <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0 }} color={group.reminders.length > 0 ? index === 0 ? "error.main" : index === 1 ? "warning.main" : "text.secondary" : "text.secondary"}>
                   {group.reminders.length} {index === 0 ? "overdue" : index === 1 ? "today" : "upcoming"}
                 </Typography>
@@ -41,14 +42,11 @@ export function SchedulePage() {
           <Stack gap={4}>
             <SectionCard variant="plain" title="Active queue" description="Your current interviews, assignments and offers." action={<Chip label={`${activePipeline.length} active`} size="small" variant="outlined" />}>
               {activePipeline.length > 0 ? <Stack gap={2}>{activePipeline.map((application, index) => <Stack key={application.id} gap={0.75}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
-                  <Typography fontWeight={600}>{application.jobTitle}</Typography>
-                  <StatusChip status={application.status} />
-                </Stack>
-                <Typography color="text.secondary">{application.companyName}</Typography>
+                <ApplicationIdentity jobTitle={application.jobTitle} companyName={application.companyName} heading="h3" />
+                <Box><StatusChip status={application.status} /></Box>
                 <Stack direction="row" gap={0.75} alignItems="center" color="text.secondary">
                   <TodayOutlinedIcon fontSize="small" />
-                  <Typography variant="body2">Activity {formatApplicationDate(getLastWorkflowTime(application), "unknown")}</Typography>
+                  <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>Activity {formatApplicationDate(getLastWorkflowTime(application), "unknown")}</Typography>
                 </Stack>
                 {index < activePipeline.length - 1 ? <Divider sx={{ mt: 1 }} /> : null}
               </Stack>)}</Stack> : <Typography color="text.secondary">No interviews, assignments or offers to prepare for right now.</Typography>}

@@ -3,6 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ApplicationDataState } from "../applications/components/ApplicationDataState";
+import { ApplicationIdentity } from "../applications/components/ApplicationIdentity";
 import { StatusChip } from "../applications/components/StatusChip";
 import { getApplicationNextAction, getApplicationsNeedingAttention } from "../applications/utils/applicationNextAction";
 import { applicationStatusLabel } from "../applications/utils/applicationStatus";
@@ -50,7 +51,9 @@ export function InsightsPage() {
           <Typography sx={{ fontVariantNumeric: "tabular-nums" }}>{attention.length} application{attention.length === 1 ? "" : "s"} with a suggested action</Typography>
           {attention.length > 0 ? <List disablePadding>{attention.map(application => <ListItem key={application.id} disableGutters sx={{ py: 1.5, borderBottom: 1, borderColor: "divider" }}>
             <Stack gap={0.75} sx={{ minWidth: 0 }}>
-              <Link component={RouterLink} to={`/applications/${application.id}`} fontWeight={600}>{application.jobTitle} · {application.companyName}</Link>
+              <Link component={RouterLink} to={`/applications/${application.id}`} aria-label={`${application.jobTitle} · ${application.companyName}`} underline="always" color="primary">
+                <ApplicationIdentity jobTitle={application.jobTitle} companyName={application.companyName} heading="h3" />
+              </Link>
               <Typography variant="body2" color="text.secondary">{getApplicationNextAction(application).title}</Typography>
             </Stack>
           </ListItem>)}</List> : <Typography color="text.secondary">No actions suggested right now. Waiting for a response is a valid next step.</Typography>}

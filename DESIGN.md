@@ -173,7 +173,9 @@ sentence case. Button text retains ordinary capitalization.
 
 PageHeader reduces the headline to 1.625rem below md. SectionCard overrides its
 section-heading line height to 1.25. These component adaptations do not replace
-the theme scale. Counts and dates use tabular figures where the component calls
+the theme scale. ApplicationIdentity gives roles a 700 weight and companies a
+secondary-text 500 weight, with a 4px gap and wrapping text. Its page size uses
+the responsive headline scale; its row size uses the section scale. Counts and dates use tabular figures where the component calls
 for alignment. Visual variants are independent from HTML heading levels: page
 titles are H1, sections H2, nested headings H3; counts are ordinary text.
 
@@ -184,6 +186,7 @@ PageShell centers content with a default maximum width of 1536px; its vertical
 gaps are section-mobile below md and section-desktop from md. AppLayout's
 horizontal gutters are medium / section-desktop / page-wide-x at xs / md / xl,
 with medium / page-desktop-y vertical padding at xs / md.
+Dashboard limits its reading width to 1280px; Details uses 1200px.
 
 A 260px permanent sidebar starts at lg (1200px). Smaller widths use the existing
 temporary drawer. There is no active topbar or bottom navigation. Page headers
@@ -238,6 +241,22 @@ Use a surface fill, one divider-colored border, container corners and no shadow.
 Application cards group one record; plain SectionCard presents unboxed groups.
 Do not wrap each count or field in another card.
 
+### Application identity
+
+ApplicationIdentity leads with the role and places the company below it in
+secondary text. Application cards and Details use this shared identity in place
+of company-initial avatars. Dashboard priority and action rows, Schedule records
+and Insights suggestions use the same hierarchy. The task remains a separate cue.
+
+### Dates and record facts
+
+Timeline dates occupy a fixed 104px column from sm, with event content aligned
+beside them; below sm the date sits above the event. Schedule records use a
+150px date column from sm and stack on smaller screens. Tabular figures and
+dividers support scanning. Details groups compact Quick facts into Dates,
+Contact and populated Reference fields. Missing optional fields appear in one
+collapsed disclosure without a count; Add details opens the existing Edit form.
+
 ### Inputs / Fields
 
 Outlined fields have a surface fill, divider stroke, container corners and a
@@ -279,6 +298,7 @@ Extraction sources: [theme.ts](web/src/app/theme.ts),
 [Sidebar.tsx](web/src/components/layout/Sidebar.tsx),
 [StatusChip.tsx](web/src/features/applications/components/StatusChip.tsx),
 [NextActionChip.tsx](web/src/features/applications/components/NextActionChip.tsx),
+[ApplicationIdentity.tsx](web/src/features/applications/components/ApplicationIdentity.tsx),
 [applicationStatus.ts](web/src/features/applications/utils/applicationStatus.ts),
 and [NextActionMark.tsx](web/src/components/ui/NextActionMark.tsx).
 Refresh this document and its sidecar when those shared decisions change.
