@@ -67,6 +67,10 @@ Saving persists changes through the API. If saving fails, the form keeps its
 values and shows an error. Deletion requires confirmation and removes the
 application and its Timeline events.
 
+Closing Add/Edit or Record activity with unsaved changes asks whether to keep
+editing or discard them. Cancel, Escape and clicking outside the dialog use the
+same confirmation. An unchanged form closes directly.
+
 ## Status, activity and next steps
 
 The nine statuses are Draft, ToApply, Applied, Interviewing, Assignment, Offer,
@@ -109,9 +113,11 @@ The Applications **Active** filter includes Draft and ToApply. Dashboard's
 Offer. **Archived** is a filter for Rejected, Ghosted and Withdrawn, not a
 separate archive operation.
 
-Insights' **Response momentum** is the share of active hiring processes currently
+Insights' **Current hiring stages** shows the share of active hiring processes currently
 in Interviewing, Assignment or Offer. It is a current-status summary, not a
-historical response-rate measurement.
+historical response-rate measurement. It shows the count and denominator, and
+links suggested next steps directly to their applications. Saved context fields
+are optional reference information, not a completeness target.
 
 ## Where the data lives
 

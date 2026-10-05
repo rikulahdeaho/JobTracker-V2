@@ -65,3 +65,10 @@ appsettings.Local.json
 # Keep generated workspace internals out of git
 .codex/
 .agents/
+
+# Local Impeccable previews, captures and session state
+# Keep design.json, surface contracts and critique notes versioned.
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/direction/

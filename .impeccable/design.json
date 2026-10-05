@@ -1,0 +1,494 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T08:31:14.317Z",
+  "title": "Design System: JobTracker",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Agenda blue",
+        "tonalRamp": [
+          "oklch(15% 0.17384 260.66)",
+          "oklch(26.43% 0.17384 260.66)",
+          "oklch(37.86% 0.17384 260.66)",
+          "oklch(49.29% 0.17384 260.66)",
+          "oklch(60.71% 0.17384 260.66)",
+          "oklch(72.14% 0.17384 260.66)",
+          "oklch(83.57% 0.17384 260.66)",
+          "oklch(95% 0.17384 260.66)"
+        ]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Agenda blue, dark mode",
+        "tonalRamp": [
+          "oklch(15% 0.11787 261.13)",
+          "oklch(26.43% 0.11787 261.13)",
+          "oklch(37.86% 0.11787 261.13)",
+          "oklch(49.29% 0.11787 261.13)",
+          "oklch(60.71% 0.11787 261.13)",
+          "oklch(72.14% 0.11787 261.13)",
+          "oklch(83.57% 0.11787 261.13)",
+          "oklch(95% 0.11787 261.13)"
+        ]
+      },
+      "workspace": {
+        "role": "neutral",
+        "displayName": "Cool workspace",
+        "tonalRamp": [
+          "oklch(15% 0.00253 228.78)",
+          "oklch(26.43% 0.00253 228.78)",
+          "oklch(37.86% 0.00253 228.78)",
+          "oklch(49.29% 0.00253 228.78)",
+          "oklch(60.71% 0.00253 228.78)",
+          "oklch(72.14% 0.00253 228.78)",
+          "oklch(83.57% 0.00253 228.78)",
+          "oklch(95% 0.00253 228.78)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Reading surface",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Quiet text and ordinary stages",
+        "tonalRamp": [
+          "oklch(15% 0.02570 244.17)",
+          "oklch(26.43% 0.02570 244.17)",
+          "oklch(37.86% 0.02570 244.17)",
+          "oklch(49.29% 0.02570 244.17)",
+          "oklch(60.71% 0.02570 244.17)",
+          "oklch(72.14% 0.02570 244.17)",
+          "oklch(83.57% 0.02570 244.17)",
+          "oklch(95% 0.02570 244.17)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Positive outcome",
+        "tonalRamp": [
+          "oklch(15% 0.10832 151.33)",
+          "oklch(26.43% 0.10832 151.33)",
+          "oklch(37.86% 0.10832 151.33)",
+          "oklch(49.29% 0.10832 151.33)",
+          "oklch(60.71% 0.10832 151.33)",
+          "oklch(72.14% 0.10832 151.33)",
+          "oklch(83.57% 0.10832 151.33)",
+          "oklch(95% 0.10832 151.33)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Dated urgency",
+        "tonalRamp": [
+          "oklch(15% 0.12470 46.20)",
+          "oklch(26.43% 0.12470 46.20)",
+          "oklch(37.86% 0.12470 46.20)",
+          "oklch(49.29% 0.12470 46.20)",
+          "oklch(60.71% 0.12470 46.20)",
+          "oklch(72.14% 0.12470 46.20)",
+          "oklch(83.57% 0.12470 46.20)",
+          "oklch(95% 0.12470 46.20)"
+        ]
+      },
+      "error": {
+        "role": "semantic",
+        "displayName": "Error and destructive action",
+        "tonalRamp": [
+          "oklch(15% 0.19049 27.52)",
+          "oklch(26.43% 0.19049 27.52)",
+          "oklch(37.86% 0.19049 27.52)",
+          "oklch(49.29% 0.19049 27.52)",
+          "oklch(60.71% 0.19049 27.52)",
+          "oklch(72.14% 0.19049 27.52)",
+          "oklch(83.57% 0.19049 27.52)",
+          "oklch(95% 0.19049 27.52)"
+        ]
+      },
+      "primary-hover": {
+        "displayName": "Primary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.15514 260.89)",
+          "oklch(26.43% 0.15514 260.89)",
+          "oklch(37.86% 0.15514 260.89)",
+          "oklch(49.29% 0.15514 260.89)",
+          "oklch(60.71% 0.15514 260.89)",
+          "oklch(72.14% 0.15514 260.89)",
+          "oklch(83.57% 0.15514 260.89)",
+          "oklch(95% 0.15514 260.89)"
+        ]
+      },
+      "primary-dark-hover": {
+        "displayName": "Primary Dark Hover",
+        "tonalRamp": [
+          "oklch(15% 0.08612 262.06)",
+          "oklch(26.43% 0.08612 262.06)",
+          "oklch(37.86% 0.08612 262.06)",
+          "oklch(49.29% 0.08612 262.06)",
+          "oklch(60.71% 0.08612 262.06)",
+          "oklch(72.14% 0.08612 262.06)",
+          "oklch(83.57% 0.08612 262.06)",
+          "oklch(95% 0.08612 262.06)"
+        ]
+      },
+      "quiet-surface": {
+        "displayName": "Quiet Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00761 241.67)",
+          "oklch(26.43% 0.00761 241.67)",
+          "oklch(37.86% 0.00761 241.67)",
+          "oklch(49.29% 0.00761 241.67)",
+          "oklch(60.71% 0.00761 241.67)",
+          "oklch(72.14% 0.00761 241.67)",
+          "oklch(83.57% 0.00761 241.67)",
+          "oklch(95% 0.00761 241.67)"
+        ]
+      },
+      "text": {
+        "displayName": "Text",
+        "tonalRamp": [
+          "oklch(15% 0.02084 248.56)",
+          "oklch(26.43% 0.02084 248.56)",
+          "oklch(37.86% 0.02084 248.56)",
+          "oklch(49.29% 0.02084 248.56)",
+          "oklch(60.71% 0.02084 248.56)",
+          "oklch(72.14% 0.02084 248.56)",
+          "oklch(83.57% 0.02084 248.56)",
+          "oklch(95% 0.02084 248.56)"
+        ]
+      },
+      "divider": {
+        "displayName": "Divider",
+        "tonalRamp": [
+          "oklch(15% 0.01194 239.92)",
+          "oklch(26.43% 0.01194 239.92)",
+          "oklch(37.86% 0.01194 239.92)",
+          "oklch(49.29% 0.01194 239.92)",
+          "oklch(60.71% 0.01194 239.92)",
+          "oklch(72.14% 0.01194 239.92)",
+          "oklch(83.57% 0.01194 239.92)",
+          "oklch(95% 0.01194 239.92)"
+        ]
+      },
+      "workspace-dark": {
+        "displayName": "Workspace Dark",
+        "tonalRamp": [
+          "oklch(15% 0.01238 248.39)",
+          "oklch(26.43% 0.01238 248.39)",
+          "oklch(37.86% 0.01238 248.39)",
+          "oklch(49.29% 0.01238 248.39)",
+          "oklch(60.71% 0.01238 248.39)",
+          "oklch(72.14% 0.01238 248.39)",
+          "oklch(83.57% 0.01238 248.39)",
+          "oklch(95% 0.01238 248.39)"
+        ]
+      },
+      "surface-dark": {
+        "displayName": "Surface Dark",
+        "tonalRamp": [
+          "oklch(15% 0.01659 248.46)",
+          "oklch(26.43% 0.01659 248.46)",
+          "oklch(37.86% 0.01659 248.46)",
+          "oklch(49.29% 0.01659 248.46)",
+          "oklch(60.71% 0.01659 248.46)",
+          "oklch(72.14% 0.01659 248.46)",
+          "oklch(83.57% 0.01659 248.46)",
+          "oklch(95% 0.01659 248.46)"
+        ]
+      },
+      "quiet-surface-dark": {
+        "displayName": "Quiet Surface Dark",
+        "tonalRamp": [
+          "oklch(15% 0.02063 248.52)",
+          "oklch(26.43% 0.02063 248.52)",
+          "oklch(37.86% 0.02063 248.52)",
+          "oklch(49.29% 0.02063 248.52)",
+          "oklch(60.71% 0.02063 248.52)",
+          "oklch(72.14% 0.02063 248.52)",
+          "oklch(83.57% 0.02063 248.52)",
+          "oklch(95% 0.02063 248.52)"
+        ]
+      },
+      "text-dark": {
+        "displayName": "Text Dark",
+        "tonalRamp": [
+          "oklch(15% 0.00931 242.84)",
+          "oklch(26.43% 0.00931 242.84)",
+          "oklch(37.86% 0.00931 242.84)",
+          "oklch(49.29% 0.00931 242.84)",
+          "oklch(60.71% 0.00931 242.84)",
+          "oklch(72.14% 0.00931 242.84)",
+          "oklch(83.57% 0.00931 242.84)",
+          "oklch(95% 0.00931 242.84)"
+        ]
+      },
+      "text-secondary-dark": {
+        "displayName": "Text Secondary Dark",
+        "tonalRamp": [
+          "oklch(15% 0.02249 245.93)",
+          "oklch(26.43% 0.02249 245.93)",
+          "oklch(37.86% 0.02249 245.93)",
+          "oklch(49.29% 0.02249 245.93)",
+          "oklch(60.71% 0.02249 245.93)",
+          "oklch(72.14% 0.02249 245.93)",
+          "oklch(83.57% 0.02249 245.93)",
+          "oklch(95% 0.02249 245.93)"
+        ]
+      },
+      "divider-dark": {
+        "displayName": "Divider Dark",
+        "tonalRamp": [
+          "oklch(15% 0.02535 250.77)",
+          "oklch(26.43% 0.02535 250.77)",
+          "oklch(37.86% 0.02535 250.77)",
+          "oklch(49.29% 0.02535 250.77)",
+          "oklch(60.71% 0.02535 250.77)",
+          "oklch(72.14% 0.02535 250.77)",
+          "oklch(83.57% 0.02535 250.77)",
+          "oklch(95% 0.02535 250.77)"
+        ]
+      },
+      "filled-text-dark": {
+        "displayName": "Filled Text Dark",
+        "tonalRamp": [
+          "oklch(15% 0.04153 256.33)",
+          "oklch(26.43% 0.04153 256.33)",
+          "oklch(37.86% 0.04153 256.33)",
+          "oklch(49.29% 0.04153 256.33)",
+          "oklch(60.71% 0.04153 256.33)",
+          "oklch(72.14% 0.04153 256.33)",
+          "oklch(83.57% 0.04153 256.33)",
+          "oklch(95% 0.04153 256.33)"
+        ]
+      },
+      "success-dark": {
+        "displayName": "Success Dark",
+        "tonalRamp": [
+          "oklch(15% 0.14907 162.48)",
+          "oklch(26.43% 0.14907 162.48)",
+          "oklch(37.86% 0.14907 162.48)",
+          "oklch(49.29% 0.14907 162.48)",
+          "oklch(60.71% 0.14907 162.48)",
+          "oklch(72.14% 0.14907 162.48)",
+          "oklch(83.57% 0.14907 162.48)",
+          "oklch(95% 0.14907 162.48)"
+        ]
+      },
+      "offer-dark": {
+        "displayName": "Offer Dark",
+        "tonalRamp": [
+          "oklch(15% 0.15349 163.22)",
+          "oklch(26.43% 0.15349 163.22)",
+          "oklch(37.86% 0.15349 163.22)",
+          "oklch(49.29% 0.15349 163.22)",
+          "oklch(60.71% 0.15349 163.22)",
+          "oklch(72.14% 0.15349 163.22)",
+          "oklch(83.57% 0.15349 163.22)",
+          "oklch(95% 0.15349 163.22)"
+        ]
+      },
+      "warning-dark": {
+        "displayName": "Warning Dark",
+        "tonalRamp": [
+          "oklch(15% 0.16466 70.08)",
+          "oklch(26.43% 0.16466 70.08)",
+          "oklch(37.86% 0.16466 70.08)",
+          "oklch(49.29% 0.16466 70.08)",
+          "oklch(60.71% 0.16466 70.08)",
+          "oklch(72.14% 0.16466 70.08)",
+          "oklch(83.57% 0.16466 70.08)",
+          "oklch(95% 0.16466 70.08)"
+        ]
+      },
+      "error-dark": {
+        "displayName": "Error Dark",
+        "tonalRamp": [
+          "oklch(15% 0.16898 13.43)",
+          "oklch(26.43% 0.16898 13.43)",
+          "oklch(37.86% 0.16898 13.43)",
+          "oklch(49.29% 0.16898 13.43)",
+          "oklch(60.71% 0.16898 13.43)",
+          "oklch(72.14% 0.16898 13.43)",
+          "oklch(83.57% 0.16898 13.43)",
+          "oklch(95% 0.16898 13.43)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Page headline",
+        "purpose": "MUI h4; PageHeader reduces size below md."
+      },
+      "title": {
+        "displayName": "Task or role title",
+        "purpose": "MUI h5."
+      },
+      "section": {
+        "displayName": "Section title",
+        "purpose": "MUI h6; SectionCard adapts line height."
+      },
+      "body": {
+        "displayName": "Reading text",
+        "purpose": "Ordinary descriptions, labels and record text."
+      },
+      "caption": {
+        "displayName": "Metadata",
+        "purpose": "Dates, helper text and quiet context."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-rest",
+        "value": "none",
+        "purpose": "Shared cards use borders and tonal separation. Modal overlays retain MUI defaults."
+      },
+      {
+        "name": "button-rest",
+        "value": "none",
+        "purpose": "Shared button resting and hover styles suppress decorative elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "input-border",
+        "value": "border-color 160ms ease",
+        "purpose": "Outlined-input border transition in the shared theme."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "0px"
+      },
+      {
+        "name": "sm",
+        "value": "600px"
+      },
+      {
+        "name": "md",
+        "value": "900px"
+      },
+      {
+        "name": "lg",
+        "value": "1200px"
+      },
+      {
+        "name": "xl",
+        "value": "1536px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A medium contained MUI action in light mode; minimum height comes from the shared theme.",
+      "html": "<button class=\"ds-primary\">Save changes</button>",
+      "css": ".ds-primary{font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.9rem;font-weight:600;line-height:1.9;color:#FFFFFF;background:#235FC7;border:0;border-radius:8px;padding:6px 16px;min-height:44px;min-width:64px;cursor:pointer;box-shadow:none}.ds-primary:hover{background:#194CA6}.ds-primary:focus-visible{outline:2px solid #235FC7;outline-offset:3px}"
+    },
+    {
+      "name": "Saved stage",
+      "kind": "chip",
+      "refersTo": "status-tag",
+      "description": "Applied is a neutral saved fact. Draft and To Apply use a hollow marker; Offer has semantic green.",
+      "html": "<span class=\"ds-stage\"><span class=\"ds-stage-dot\" aria-hidden=\"true\"></span>Applied</span>",
+      "css": ".ds-stage{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.8125rem;font-weight:600;line-height:1.5;color:#586672;background:rgba(88,102,114,.1);border:1px solid rgba(88,102,114,.28);border-radius:4px}.ds-stage-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;border:1px solid currentColor}"
+    },
+    {
+      "name": "Next Action suggestion",
+      "kind": "chip",
+      "description": "A blue suggestion when attention is needed; the label wraps. This preview is a label, with no invented click behavior.",
+      "html": "<span class=\"ds-action\">Follow up</span>",
+      "css": ".ds-action{display:inline-flex;align-items:center;min-height:24px;max-width:100%;padding:2px 7px;font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.8125rem;font-weight:600;line-height:1.5;overflow-wrap:anywhere;white-space:normal;color:#235FC7;background:rgba(35,95,199,.08);border:1px solid rgba(35,95,199,.24);border-radius:4px}"
+    },
+    {
+      "name": "Selected navigation",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "A selected sidebar link retains its 10% blue fill on hover.",
+      "html": "<a class=\"ds-nav\" href=\"#applications\" aria-current=\"page\"><svg aria-hidden=\"true\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4zm10 16H4V8h16z\"/></svg>Applications</a>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:14px;min-height:48px;padding:0 12px;font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:1rem;font-weight:500;line-height:1.5;text-decoration:none;border-radius:16px;color:#235FC7;background:rgba(35,95,199,.1)}.ds-nav:hover{background:rgba(35,95,199,.1)}.ds-nav:focus-visible{outline:2px solid #235FC7;outline-offset:3px}"
+    },
+    {
+      "name": "Next Action mark",
+      "kind": "custom",
+      "refersTo": "next-action-mark",
+      "description": "Decorative signature beside Next Action headings; no progress or interaction is encoded.",
+      "html": "<span class=\"ds-mark\" aria-hidden=\"true\"><span class=\"ds-mark-solid\"></span><span class=\"ds-mark-rule\"></span><span class=\"ds-mark-outline\"></span></span>",
+      "css": ".ds-mark{display:inline-flex;align-items:center;gap:6px;color:#235FC7;flex-shrink:0}.ds-mark-solid{width:8px;height:8px;border-radius:50%;background:currentColor}.ds-mark-rule{width:16px;height:1px;background:currentColor}.ds-mark-outline{width:8px;height:8px;border-radius:50%;border:1px solid #586672}"
+    },
+    {
+      "name": "Outlined button",
+      "kind": "button",
+      "refersTo": "button-outlined",
+      "description": "Medium outlined MUI action in light mode; hover fill and border come from installed MUI defaults.",
+      "html": "<button class=\"ds-outlined\">Open application</button>",
+      "css": ".ds-outlined{font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.9rem;font-weight:600;line-height:1.9;min-height:44px;min-width:64px;cursor:pointer;border-radius:8px;color:#235FC7;box-shadow:none;padding:5px 15px;border:1px solid rgba(35,95,199,.5);background:transparent}.ds-outlined:hover{background:rgba(35,95,199,.04);border-color:#235FC7}.ds-outlined:focus-visible{outline:2px solid #235FC7;outline-offset:3px}"
+    },
+    {
+      "name": "Text button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Medium text action with the existing blue hover treatment.",
+      "html": "<button class=\"ds-text-button\">View schedule</button>",
+      "css": ".ds-text-button{font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.9rem;font-weight:600;line-height:1.9;min-height:44px;min-width:64px;cursor:pointer;border-radius:8px;color:#235FC7;box-shadow:none;padding:6px 8px;border:0;background:transparent}.ds-text-button:hover{background:rgba(35,95,199,.04)}.ds-text-button:focus-visible{outline:2px solid #235FC7;outline-offset:3px}"
+    },
+    {
+      "name": "Outlined field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Isolated light-mode input stroke, fill, type and focus treatment. External label identifies the preview; full app fields use MUI floating labels and validation.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-job-title\">Job title</label><input class=\"ds-field\" id=\"ds-job-title\" placeholder=\"Job title\" />",
+      "css": ".ds-field-label{display:block;margin-bottom:4px;font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.875rem;color:#586672}.ds-field{font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:.9375rem;line-height:1.5;min-height:48px;padding:0 14px;border:1px solid #D7DFE5;border-radius:8px;background:#FFFFFF;color:#222B34;transition:border-color 160ms ease}.ds-field::placeholder{color:#586672;opacity:1}.ds-field:hover{border-color:#222B34}.ds-field:focus{outline:0;border:2px solid #235FC7;padding:0 13px;box-shadow:none}.ds-field:disabled{color:rgba(0,0,0,.38);border-color:rgba(0,0,0,.26)}"
+    },
+    {
+      "name": "Application card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Reduced application-card preview with synthetic sample content: desktop padding, role/company, stage, separate next-action row and details link. Optional metadata and icons omitted here.",
+      "html": "<a class=\"ds-application\" href=\"#application\"><div class=\"ds-application-identity\"><span class=\"ds-company-initial\" aria-hidden=\"true\">E</span><div><h2>Frontend developer</h2><p>Example company</p></div></div><span class=\"ds-application-stage\"><span aria-hidden=\"true\"></span>Applied</span><div class=\"ds-application-next\"><div><strong>Next action</strong><span class=\"ds-application-action\">Waiting for response</span></div><p>Waiting for the company to respond.</p></div><div class=\"ds-application-footer\"><span>Applied date not recorded</span><strong>Open details</strong></div></a>",
+      "css": ".ds-application{display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid #D7DFE5;border-radius:8px;background:#FFFFFF;color:#222B34;text-decoration:none;box-shadow:none;font-family:Inter,Segoe UI,Helvetica Neue,sans-serif;font-size:1rem;line-height:1.5;transition:border-color 160ms ease}.ds-application:hover{border-color:#235FC7;background:#F5F5F5}.ds-application:focus-visible{outline:2px solid #235FC7;outline-offset:3px}.ds-application-identity{display:flex;gap:12px;align-items:flex-start}.ds-company-initial{display:flex;align-items:center;justify-content:center;width:40px;height:40px;flex-shrink:0;border-radius:8px;color:#586672;background:rgba(0,0,0,.04);font-weight:600}.ds-application h2{margin:0;font-size:1.125rem;font-weight:600;line-height:1.35;letter-spacing:-.01em;overflow-wrap:anywhere}.ds-application p{margin:0;color:#586672;overflow-wrap:anywhere}.ds-application-stage{display:inline-flex;align-items:center;align-self:flex-start;gap:6px;height:24px;padding:0 8px;font-size:.8125rem;font-weight:600;color:#586672;border:1px solid rgba(88,102,114,.28);background:rgba(88,102,114,.1);border-radius:4px}.ds-application-stage>span{width:7px;height:7px;border-radius:50%;background:currentColor;border:1px solid currentColor}.ds-application-next{border-top:1px solid #D7DFE5;padding-top:12px;font-size:.875rem}.ds-application-next>div{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.ds-application-action{color:#586672;border:1px solid rgba(88,102,114,.24);background:rgba(88,102,114,.08);border-radius:4px;padding:2px 7px;font-size:.8125rem;font-weight:600}.ds-application-next p{margin-top:8px}.ds-application-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #D7DFE5;padding-top:14px;font-size:.875rem;color:#586672}.ds-application-footer strong{color:#235FC7;font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Search agenda",
+    "overview": "A personal job search needs clear records, explicit waiting and useful next steps.\nThe interface is calm, focused and slightly technical: readable Inter text, neutral\nsurfaces, aligned dates and one blue accent. Its personality comes from the\nrelationship between an application, its saved stage and its next action.\n\nThis is the implemented identity selected on 2026-10-05. Generated concepts guide\nits character; actual components establish its reusable rules. Page compositions\nbelong in [.impeccable/surfaces/web-app.md](.impeccable/surfaces/web-app.md).",
+    "keyCharacteristics": [
+      "Open sections and modest borders instead of repeated summary cards.",
+      "Neutral saved stages and waiting; blue for action, selection and focus.",
+      "The dot–rule–outlined-dot signature accompanies Next Action.",
+      "One identity across light and dark mode."
+    ],
+    "rules": [
+      {
+        "name": "The Action Rule",
+        "body": "A derived suggestion does not become a red deadline simply because it needs attention. Preserve its words and distinguish it from a saved date.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do preserve stage words, action words and recorded dates as separate cues.",
+      "Do use the shared theme and components for both modes.",
+      "Do retain visible focus, text labels, semantic headings and wrapping content.",
+      "Do group real records and tasks while leaving summaries open."
+    ],
+    "donts": [
+      "Don't add gradients, decorative AI imagery, excessive cards or generic KPI tiles.",
+      "Don't turn waiting or missing optional information into a visual failure.",
+      "Don't interpret the signature as a funnel or invent interaction for it.",
+      "Don't copy synthetic counts, controls or screen geometry from concept images."
+    ]
+  }
+}

@@ -8,10 +8,63 @@ import { ApplicationFormDialog } from "./ApplicationFormDialog";
 
 function renderForm(mode: "add" | "edit" = "add", values: Partial<JobApplicationFormValues> = {}) {
   const submit = vi.fn<(values: JobApplicationFormValues) => Promise<void>>().mockResolvedValue();
-  render(<ApplicationFormDialog mode={mode} open onClose={vi.fn()} onSubmit={submit}
+  const close = vi.fn();
+  render(<ApplicationFormDialog mode={mode} open onClose={close} onSubmit={submit}
     initialValues={{ ...emptyApplicationFormValues, companyName: "Example", jobTitle: "Developer", ...values }} />);
-  return { user: userEvent.setup(), submit };
+  return { user: userEvent.setup(), submit, close };
 }
+
+it.each(["add", "edit"] as const)("closes unchanged %s values directly", async mode => {
+  const { user, close } = renderForm(mode);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  expect(screen.queryByText("Discard changes?")).not.toBeInTheDocument();
+});
+
+it.each(["Cancel", "Escape", "backdrop"])("protects changed values when closing with %s", async method => {
+  const { user, close } = renderForm();
+  await user.type(screen.getByRole("textbox", { name: "Company" }), " changed");
+  if (method === "Cancel") await user.click(screen.getByRole("button", { name: "Cancel" }));
+  else if (method === "Escape") await user.keyboard("{Escape}");
+  else {
+    const backdrop = document.querySelector(".MuiDialog-container")!;
+    fireEvent.mouseDown(backdrop);
+    fireEvent.click(backdrop);
+  }
+  expect(screen.getByText("Discard changes?")).toBeInTheDocument();
+  expect(close).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Keep editing" }));
+  expect(await screen.findByRole("textbox", { name: "Company" })).toHaveValue("Example changed");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: /^Discard$/ }));
+  expect(close).toHaveBeenCalledOnce();
+});
+
+it("returns to clean after undoing formatting", async () => {
+  const { user, close } = renderForm("edit", { jobDescription: "Advert  " });
+  await user.click(screen.getByRole("button", { name: "Clean formatting" }));
+  await user.click(screen.getByRole("button", { name: "Undo formatting" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  expect(screen.queryByText("Discard changes?")).not.toBeInTheDocument();
+});
+
+it("blocks closing while saving and retains values after a failure", async () => {
+  const { user, submit, close } = renderForm();
+  let rejectSave: (reason: Error) => void = () => {};
+  submit.mockImplementation(() => new Promise<void>((_, reject) => { rejectSave = reject; }));
+  await user.type(screen.getByRole("textbox", { name: "Company" }), " changed");
+  await user.click(screen.getByRole("button", { name: "Add application" }));
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  await user.keyboard("{Escape}");
+  expect(close).not.toHaveBeenCalled();
+  rejectSave(new Error("Save failed"));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled());
+  expect(screen.getByRole("textbox", { name: "Company" })).toHaveValue("Example changed");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByText("Discard changes?")).toBeInTheDocument();
+  expect(close).not.toHaveBeenCalled();
+});
 
 it.each([
   ["Company", "companyName", "Company name is required."],
@@ -21,7 +74,34 @@ it.each([
   expect(screen.getByRole("textbox", { name: label })).toBeRequired();
   await user.click(screen.getByRole("button", { name: "Add application" }));
   expect(screen.getByText(error)).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: label })).toHaveFocus();
   expect(submit).not.toHaveBeenCalled();
+});
+
+it("submits from a single-line field with Enter", async () => {
+  const { user, submit } = renderForm();
+  await user.click(screen.getByRole("textbox", { name: "Company" }));
+  await user.keyboard("{Enter}");
+  await waitFor(() => expect(submit).toHaveBeenCalledOnce());
+});
+
+it("preserves multiline Enter and focuses an invalid collapsed contact field", async () => {
+  const { user, submit } = renderForm("add", { contactEmail: "invalid" });
+  await user.click(screen.getByRole("textbox", { name: "Job description" }));
+  await user.type(screen.getByRole("textbox", { name: "Job description" }), "First line{Enter}Second line");
+  expect(submit).not.toHaveBeenCalled();
+  expect(screen.getByRole("textbox", { name: "Job description" })).toHaveValue("First line\nSecond line");
+  await user.click(screen.getByRole("button", { name: "Add application" }));
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "Contact email" })).toHaveFocus());
+  expect(submit).not.toHaveBeenCalled();
+});
+
+it("does not move focus to another error while correcting a field", async () => {
+  const { user } = renderForm("add", { companyName: "", jobTitle: "" });
+  await user.click(screen.getByRole("button", { name: "Add application" }));
+  await user.keyboard("Example");
+  expect(screen.getByRole("textbox", { name: "Company" })).toHaveValue("Example");
+  expect(screen.getByRole("textbox", { name: "Company" })).toHaveFocus();
 });
 
 it.each([

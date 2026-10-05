@@ -5,26 +5,26 @@ import interUrl from "../assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 export type ThemeMode = PaletteMode;
 
 const palette = {
-  primary: "#2563EB",
-  secondary: "#7C3AED",
-  success: "#16A34A",
-  warning: "#D97706",
-  error: "#DC2626",
+  primary: "#235FC7",
+  secondary: "#586672",
+  success: "#166534",
+  warning: "#92400E",
+  error: "#B91C1C",
   light: {
-    background: "#F8FAFC",
+    background: "#F3F5F6",
     paper: "#FFFFFF",
-    mutedSurface: "#EEF2F8",
-    textPrimary: "#0F172A",
-    textSecondary: "#475569",
-    border: "#E2E8F0",
+    mutedSurface: "#E9EEF2",
+    textPrimary: "#222B34",
+    textSecondary: "#586672",
+    border: "#D7DFE5",
   },
   dark: {
-    background: "#131211",
-    paper: "#181716",
-    mutedSurface: "#1E1C1A",
-    textPrimary: "#F5F3F0",
-    textSecondary: "#A8A29E",
-    border: "#262422",
+    background: "#161B20",
+    paper: "#1E252C",
+    mutedSurface: "#252E37",
+    textPrimary: "#EAF0F5",
+    textSecondary: "#A8B5C1",
+    border: "#35404C",
   },
 };
 
@@ -33,11 +33,12 @@ export function createAppTheme(mode: ThemeMode) {
   const modePalette = isDark ? palette.dark : palette.light;
   const paperColor = modePalette.paper;
   const mutedSurfaceColor = modePalette.mutedSurface;
-  const primaryColor = isDark ? "#3B82F6" : palette.primary;
+  const primaryColor = isDark ? "#89B4FF" : palette.primary;
   const successColor = isDark ? "#10B981" : palette.success;
   const warningColor = isDark ? "#F59E0B" : palette.warning;
-  const errorColor = isDark ? "#F43F5E" : palette.error;
-  const infoColor = isDark ? "#38BDF8" : "#0891B2";
+  const errorColor = isDark ? "#FB7185" : palette.error;
+  const infoColor = primaryColor;
+  const filledTextColor = isDark ? "#122033" : "#FFFFFF";
 
   return createTheme({
     palette: {
@@ -45,38 +46,38 @@ export function createAppTheme(mode: ThemeMode) {
       primary: {
         main: primaryColor,
         light: "#60A5FA",
-        dark: "#1D4ED8",
-        contrastText: "#FFFFFF",
+        dark: isDark ? "#A8C7FF" : "#194CA6",
+        contrastText: filledTextColor,
       },
       secondary: {
-        main: palette.secondary,
-        light: "#A78BFA",
-        dark: "#6D28D9",
-        contrastText: "#FFFFFF",
+        main: modePalette.textSecondary,
+        light: isDark ? "#CDD6DF" : "#76818B",
+        dark: isDark ? "#CDD6DF" : "#3F4D59",
+        contrastText: filledTextColor,
       },
       success: {
         main: successColor,
         light: "#4ADE80",
-        dark: "#15803D",
-        contrastText: "#FFFFFF",
+        dark: isDark ? "#34D399" : "#166534",
+        contrastText: filledTextColor,
       },
       warning: {
         main: warningColor,
         light: "#FBBF24",
-        dark: "#B45309",
-        contrastText: "#0F172A",
+        dark: isDark ? "#FBBF24" : "#92400E",
+        contrastText: filledTextColor,
       },
       error: {
         main: errorColor,
         light: "#F87171",
-        dark: "#B91C1C",
-        contrastText: "#FFFFFF",
+        dark: isDark ? "#FDA4AF" : "#991B1B",
+        contrastText: filledTextColor,
       },
       info: {
         main: infoColor,
         light: "#22D3EE",
-        dark: "#0E7490",
-        contrastText: "#FFFFFF",
+        dark: isDark ? "#7DD3FC" : "#155E75",
+        contrastText: filledTextColor,
       },
       background: {
         default: modePalette.background,
@@ -96,40 +97,40 @@ export function createAppTheme(mode: ThemeMode) {
       fontFamily: '"Inter", "Segoe UI", "Helvetica Neue", sans-serif',
       fontSize: 15,
       h4: {
-        fontSize: "2rem",
-        fontWeight: 750,
-        lineHeight: 1.18,
+        fontSize: "1.875rem",
+        fontWeight: 700,
+        lineHeight: 1.2,
         letterSpacing: "-0.02em",
       },
       h5: {
         fontSize: "1.25rem",
-        fontWeight: 750,
-        lineHeight: 1.3,
+        fontWeight: 600,
+        lineHeight: 1.4,
         letterSpacing: "-0.015em",
       },
       h6: {
         fontSize: "1.125rem",
-        fontWeight: 700,
+        fontWeight: 600,
         lineHeight: 1.35,
         letterSpacing: "-0.01em",
       },
       subtitle1: {
         fontSize: "1rem",
-        fontWeight: 650,
+        fontWeight: 600,
         lineHeight: 1.5,
       },
       subtitle2: {
         fontSize: "0.9375rem",
-        fontWeight: 650,
+        fontWeight: 600,
         lineHeight: 1.45,
       },
       body1: {
         fontSize: "1rem",
-        lineHeight: 1.6,
+        lineHeight: 1.5,
       },
       body2: {
-        fontSize: "0.9375rem",
-        lineHeight: 1.55,
+        fontSize: "0.875rem",
+        lineHeight: 1.5,
       },
       caption: {
         fontSize: "0.8125rem",
@@ -143,7 +144,7 @@ export function createAppTheme(mode: ThemeMode) {
       },
       button: {
         fontSize: "0.9rem",
-        fontWeight: 700,
+        fontWeight: 600,
         lineHeight: 1.9,
         textTransform: "none",
       },
@@ -163,8 +164,36 @@ export function createAppTheme(mode: ThemeMode) {
             color: modePalette.textPrimary,
             fontFeatureSettings: '"cv02", "cv03", "cv04", "cv11"',
             WebkitFontSmoothing: "antialiased",
+            caretColor: primaryColor,
+            scrollbarColor: `${modePalette.textSecondary} ${modePalette.background}`,
+            textUnderlineOffset: "0.2em",
+          },
+          "::selection": {
+            backgroundColor: primaryColor,
+            color: filledTextColor,
           },
         },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: { overflowWrap: "anywhere" },
+        },
+      },
+      MuiButtonBase: {
+        styleOverrides: {
+          root: {
+            "&.Mui-focusVisible": {
+              outline: `2px solid ${primaryColor}`,
+              outlineOffset: 3,
+            },
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: { root: { minWidth: 44, minHeight: 44 } },
+      },
+      MuiToggleButton: {
+        styleOverrides: { root: { minHeight: 44 } },
       },
       MuiPaper: {
         styleOverrides: {
@@ -180,10 +209,10 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             border: `1px solid ${modePalette.border}`,
-            borderRadius: 10,
+            borderRadius: 8,
             backgroundColor: paperColor,
             backgroundImage: "none",
-            boxShadow: isDark ? "none" : `0 1px 2px ${alpha("#0F172A", 0.035)}`,
+            boxShadow: "none",
           },
         },
       },
@@ -201,11 +230,11 @@ export function createAppTheme(mode: ThemeMode) {
           root: {
             borderRadius: 8,
             boxShadow: "none",
+            minHeight: 44,
           },
           contained: {
             "&:hover": {
-              backgroundColor: isDark ? "#2563EB" : undefined,
-              boxShadow: isDark ? "none" : `0 8px 18px ${alpha(palette.primary, 0.16)}`,
+              boxShadow: "none",
             },
           },
         },
@@ -214,8 +243,8 @@ export function createAppTheme(mode: ThemeMode) {
         styleOverrides: {
           root: {
             fontSize: "0.8125rem",
-            fontWeight: 700,
-            borderRadius: 999,
+            fontWeight: 600,
+            borderRadius: 4,
           },
           outlined: {
             backgroundColor: isDark ? mutedSurfaceColor : alpha("#111827", 0.02),
@@ -248,15 +277,16 @@ export function createAppTheme(mode: ThemeMode) {
             backgroundColor: isDark ? paperColor : "#FFFFFF",
             borderRadius: 8,
             minHeight: 48,
-            transition: "box-shadow 160ms ease, border-color 160ms ease",
+            transition: "border-color 160ms ease",
             "&.MuiInputBase-multiline": {
               minHeight: 0,
             },
             "& .MuiOutlinedInput-input": {
               fontSize: "0.9375rem",
+              "&::placeholder": { color: modePalette.textSecondary, opacity: 1 },
             },
-            "&.Mui-focused": {
-              boxShadow: isDark ? "none" : `0 0 0 3px ${alpha(palette.primary, 0.12)}`,
+            "&.Mui-focused:not(.Mui-error)": {
+              boxShadow: "none",
               "& .MuiOutlinedInput-notchedOutline": {
                 borderColor: primaryColor,
               },
@@ -285,7 +315,7 @@ export function createAppTheme(mode: ThemeMode) {
       MuiDialog: {
         styleOverrides: {
           paper: {
-            backgroundColor: isDark ? mutedSurfaceColor : paperColor,
+            backgroundColor: paperColor,
             border: isDark ? `1px solid ${modePalette.border}` : undefined,
           },
         },
@@ -316,35 +346,23 @@ export function getBorderColor(mode: ThemeMode) {
 }
 
 export function getSidebarColors(mode: ThemeMode) {
-  if (mode === "dark") {
-    return {
-      background: "#181716",
-      text: "#A8A29E",
-      eyebrow: "#F5F3F0",
-      border: "#262422",
-      activeBackground: "#3B82F6",
-      activeText: "#FFFFFF",
-      hoverBackground: "#1E1C1A",
-      workspaceBackground: "#1E1C1A",
-      muted: "#6E6761",
-    };
-  }
-
+  const colors = palette[mode];
+  const accent = mode === "dark" ? "#89B4FF" : palette.primary;
   return {
-    background: "#FFFFFF",
-    text: "#475569",
-    eyebrow: palette.primary,
-    border: "#E2E8F0",
-    activeBackground: alpha(palette.primary, 0.12),
-    activeText: palette.primary,
-    hoverBackground: alpha(palette.primary, 0.08),
-    workspaceBackground: alpha(palette.primary, 0.08),
-    muted: "#64748B",
+    background: colors.background,
+    text: colors.textSecondary,
+    eyebrow: colors.textPrimary,
+    border: colors.border,
+    activeBackground: alpha(accent, 0.1),
+    activeText: accent,
+    hoverBackground: colors.mutedSurface,
+    workspaceBackground: colors.mutedSurface,
+    muted: colors.textSecondary,
   };
 }
 
 export function getStatusChipStyles(statusColor: string, mode: ThemeMode) {
-  const chipColor = mode === "dark" ? getDarkChipColor(statusColor) : statusColor;
+  const chipColor = mode === "dark" ? getDarkChipColor(statusColor) : getLightChipColor(statusColor);
 
   return {
     bgcolor: alpha(chipColor, mode === "dark" ? 0.12 : 0.1),
@@ -357,18 +375,34 @@ export function getStatusChipStyles(statusColor: string, mode: ThemeMode) {
 }
 
 export function getSemanticChipStyles(color: string, mode: ThemeMode) {
+  const chipColor = mode === "dark" ? getDarkChipColor(color) : getLightChipColor(color);
   return {
-    bgcolor: alpha(color, mode === "dark" ? 0.12 : 0.08),
-    color,
-    borderColor: alpha(color, mode === "dark" ? 0.24 : 0.24),
+    bgcolor: alpha(chipColor, mode === "dark" ? 0.12 : 0.08),
+    color: chipColor,
+    borderColor: alpha(chipColor, 0.24),
   };
+}
+
+function getLightChipColor(color: string): string {
+  const lightColors: Record<string, string> = {
+    "#64748B": "#475569",
+    "#586672": "#586672",
+    "#0891B2": "#0E7490",
+    "#2563EB": "#1D4ED8",
+    "#D97706": "#92400E",
+    "#16A34A": "#166534",
+    "#DC2626": "#B91C1C",
+  };
+  return lightColors[color] ?? color;
 }
 
 function getDarkChipColor(statusColor: string): string {
   const darkColors: Record<string, string> = {
     "#64748B": "#A8A29E",
+    "#586672": "#A8B5C1",
     "#0891B2": "#38BDF8",
     "#2563EB": "#60A5FA",
+    "#3B82F6": "#60A5FA",
     "#7C3AED": "#C4B5FD",
     "#D97706": "#FBBF24",
     "#16A34A": "#34D399",

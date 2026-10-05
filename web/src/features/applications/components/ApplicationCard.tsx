@@ -11,7 +11,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 import type { JobApplication } from "../types/application";
 import { getApplicationNextAction } from "../utils/applicationNextAction";
@@ -32,7 +31,9 @@ function formatKeyDate(application: JobApplication) {
     return `Deadline ${formatApplicationDate(application.deadline, "No deadline")}`;
   }
 
-  return "Date pending";
+  return application.status === "Draft" || application.status === "ToApply"
+    ? "Not applied yet"
+    : "Applied date not recorded";
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
@@ -43,12 +44,9 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
     <Card
       sx={{
         height: "100%",
-        transition: "border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease",
+        transition: "border-color 160ms ease",
         "&:hover": {
           borderColor: "primary.main",
-          transform: "translateY(-1px)",
-          boxShadow: (theme) =>
-            theme.palette.mode === "dark" ? "none" : `0 10px 24px ${alpha(theme.palette.primary.main, 0.08)}`,
         },
       }}
     >
@@ -57,44 +55,45 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         to={`/applications/${application.id}`}
         sx={{ height: "100%", alignItems: "stretch" }}
       >
-        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2.25, height: "100%", p: 3 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
+        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1.75, height: "100%", p: { xs: 2, md: 2.5 } }}>
+          <Stack gap={1.5}>
             <Stack direction="row" gap={1.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
               <Avatar
                 variant="rounded"
                 sx={{
-                  width: 48,
-                  height: 48,
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
-                  color: "primary.main",
-                  fontWeight: 800,
-                  border: 1,
-                  borderColor: "divider",
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  bgcolor: "action.hover",
+                  color: "text.secondary",
+                  fontWeight: 600,
                 }}
               >
                 {companyInitial}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="h6" sx={{ lineHeight: 1.25 }}>
+                <Typography component="h2" variant="h6" sx={{ overflowWrap: "anywhere" }}>
                   {application.jobTitle}
                 </Typography>
-                <Typography color="text.secondary">{application.companyName}</Typography>
+                <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{application.companyName}</Typography>
               </Box>
             </Stack>
-            <StatusChip status={application.status} />
+            <Box><StatusChip status={application.status} /></Box>
           </Stack>
-          <Stack direction={{ xs: "column", sm: "row" }} gap={2} color="text.secondary">
-            <Stack direction="row" gap={0.75} alignItems="center">
+          <Stack direction="row" flexWrap="wrap" gap={1.5} color="text.secondary">
+            {application.location ? (
+            <Stack direction="row" gap={0.75} alignItems="center" sx={{ minWidth: 0 }}>
               <LocationOnOutlinedIcon fontSize="small" />
-              <Typography variant="body2">{application.location || "Location not specified"}</Typography>
+              <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>{application.location}</Typography>
             </Stack>
+            ) : null}
             <Stack direction="row" gap={0.75} alignItems="center">
               <TodayOutlinedIcon fontSize="small" />
-              <Typography variant="body2">{formatKeyDate(application)}</Typography>
+              <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>{formatKeyDate(application)}</Typography>
             </Stack>
           </Stack>
-          <Stack gap={1}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+          <Stack gap={1} sx={{ pt: 1.5, borderTop: 1, borderColor: "divider" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
               <Typography variant="body2" fontWeight={600}>
                 Next action
               </Typography>
@@ -105,16 +104,14 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
             </Typography>
           </Stack>
           <Divider />
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
-            <div>
-              <Typography variant="body2" color="text.secondary">
-                Source: {application.source || "Not specified"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+          <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1.5} flexWrap="wrap" sx={{ mt: "auto" }}>
+            <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+              {application.source ? <Typography variant="body2" color="text.secondary">Source: {application.source}</Typography> : null}
+              <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
                 Updated {formatApplicationDate(application.updatedAt, "recently")}
               </Typography>
-            </div>
-            <Stack direction="row" gap={0.5} alignItems="center" color="primary.main">
+            </Box>
+            <Stack direction="row" gap={0.5} alignItems="center" color="primary.main" sx={{ flexShrink: 0 }}>
               <Typography variant="body2" fontWeight={600}>
                 Open details
               </Typography>

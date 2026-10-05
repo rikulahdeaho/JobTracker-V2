@@ -16,6 +16,26 @@ let queryClient: QueryClient;
 let unbindSession: () => void;
 const http = vi.fn<AxiosAdapter>();
 
+it.each(["Applied", "Interviewing", "Assignment", "Offer", "Rejected", "Ghosted", "Withdrawn"] as const)(
+  "describes a missing applied date accurately for the saved %s stage",
+  async status => {
+    const application = applicationFixture({ status, appliedDate: null });
+    http.mockImplementation(async config => response(config, config.url === "/api/applications" ? [application] : application));
+    renderPage(`/applications/${application.id}`);
+    expect(await screen.findByText("Applied date not recorded")).toBeInTheDocument();
+    expect(screen.queryByText("Not applied yet")).not.toBeInTheDocument();
+    expect(http.mock.calls.some(([config]) => config.method !== "get")).toBe(false);
+  },
+);
+
+it.each(["Draft", "ToApply"] as const)("keeps the unapplied date context for %s", async status => {
+  const application = applicationFixture({ status, appliedDate: null });
+  http.mockImplementation(async config => response(config, config.url === "/api/applications" ? [application] : application));
+  renderPage(`/applications/${application.id}`);
+  expect(await screen.findByText("Not applied yet")).toBeInTheDocument();
+  expect(screen.queryByText("Applied date not recorded")).not.toBeInTheDocument();
+});
+
 it("keeps review active without a write, then manually marks Ghosted through the normal update", async () => {
   const user = userEvent.setup();
   let application = applicationFixture({ events: [eventFixture({ occurredAt: "2020-01-01T00:00:00Z" })] });
@@ -30,10 +50,10 @@ it("keeps review active without a write, then manually marks Ghosted through the
   renderPage(`/applications/${application.id}`);
   await user.click(await screen.findByRole("button", { name: "Keep active" }));
   expect(screen.getByRole("alert")).toHaveTextContent("Review status remains available");
-  expect(screen.getByRole("heading", { name: "Review status" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Next Action · Review status" })).toBeInTheDocument();
   expect(http.mock.calls.some(([config]) => config.method !== "get")).toBe(false);
   await user.click(screen.getByRole("button", { name: "Mark as ghosted" }));
-  expect(await screen.findByRole("heading", { name: "No action" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Next Action · No action" })).toBeInTheDocument();
   expect(queryClient.getQueryData(["applications"])).toEqual([application]);
 });
 
@@ -91,7 +111,7 @@ it("records a recruiter reply with an explicit timestamp and resets the visible 
   await user.click(screen.getByRole("option", { name: "Recruiter reply received" }));
   expect(dialog.getByLabelText(/Activity occurred at/)).toBeInTheDocument();
   await user.click(dialog.getByRole("button", { name: "Save activity" }));
-  expect(await screen.findByRole("heading", { name: "Wait for response" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Next Action · Wait for response" })).toBeInTheDocument();
   expect(screen.getByText("Recruiter reply received")).toBeInTheDocument();
   expect(queryClient.getQueryData(["applications"])).toEqual([application]);
 });
@@ -106,7 +126,7 @@ it("shows hard commitments and suggested attention separately with application l
   expect(screen.getByText(/Suggested attention from/)).toBeInTheDocument();
   expect(screen.getByText(/Scheduled for/)).toBeInTheDocument();
   expect(screen.queryByText("Follow up")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Example Company - Backend Developer" })).toHaveAttribute("href", `/applications/${application.id}`);
+  expect(screen.getByRole("link", { name: "Backend Developer · Example Company" })).toHaveAttribute("href", `/applications/${application.id}`);
 });
 
 function response(config: InternalAxiosRequestConfig, data: unknown, status = 200): AxiosResponse<unknown> {
@@ -180,7 +200,7 @@ it("renders API records with nullable fields and searches the returned list", as
   http.mockImplementation(async config => response(config, [applicationFixture()]));
   renderPage();
   expect(await screen.findByRole("link", { name: /Open details/ })).toHaveAttribute("href", "/applications/11111111-1111-1111-1111-111111111111");
-  expect(screen.getByText("Location not specified")).toBeInTheDocument();
+  expect(screen.queryByText("Location not specified")).not.toBeInTheDocument();
   await user.type(screen.getByRole("textbox", { name: "Search applications" }), "unmatched");
   expect(screen.getByText("No matching applications")).toBeInTheDocument();
 });
@@ -247,7 +267,8 @@ it("edits an application and updates both list and detail caches", async () => {
   await user.type(dialog.getByRole("textbox", { name: /^Company/ }), "Updated company");
   await user.click(dialog.getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(screen.getByRole("heading", { name: "Backend Developer at Updated company" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Backend Developer", level: 1 })).toBeInTheDocument();
+  expect(screen.getByText("Updated company")).toBeInTheDocument();
   expect(queryClient.getQueryData(["applications"])).toEqual([application]);
   expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
 });
@@ -331,7 +352,7 @@ it("records follow-up, refreshes list/detail caches, and keeps persisted history
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(screen.getByText("Follow-up sent")).toBeInTheDocument();
   expect(screen.getByText("Application sent")).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Wait for response" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Next Action · Wait for response" })).toBeInTheDocument();
   expect(queryClient.getQueryData(["applications"])).toEqual([application]);
   expect(queryClient.getQueryData(["applications", application.id])).toEqual(application);
 });

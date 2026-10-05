@@ -1,458 +1,128 @@
-import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
-import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
-import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
-import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutlined";
-import WatchLaterOutlinedIcon from "@mui/icons-material/WatchLaterOutlined";
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Grid,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Typography,
-} from "@mui/material";
-import type { ChipProps } from "@mui/material";
+import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { alpha } from "@mui/material/styles";
-import type { Theme } from "@mui/material/styles";
 import { PageHeader, PageShell, SectionCard } from "../../components/ui/PageSection";
+import { NextActionMark } from "../../components/ui/NextActionMark";
 import { useApplications } from "../applications/context/ApplicationsContext";
 import { ApplicationDataState } from "../applications/components/ApplicationDataState";
 import { StatusChip } from "../applications/components/StatusChip";
 import type { ApplicationStatus, JobApplication } from "../applications/types/application";
 import { formatApplicationDate } from "../applications/utils/applicationPresentation";
-import { applicationStatusLabel } from "../applications/utils/applicationStatus";
-import {
-  getApplicationNextAction,
-  getApplicationsNeedingAttention,
-  getStatusReviewApplications,
-} from "../applications/utils/applicationNextAction";
+import { getApplicationNextAction, getApplicationsNeedingAttention, getStatusReviewApplications } from "../applications/utils/applicationNextAction";
 import { getAllReminders, getGroupedReminders } from "../applications/utils/applicationWorkflow";
 
 export function DashboardPage() {
   const { applications, isPending, error, refetch } = useApplications();
-
   if (isPending || error) {
-    return (
-      <PageShell>
-        <PageHeader title="Job search at a glance" description="Your current applications, priorities, and progress at a glance." />
-        <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
-      </PageShell>
-    );
+    return <PageShell>
+      <PageHeader title="Your job search" description="Your applications and what to do next." />
+      <ApplicationDataState isPending={isPending} error={error} onRetry={refetch} />
+    </PageShell>;
   }
   const followUpApplications = getApplicationsNeedingAttention(applications);
   const statusReviewApplications = getStatusReviewApplications(applications);
   const reminderGroups = getGroupedReminders(applications, new Date(), "hardDate");
-  const reminders = getAllReminders(applications);
   const topActionItems = applications
-    .map((application) => ({
-      application,
-      nextAction: getApplicationNextAction(application),
-    }))
+    .map(application => ({ application, nextAction: getApplicationNextAction(application) }))
     .filter(({ nextAction }) => nextAction.title !== "No action")
     .sort((left, right) => {
-      if (left.nextAction.needsStatusReview !== right.nextAction.needsStatusReview) {
-        return left.nextAction.needsStatusReview ? -1 : 1;
-      }
-
-      if (left.nextAction.needsAttention !== right.nextAction.needsAttention) {
-        return left.nextAction.needsAttention ? -1 : 1;
-      }
-
+      if (left.nextAction.needsStatusReview !== right.nextAction.needsStatusReview) return left.nextAction.needsStatusReview ? -1 : 1;
+      if (left.nextAction.needsAttention !== right.nextAction.needsAttention) return left.nextAction.needsAttention ? -1 : 1;
       return left.application.companyName.localeCompare(right.application.companyName);
     });
   const priorityItem = topActionItems[0];
   const nextActionItems = topActionItems.slice(1, 4);
-  const nextReminder = [...reminders].sort((left, right) => left.dueDate.localeCompare(right.dueDate))[0];
-
-  const dashboardStats = [
-    {
-      label: "Total applications",
-      value: applications.length,
-      helper: "Saved applications",
-      icon: <BusinessCenterOutlinedIcon color="primary" />,
-    },
-    {
-      label: "Active hiring processes",
-      value: applications.filter((application) =>
-        ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
-      ).length,
-      helper: "Still moving",
-      icon: <PendingActionsOutlinedIcon color="primary" />,
-    },
-    {
-      label: "Interviews",
-      value: applications.filter((application) => application.status === "Interviewing").length,
-      helper: "Need preparation",
-      icon: <RecordVoiceOverOutlinedIcon color="primary" />,
-    },
-    {
-      label: "Offers",
-      value: applications.filter((application) => application.status === "Offer").length,
-      helper: "Decision stage",
-      icon: <AssignmentTurnedInOutlinedIcon color="primary" />,
-    },
-    {
-      label: "Needs attention",
-      value: followUpApplications.length,
-      helper: followUpApplications.length > 0 ? "Action suggested" : "No action needed",
-      icon: <MarkEmailUnreadOutlinedIcon color="primary" />,
-    },
-    {
-      label: "Status review",
-      value: statusReviewApplications.length,
-      helper: statusReviewApplications.length > 0 ? "Long silence" : "No review needed",
-      icon: <WatchLaterOutlinedIcon color="primary" />,
-    },
-  ];
+  const nextReminders = getAllReminders(applications).filter(reminder => reminder.category === "hardDate")
+    .sort((left, right) => left.dueDate.localeCompare(right.dueDate)).slice(0, 2);
   const pipelineStatuses: ApplicationStatus[] = ["Applied", "Interviewing", "Assignment", "Offer"];
-  const pipelineSnapshot = pipelineStatuses.map((status) => ({
-    status,
-    count: applications.filter((application) => application.status === status).length,
-  }));
-  const activeCount = applications.filter((application) =>
-    ["Applied", "Interviewing", "Assignment", "Offer"].includes(application.status),
-  ).length;
-  const closedCount = applications.length - activeCount;
+  const activeCount = applications.filter(application => pipelineStatuses.includes(application.status)).length;
+  const dashboardStats = [
+    { label: "Total applications", value: applications.length },
+    { label: "Active hiring processes", value: activeCount },
+    { label: "Interviews", value: applications.filter(application => application.status === "Interviewing").length },
+    { label: "Offers", value: applications.filter(application => application.status === "Offer").length },
+    { label: "Needs attention", value: followUpApplications.length },
+    { label: "Status review", value: statusReviewApplications.length },
+  ];
 
   return (
     <PageShell>
-      <PageHeader
-        title="Job search at a glance"
-        description="Your current applications, priorities, and progress at a glance."
-        actions={
-          <Stack direction="row" gap={1.25} alignItems="center" flexWrap="wrap">
-            <Button component={RouterLink} to="/applications" variant="contained">
-              Manage applications
-            </Button>
-          </Stack>
-        }
-      />
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, xl: 8 }}>
-          <SectionCard
-            title="Priority action"
-            description="Start here. This is the highest-signal next step from your current pipeline."
-            action={<Chip label="High priority" color="warning" variant="outlined" />}
-          >
-            {priorityItem ? (
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                justifyContent="space-between"
-                alignItems={{ xs: "flex-start", md: "center" }}
-                gap={2.5}
-                sx={(theme) => ({
-                  p: { xs: 2.5, md: 3.5 },
-                  borderRadius: 2,
-                  background:
-                    theme.palette.mode === "dark"
-                      ? alpha(theme.palette.warning.main, 0.14)
-                      : `linear-gradient(90deg, ${alpha(theme.palette.warning.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
-                  border: 1,
-                  borderColor: alpha(theme.palette.warning.main, theme.palette.mode === "dark" ? 0.32 : 0.22),
-                })}
-              >
-                <Stack direction="row" gap={2} alignItems="flex-start">
-                  <Avatar
-                    sx={(theme) => ({
-                      bgcolor: alpha(theme.palette.warning.main, theme.palette.mode === "dark" ? 0.24 : 0.13),
-                      color: "warning.main",
-                      width: 56,
-                      height: 56,
-                    })}
-                  >
-                    <PendingActionsOutlinedIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="overline" color="warning.main">
-                      {priorityItem.application.companyName}
-                    </Typography>
-                    <Typography variant="h5" sx={{ mt: 0.25 }}>
-                      {priorityItem.nextAction.title} for {priorityItem.application.jobTitle}
-                    </Typography>
-                    <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 640 }}>
-                      {priorityItem.nextAction.description}
-                    </Typography>
-                    <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center" sx={{ mt: 1.5 }}>
-                      <StatusChip status={priorityItem.application.status} />
-                      <Chip
-                        label={getApplicationDateContext(priorityItem.application)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Stack>
-                  </Box>
-                </Stack>
-                <Button
-                  component={RouterLink}
-                  to={`/applications/${priorityItem.application.id}`}
-                  variant="contained"
-                  endIcon={<ChevronRightOutlinedIcon />}
-                  sx={{ minWidth: 180 }}
-                >
-                  Open application
-                </Button>
-              </Stack>
-            ) : (
-              <Typography color="text.secondary">
-                Add applications to surface the most important next step here.
-              </Typography>
-            )}
-          </SectionCard>
-        </Grid>
-        <Grid size={{ xs: 12, xl: 4 }}>
-          <SectionCard
-            title="Schedule summary"
-            description="Counts show hard-date commitments. Suggested attention is listed separately in Schedule."
-            action={
-              <Button component={RouterLink} to="/schedule" variant="contained" endIcon={<ChevronRightOutlinedIcon />}>
-                View schedule
-              </Button>
-            }
-          >
-            {reminders.length > 0 ? (
+      <PageHeader title="Your job search" description="Your applications and what to do next." actions={<Button component={RouterLink} to="/applications" variant="outlined">Manage applications</Button>} />
+      <Grid container spacing={{ xs: 3, md: 4 }}>
+        <Grid size={{ xs: 12, md: 8 }}>
               <Stack gap={2}>
-                <Grid container spacing={1.25}>
-                  {reminderGroups.map((group, index) => (
-                    <Grid key={group.key} size={{ xs: 4 }}>
-                      <Box
-                        sx={(theme) => ({
-                          p: 1.5,
-                          textAlign: "center",
-                          border: 1,
-                          borderColor:
-                            index === 0
-                              ? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.42 : 0.2)
-                              : "divider",
-                          borderRadius: 2,
-                          bgcolor:
-                            index === 0
-                              ? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.12 : 0.04)
-                              : alpha(theme.palette.background.default, theme.palette.mode === "dark" ? 0.42 : 0.7),
-                        })}
-                      >
-                        <Typography variant="h5" color={index === 0 ? "error.main" : "text.primary"}>
-                          {group.reminders.length}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                          {group.title}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-                <Divider />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {nextReminder?.category === "suggestedAttention" ? "Suggested attention" : "Next commitment"}
-                  </Typography>
-                  <Typography fontWeight={700} sx={{ mt: 0.5 }}>
-                    {nextReminder
-                      ? `${nextReminder.title}: ${nextReminder.companyName}`
-                      : "No reminder queued"}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {nextReminder ? formatApplicationDate(nextReminder.dueDate, "No due date") : "Add a deadline to create one."}
-                  </Typography>
-                </Box>
-              </Stack>
-            ) : (
-              <Typography color="text.secondary">
-                Reminders will appear here as applications pick up deadlines, interviews, and follow-up needs.
-              </Typography>
-            )}
-          </SectionCard>
-        </Grid>
-      </Grid>
-      <Grid container spacing={2.5}>
-        {dashboardStats.map((stat) => (
-          <Grid key={stat.label} size={{ xs: 12, sm: 6, lg: 4, xl: 2 }}>
-            <Card sx={{ height: "100%" }}>
-              <CardContent sx={{ p: 2.5 }}>
-                <Stack gap={2}>
-                  <Avatar
-                    sx={{
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
-                      color: "primary.main",
-                      width: 42,
-                      height: 42,
-                    }}
-                  >
-                    {stat.icon}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {stat.label}
-                    </Typography>
-                    <Typography variant="h4">{stat.value}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                      {stat.helper}
-                    </Typography>
-                  </Box>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                  <Stack direction="row" alignItems="center" gap={1.5}><NextActionMark /><Typography component="h2" variant="h6">Next Action</Typography></Stack>
+                  {priorityItem?.nextAction.needsAttention ? <Typography variant="body2" color="text.secondary">Action suggested</Typography> : null}
                 </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, xl: 7 }}>
-          <SectionCard
-            title="Pipeline snapshot"
-            description="A compact health check. Insights keeps the deeper breakdown."
-          >
-            <Stack gap={1.5}>
-              <Stack direction={{ xs: "column", sm: "row" }} gap={1.25}>
-                <Box sx={{ flex: 1, p: 1.75, border: 1, borderColor: "divider", borderRadius: 2 }}>
-                  <Typography variant="overline" color="text.secondary">
-                    Active
-                  </Typography>
-                  <Typography variant="h4">{activeCount}</Typography>
-                  <Typography variant="body2" color="text.secondary">Processes still worth tracking closely.</Typography>
-                </Box>
-                <Box sx={{ flex: 1, p: 1.75, border: 1, borderColor: "divider", borderRadius: 2 }}>
-                  <Typography variant="overline" color="text.secondary">
-                    Closed
-                  </Typography>
-                  <Typography variant="h4">{closedCount}</Typography>
-                  <Typography variant="body2" color="text.secondary">Rejected, ghosted, or withdrawn applications.</Typography>
-                </Box>
-              </Stack>
-              <Divider />
-              <Typography variant="overline" color="text.secondary">
-                Current active funnel
-              </Typography>
-              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
-                {pipelineSnapshot.map(({ status, count }) => (
-                  <Stack key={status} direction="row" gap={1} alignItems="center">
-                    <Chip
-                      label={`${applicationStatusLabel[status]}: ${count}`}
-                      variant="outlined"
-                      size="small"
-                    />
-                    {status !== "Offer" ? <ChevronRightOutlinedIcon fontSize="small" color="action" /> : null}
+                {priorityItem ? <>
+                  <Box>
+                    <Typography component="h3" variant="h4" sx={{ fontSize: { xs: "1.625rem", md: "1.875rem" }, maxWidth: "28ch", textWrap: "balance" }}>{priorityItem.nextAction.title}</Typography>
+                    <Typography sx={{ mt: 0.75 }}>{priorityItem.application.jobTitle}</Typography>
+                    <Typography sx={{ mt: 0.75 }} fontWeight={600}>{priorityItem.application.companyName}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, maxWidth: "65ch" }}>{priorityItem.nextAction.description}</Typography>
+                  </Box>
+                  <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
+                    <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                      <StatusChip status={priorityItem.application.status} />
+                      <Typography variant="body2" color="text.secondary">{getApplicationDateContext(priorityItem.application)}</Typography>
+                    </Stack>
+                    <Button component={RouterLink} to={`/applications/${priorityItem.application.id}`} variant="contained" endIcon={<ChevronRightOutlinedIcon />}>Open application</Button>
                   </Stack>
-                ))}
+                </> : <Typography color="text.secondary">{applications.length === 0 ? "Add applications to surface the most important next step here." : "No next actions for your current applications."}</Typography>}
               </Stack>
-            </Stack>
-          </SectionCard>
         </Grid>
-        <Grid size={{ xs: 12, xl: 5 }}>
-          <SectionCard
-            title="Next actions"
-            description="Suggested actions are still generated locally from the existing next-action rules."
-          >
-            {nextActionItems.length > 0 ? (
-              <List disablePadding>
-                {nextActionItems.map(({ application, nextAction }, index) => (
-                  <ListItem
-                    key={application.id}
-                    disableGutters
-                    sx={{
-                      color: "inherit",
-                      borderTop: index === 0 ? 0 : 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    <ListItemButton
-                      component={RouterLink}
-                      to={`/applications/${application.id}`}
-                      sx={{
-                        px: 0,
-                        py: 1.25,
-                        gap: 1.5,
-                        alignItems: "flex-start",
-                        "&:hover": {
-                          bgcolor: "action.hover",
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={(theme) => ({
-                          width: 8,
-                          height: 8,
-                          borderRadius: 999,
-                          bgcolor: getActionAccentColor(nextAction.color, theme),
-                          flexShrink: 0,
-                          mt: 1,
-                        })}
-                      />
-                      <ListItemText
-                        disableTypography
-                        primary={
-                          <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
-                            <Typography fontWeight={800}>{application.companyName}</Typography>
-                            <Typography color="text.secondary">·</Typography>
-                            <Typography fontWeight={700}>{nextAction.title}</Typography>
-                          </Stack>
-                        }
-                        secondary={
-                          <Stack gap={1} sx={{ mt: 0.5 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              {nextAction.description}
-                            </Typography>
-                            <Stack direction="row" gap={1} flexWrap="wrap">
-                              <Chip label={getApplicationDateContext(application)} size="small" variant="outlined" />
-                              <StatusChip status={application.status} />
-                            </Stack>
-                          </Stack>
-                        }
-                      />
-                      <ChevronRightOutlinedIcon color="action" sx={{ flexShrink: 0, mt: 0.75 }} />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <Typography color="text.secondary">
-                No additional next actions are queued behind the current priority.
-              </Typography>
-            )}
+        <Grid size={{ xs: 12, md: 4 }} sx={theme => ({ borderLeft: { md: `1px solid ${theme.palette.divider}` }, pl: { md: 3 } })}>
+          <SectionCard variant="plain" title="Schedule summary" action={<Button component={RouterLink} to="/schedule" endIcon={<ChevronRightOutlinedIcon />}>View schedule</Button>}>
+            <Stack direction="row" gap={2} justifyContent="space-between">
+              {reminderGroups.map((group, index) => <Box key={group.key}>
+                <Typography fontWeight={650} sx={{ fontVariantNumeric: "tabular-nums" }} color={index === 0 && group.reminders.length > 0 ? "error.main" : "text.primary"}>{group.reminders.length}</Typography>
+                <Typography variant="body2" color="text.secondary">{group.title}</Typography>
+              </Box>)}
+            </Stack>
+            <Divider />
+            {nextReminders.length > 0 ? nextReminders.map(reminder => <Stack key={reminder.id} direction="row" gap={2}>
+              <Typography variant="body2" sx={{ minWidth: 86, fontVariantNumeric: "tabular-nums" }}>{formatApplicationDate(reminder.dueDate, "No due date")}</Typography>
+              <Box><Typography fontWeight={600}>{reminder.title}</Typography><Typography variant="body2" color="text.secondary">{reminder.companyName} · {reminder.jobTitle}</Typography></Box>
+            </Stack>) : <Typography color="text.secondary">No dates scheduled. Recorded deadlines and interviews will appear here.</Typography>}
           </SectionCard>
         </Grid>
       </Grid>
+      <Box component="dl" aria-label="Application summary" sx={{ m: 0, display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" }, borderTop: 1, borderBottom: 1, borderColor: "divider", py: 1 }}>
+        {dashboardStats.map(stat => <Box key={stat.label} sx={{ px: { xs: 1, md: 2 }, py: 1.5 }}>
+          <Typography component="dt" variant="body2" color="text.secondary">{stat.label}</Typography>
+          <Typography component="dd" variant="h6" sx={{ m: 0, mt: 0.5, fontVariantNumeric: "tabular-nums" }}>{stat.value}</Typography>
+        </Box>)}
+      </Box>
+      <Box>
+          <SectionCard variant="plain" title="Next actions">
+            {nextActionItems.length > 0 ? <List disablePadding>
+              {nextActionItems.map(({ application, nextAction }, index) => <ListItem key={application.id} disablePadding sx={{ borderTop: index > 0 ? 1 : 0, borderColor: "divider" }}>
+                <ListItemButton component={RouterLink} to={`/applications/${application.id}`} sx={{ px: 0, py: 2, gap: 2, alignItems: "start", display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) auto", md: "minmax(0, 1fr) minmax(0, 1.4fr) minmax(140px, .7fr) auto" } }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography fontWeight={600}>{application.jobTitle}</Typography>
+                    <Typography variant="body2" color="text.secondary">{application.companyName}</Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 0, gridColumn: { xs: 1, md: "auto" } }}>
+                    <Typography sx={{ mt: 0.5 }}>{nextAction.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{nextAction.description}</Typography>
+                  </Box>
+                    <Stack gap={1} alignItems="flex-start" sx={{ gridColumn: { xs: 1, md: "auto" } }}>
+                      <StatusChip status={application.status} />
+                      <Typography variant="body2" color="text.secondary">{getApplicationDateContext(application)}</Typography>
+                    </Stack>
+                  <ChevronRightOutlinedIcon color="action" sx={{ gridColumn: { xs: 2, md: "auto" }, gridRow: { xs: 1, md: "auto" } }} />
+                </ListItemButton>
+              </ListItem>)}
+            </List> : <Typography color="text.secondary">No additional next actions are queued behind the current priority.</Typography>}
+          </SectionCard>
+      </Box>
     </PageShell>
   );
 }
 
 function getApplicationDateContext(application: JobApplication): string {
-  if (application.deadline) {
-    return `Due ${formatApplicationDate(application.deadline, "No deadline")}`;
-  }
-
-  if (application.appliedDate) {
-    return `Applied ${formatApplicationDate(application.appliedDate, "Not applied")}`;
-  }
-
+  if (application.deadline) return `Due ${formatApplicationDate(application.deadline, "No deadline")}`;
+  if (application.appliedDate) return `Applied ${formatApplicationDate(application.appliedDate, "Not applied")}`;
   return `Updated ${formatApplicationDate(application.updatedAt, "recently")}`;
-}
-
-function getActionAccentColor(color: ChipProps["color"], theme: Theme): string {
-  switch (color) {
-    case "primary":
-      return theme.palette.primary.main;
-    case "secondary":
-      return theme.palette.secondary.main;
-    case "success":
-      return theme.palette.success.main;
-    case "warning":
-      return theme.palette.warning.main;
-    case "error":
-      return theme.palette.error.main;
-    case "info":
-      return theme.palette.info.main;
-    case "default":
-    case undefined:
-      return theme.palette.text.secondary;
-  }
 }

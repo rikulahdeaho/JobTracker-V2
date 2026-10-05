@@ -2,13 +2,93 @@
 
 ## Current scope
 
-**Application Form UX Refinement is implemented.** Remaining work is manual
+**Search agenda visual identity and Application Form UX Refinement are implemented.** Remaining work is manual
 validation of native date controls and the combined workflow. Deployment is
 complete, as confirmed by the project owner on 2026-10-05.
 
 The documentation review updates descriptions and removes obsolete plans.
 It does not expand the product scope or change application behavior.
 See [roadmap](roadmap.md) for uncommitted future options.
+
+### UI polish (2026-10-05)
+
+The requested polish pass addresses findings 1–7 of the
+[technical UI audit](ui-audit-2026-10-05.md). It corrects Dashboard Closed counts
+and urgency labels, improves contrast and accessible names, separates heading
+semantics from visual size, adds form keyboard submission/error focus, and
+improves touch targets and text wrapping. Native date controls follow the theme.
+The original visual system and API/data workflows are preserved.
+
+Validation: the full frontend suite ran 139 tests; 138 passed initially, and the
+remaining light-navigation contrast case passed after correction in a targeted
+rerun of both theme tests. Lint and the final production build passed. The
+bundled UI detector returned no findings. The build still reports a large
+JavaScript chunk (883.62 kB; 268.31 kB gzip) and an 874.71 kB font.
+
+Local browser checks used the real signed-in session and API: Dashboard,
+Applications, Insights, and Details loaded; light/dark switching worked; the
+Add form validated via Enter and focused Company; footer buttons remained visible
+with 44 px heights. Applications and Details had no page-level horizontal overflow
+at 320 px; mobile cards and Insights were also checked at 390 px, and the form
+at 1440 px. Checks did not save or delete application records. Full screen-reader,
+zoom, and production smoke testing were not performed in this pass.
+
+The audit's initial-loading finding remains open: eager routes and the large TTF
+font are unchanged. The original audit score is historical and has not been
+recalculated. Remaining native date persistence and combined-workflow checks
+below are still outstanding.
+
+## Design refinement (2026-10-05)
+
+The owner requested all five improvements from the
+[visual critique](../.impeccable/critique/2026-10-05T06-38-43Z__web-src.md).
+The Dashboard now uses one priority panel and compact counts; mobile Applications
+discloses secondary filters; Details places Record activity alongside Next Action;
+Settings groups future-control previews; Schedule uses neutral clear states and
+puts recorded dates first. Typography, card framing and explanatory copy are quieter.
+MUI, the existing application workflows, and API behavior are preserved.
+
+Validation: all 139 frontend tests passed after updating assertions for the revised
+presentation. Final lint and production build passed; the existing bundle-size
+warning remains (879.07 kB JavaScript, 267.41 kB gzip). The UI detector returned
+no findings. Browser checks covered search/reset, mobile filters and sorting,
+navigation, opening/canceling the activity dialog, theme switching and settings
+preview disclosure. Desktop and 320/390 px mobile layouts were inspected with
+existing records. No application records were created, edited or deleted.
+
+
+## Search agenda implementation (2026-10-05)
+
+The approved [whole-app plan](search-agenda-implementation-plan.md) applies the
+Search agenda direction to Dashboard, Applications, Details, Schedule, Insights,
+Settings and the shared forms. A single blue accent, neutral stage markers,
+consistent Inter hierarchy and flatter surfaces replace competing color blocks
+and unnecessary card framing. Dashboard prioritizes Next Action and recorded
+Schedule dates; Pipeline snapshot is removed, with stage distribution retained
+in Insights. Existing counters, filters, workflow rules, MUI, API and auth remain.
+
+Insights labels current-stage counts accurately and links suggestions to Details.
+Missing Applied dates are distinguished from applications not yet sent.
+Add/Edit and activity dialogs confirm discarding actual unsaved changes.
+
+Validation: all 164 frontend tests passed across 13 files. After the final visual
+adjustments, eight relevant Dashboard, Insights and theme tests passed again.
+Final lint and production build passed. The existing large-chunk warning remains
+(879.15 kB JavaScript, 267.00 kB gzip; 874.71 kB font). The UI detector returned
+no findings. No API code changed during this pass.
+
+Local browser checks covered all six pages in light/dark at desktop and 390 px,
+Dashboard at 1280 px, and Dashboard/Applications/Details at 320 px without
+page-level horizontal overflow. Add/Edit/activity dialogs, discard confirmation,
+navigation, theme controls, search/reset and mobile filters were checked with
+existing signed-in records. No application data was saved or deleted. Screenshots
+are in `.impeccable/review/`. This does not close the native date persistence,
+combined workflow, zoom, screen-reader or production checks below.
+
+Independent finish review: **ship**, no material fixes. The reviewer inspected
+41 valid viewport captures and sampled source against the approved direction.
+Populated Schedule and authentication/error/save-failure states rely on source
+and automated tests rather than a separate live reviewer session.
 
 ## Implemented form behavior
 

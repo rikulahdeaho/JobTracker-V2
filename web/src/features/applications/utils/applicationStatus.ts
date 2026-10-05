@@ -15,24 +15,24 @@ export const applicationStatusLabel: Record<ApplicationStatus, string> = {
 
 export const applicationStatusColor: Record<ApplicationStatus, ChipProps["color"]> = {
   Draft: "default",
-  ToApply: "info",
-  Applied: "primary",
-  Interviewing: "secondary",
-  Assignment: "warning",
+  ToApply: "default",
+  Applied: "default",
+  Interviewing: "default",
+  Assignment: "default",
   Offer: "success",
-  Rejected: "error",
+  Rejected: "default",
   Ghosted: "default",
   Withdrawn: "default",
 };
 
 export const applicationStatusHexColor: Record<ApplicationStatus, string> = {
-  Draft: "#64748B",
-  ToApply: "#0891B2",
-  Applied: "#2563EB",
-  Interviewing: "#7C3AED",
-  Assignment: "#D97706",
+  Draft: "#586672",
+  ToApply: "#586672",
+  Applied: "#586672",
+  Interviewing: "#586672",
+  Assignment: "#586672",
   Offer: "#16A34A",
-  Rejected: "#DC2626",
-  Ghosted: "#64748B",
-  Withdrawn: "#64748B",
+  Rejected: "#586672",
+  Ghosted: "#586672",
+  Withdrawn: "#586672",
 };

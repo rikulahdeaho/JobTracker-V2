@@ -6,10 +6,10 @@ import { bindApiSession } from "../../lib/apiClient";
 import { ApplicationsProvider } from "../applications/context/ApplicationsProvider";
 
 export function AuthScreen({ children }: PropsWithChildren) {
-  return <Container maxWidth="sm" sx={{ py: 10 }}>
-    <Paper sx={{ p: 4 }}><Stack spacing={3} alignItems="center">
-      <Typography variant="h4">JobTracker</Typography>
-      <Typography color="text.secondary">Career Co-pilot</Typography>
+  return <Container maxWidth="sm" sx={{ py: { xs: 5, sm: 10 } }}>
+    <Paper sx={{ p: { xs: 3, sm: 4 } }}><Stack spacing={3} alignItems="center" sx={{ textAlign: "center" }}>
+      <Typography component="h1" variant="h4" fontWeight={600}>JobTracker</Typography>
+      <Typography color="text.secondary">Your applications, activity and next steps.</Typography>
       {children}
     </Stack></Paper>
   </Container>;

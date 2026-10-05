@@ -1,10 +1,7 @@
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LaunchOutlinedIcon from "@mui/icons-material/LaunchOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import SourceOutlinedIcon from "@mui/icons-material/SourceOutlined";
 import {
   Alert,
   Avatar,
@@ -23,17 +20,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { applicationMethodLabels, followUpModeLabels } from "../utils/applicationContact";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "../../../components/ui/PageSection";
+import { NextActionMark } from "../../../components/ui/NextActionMark";
 import { ApplicationEventDialog } from "../components/ApplicationEventDialog";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 import { ApplicationDataState } from "../components/ApplicationDataState";
 import { useApplicationQuery } from "../api/applicationQueries";
 import { getApiErrorMessage, isNotFoundError } from "../../../lib/apiClient";
-import { NextActionChip } from "../components/NextActionChip";
 import { TimelineEventList } from "../components/TimelineEventList";
 import { StatusChip } from "../components/StatusChip";
 import { useApplications } from "../context/ApplicationsContext";
@@ -109,7 +105,7 @@ export function ApplicationDetailsPage() {
 
   return (
     <PageShell>
-      <Stack gap={2.5}>
+      <Stack gap={{ xs: 3, md: 4 }}>
         <ApplicationDataState isPending={false} error={query.error} onRetry={() => { void query.refetch(); }} />
         <Button
           component={RouterLink}
@@ -120,37 +116,36 @@ export function ApplicationDetailsPage() {
           Back to applications
         </Button>
 
-        <Card>
-          <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+        <Card sx={{ border: 0, bgcolor: "transparent", boxShadow: "none" }}>
+          <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
             <Stack
               direction={{ xs: "column", md: "row" }}
               justifyContent="space-between"
               alignItems={{ xs: "flex-start", md: "center" }}
               gap={2.5}
             >
-              <Stack direction="row" gap={2} alignItems="flex-start">
+              <Stack direction="row" gap={2} alignItems="flex-start" sx={{ minWidth: 0 }}>
                 <Avatar
                   variant="rounded"
-                  sx={(theme) => ({
-                    width: 64,
-                    height: 64,
-                    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.24 : 0.1),
-                    color: "primary.main",
-                    fontWeight: 800,
-                    fontSize: 28,
-                    border: 1,
-                    borderColor: "divider",
-                  })}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    bgcolor: "action.hover",
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    fontSize: 22,
+                  }}
                 >
                   {companyInitial}
                 </Avatar>
-                <Box>
-                  <Typography variant="h4" gutterBottom>
-                    {application.jobTitle} at {application.companyName}
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography component="h1" variant="h4" gutterBottom sx={{ overflowWrap: "anywhere" }}>
+                    {application.jobTitle}
                   </Typography>
-                  <Stack direction="row" gap={1} flexWrap="wrap">
-                    <StatusChip status={application.status} />
-                    <NextActionChip application={application} />
+                  <Stack gap={1.5}>
+                    <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{application.companyName}</Typography>
+                    <Box><StatusChip status={application.status} /></Box>
                   </Stack>
                 </Box>
               </Stack>
@@ -159,7 +154,7 @@ export function ApplicationDetailsPage() {
                   Edit
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant="text"
                   color="error"
                   startIcon={<DeleteOutlineOutlinedIcon />}
                   onClick={() => { setDeleteError(null); setDeleteOpen(true); }}
@@ -171,12 +166,7 @@ export function ApplicationDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card
-          sx={(theme) => ({
-            bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.18 : 0.1),
-            borderColor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.38 : 0.22),
-          })}
-        >
+        <Card>
           <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
             <Stack
               direction={{ xs: "column", md: "row" }}
@@ -184,25 +174,23 @@ export function ApplicationDetailsPage() {
               alignItems={{ xs: "flex-start", md: "center" }}
               gap={2}
             >
-              <Box>
-                <Typography variant="overline" color="primary.main">
-                  Next action
+              <Box sx={{ minWidth: 0 }}>
+                <Typography component="h2" variant="h6" sx={{ display: "flex", gap: 1.5, alignItems: "center", overflowWrap: "anywhere" }}>
+                  <NextActionMark />
+                  <span>Next Action · {nextAction.title}</span>
                 </Typography>
-                <Typography variant="h5" sx={{ mt: 0.25 }}>
-                  {nextAction.title}
-                </Typography>
-                <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 720 }}>
+                <Typography sx={{ mt: 0.75, maxWidth: "65ch" }}>
                   {nextAction.description}
                 </Typography>
                 <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
                   {nextAction.needsAttention ? (
-                    <Chip label="Needs attention" color="secondary" variant="outlined" />
+                    <Chip label="Needs attention" variant="outlined" />
                   ) : null}
                   {nextAction.needsStatusReview ? <>
                     <Button disabled={isReviewSaving} onClick={() => {
                       setReviewMessage("Kept active. Review status remains available until you record new communication or change status.");
                     }}>Keep active</Button>
-                    <Button disabled={isReviewSaving} color="warning" onClick={async () => {
+                    <Button disabled={isReviewSaving} onClick={async () => {
                       setIsReviewSaving(true);
                       setReviewError(null);
                       try {
@@ -216,51 +204,48 @@ export function ApplicationDetailsPage() {
                 {reviewMessage && <Alert severity="info" sx={{ mt: 1 }}>{reviewMessage}</Alert>}
                 {reviewError && <Alert severity="error" sx={{ mt: 1 }}>{reviewError}</Alert>}
               </Box>
+              <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => setEventOpen(true)} sx={{ flexShrink: 0 }}>Record activity</Button>
             </Stack>
           </CardContent>
         </Card>
 
-        <Grid container spacing={2.5}>
+        <Grid container spacing={4}>
           <Grid size={{ xs: 12, lg: 8 }}>
-            <Stack gap={2.5}>
-              <Card>
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+            <Stack gap={4}>
+              <Card sx={{ border: 0, bgcolor: "transparent" }}>
+                <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
                   <Stack gap={2}>
-                    <Typography variant="h6">Description & notes</Typography>
+                    <Typography component="h2" variant="h6">Description & notes</Typography>
                     <Divider />
                     <Box>
-                      <Typography variant="overline" color="text.secondary">
+                      <Typography component="h3" variant="subtitle2">
                         Job description
                       </Typography>
-                      <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 760, whiteSpace: "pre-line", lineHeight: 1.7 }}>
+                      <Typography sx={{ mt: 1, maxWidth: "75ch", whiteSpace: "pre-line", overflowWrap: "anywhere" }}>
                         {application.jobDescription || "No job description saved for this application yet."}
                       </Typography>
                     </Box>
                     <Box
                       sx={(theme) => ({
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: alpha(theme.palette.secondary.main, theme.palette.mode === "dark" ? 0.12 : 0.06),
-                        border: 1,
-                        borderColor: "divider",
+                        pt: 2,
+                        borderTop: `1px solid ${theme.palette.divider}`,
                       })}
                     >
-                      <Typography variant="overline" color="text.secondary">
+                      <Typography component="h3" variant="subtitle2">
                         My notes
                       </Typography>
-                      <Typography color="text.secondary" sx={{ mt: 0.75, whiteSpace: "pre-line", lineHeight: 1.7 }}>
+                      <Typography sx={{ mt: 1, maxWidth: "75ch", whiteSpace: "pre-line", overflowWrap: "anywhere" }}>
                         {application.notes || "No notes saved for this application yet."}
                       </Typography>
                     </Box>
                   </Stack>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+              <Card sx={{ border: 0, bgcolor: "transparent" }}>
+                <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
                   <Stack gap={1.5}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="h6">Timeline</Typography>
-                      <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => setEventOpen(true)}>Record activity</Button>
+                    <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
+                      <Typography component="h2" variant="h6">Timeline</Typography>
                     </Stack>
                     <Typography color="text.secondary">
                       Recorded application activity. Status changes are saved automatically.
@@ -273,24 +258,24 @@ export function ApplicationDetailsPage() {
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
             <Stack gap={2.5}>
-              <Card>
-                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+              <Card sx={{ border: 0, bgcolor: "transparent" }}>
+                <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
                   <Stack gap={1.75}>
-                    <Typography variant="h6">Quick facts</Typography>
+                    <Typography component="h2" variant="h6">Quick facts</Typography>
                     <Divider />
                     <DetailCard label="Application method" value={applicationMethodLabels[application.applicationMethod] ?? "Unknown"} />
                     <DetailCard label="Contact person" value={application.contactPerson || "Not specified"} />
                     <DetailCard label="Contact email" value={application.contactEmail || "Not specified"} />
                     <DetailCard label="Follow-up preference" value={followUpModeLabels[application.followUpMode] ?? "Unknown"} />
-                    <FactRow icon={<PlaceOutlinedIcon fontSize="small" />} label="Location" value={application.location || "Location not specified"} />
-                    <FactRow icon={<SourceOutlinedIcon fontSize="small" />} label="Source" value={application.source || "Source not specified"} />
-                    <FactRow
-                      icon={<CalendarTodayOutlinedIcon fontSize="small" />}
+                    <DetailCard label="Location" value={application.location || "Location not specified"} />
+                    <DetailCard label="Source" value={application.source || "Source not specified"} />
+                    <DetailCard
                       label="Deadline"
                       value={formatApplicationDate(application.deadline, "No deadline")}
                     />
                     <DetailCard label="Salary range" value={application.salaryRange || "Not specified"} />
-                    <DetailCard label="Applied date" value={formatApplicationDate(application.appliedDate, "Not applied yet")} />
+                    <DetailCard label="Applied date" value={formatApplicationDate(application.appliedDate,
+                      application.status === "Draft" || application.status === "ToApply" ? "Not applied yet" : "Applied date not recorded")} />
                     <DetailCard label="Created" value={formatApplicationDate(application.createdAt, "Unknown")} />
                     <DetailCard label="Updated" value={formatApplicationDate(application.updatedAt, "Unknown")} />
                     {application.jobUrl ? (
@@ -352,38 +337,18 @@ type DetailItemProps = {
 function DetailCard({ label, value }: DetailItemProps) {
   return (
     <Stack
-      direction="row"
+      direction="column"
       justifyContent="space-between"
       alignItems="flex-start"
-      gap={2}
-      sx={{ py: 0.75, borderTop: 1, borderColor: "divider" }}
+      gap={0.5}
+      sx={{ py: 0.25, minWidth: 0 }}
     >
       <Box>
-        <Typography variant="overline" color="text.secondary">
+        <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
       </Box>
-      <Typography sx={{ textAlign: "right", maxWidth: "60%" }}>{value}</Typography>
-    </Stack>
-  );
-}
-
-type FactRowProps = {
-  icon: ReactNode;
-  label: string;
-  value: string;
-};
-
-function FactRow({ icon, label, value }: FactRowProps) {
-  return (
-    <Stack direction="row" gap={1.25} alignItems="flex-start">
-      <Box sx={{ color: "text.secondary", mt: 0.25 }}>{icon}</Box>
-      <Box>
-        <Typography variant="overline" color="text.secondary">
-          {label}
-        </Typography>
-        <Typography>{value}</Typography>
-      </Box>
+      <Typography sx={{ overflowWrap: "anywhere", fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
     </Stack>
   );
 }

@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -26,6 +26,7 @@ import { cleanJobDescriptionFormatting } from "../utils/jobDescriptionFormatting
 import { applicationMethodLabels, followUpModeLabels, isValidContactEmail } from "../utils/applicationContact";
 import { applicationStatusLabel } from "../utils/applicationStatus";
 import { getApiErrorMessage } from "../../../lib/apiClient";
+import { UnsavedChangesDialog } from "../../../components/ui/UnsavedChangesDialog";
 
 type ApplicationFormDialogProps = {
   mode: "add" | "edit";
@@ -47,10 +48,17 @@ export function ApplicationFormDialog({
   onSubmit,
 }: ApplicationFormDialogProps) {
   const [values, setValues] = useState<JobApplicationFormValues>(initialValues ?? emptyApplicationFormValues);
+  const [baseline] = useState(() => ({ ...(initialValues ?? emptyApplicationFormValues) }));
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const submitting = useRef(false);
+  const focusValidationError = useRef(false);
+  const companyInput = useRef<HTMLInputElement>(null);
+  const jobTitleInput = useRef<HTMLInputElement>(null);
+  const contactPersonInput = useRef<HTMLInputElement>(null);
+  const contactEmailInput = useRef<HTMLInputElement>(null);
   const [descriptionBeforeCleanup, setDescriptionBeforeCleanup] = useState<string | null>(null);
   const [contactExpanded, setContactExpanded] = useState(mode === "edit" && Boolean(
     initialValues?.contactPerson || initialValues?.contactEmail ||
@@ -65,6 +73,26 @@ export function ApplicationFormDialog({
     : values.followUpMode === "NotAvailable"
       ? "No direct follow-up channel; response monitoring still applies."
       : "Follow-up suggestions require a valid contact email.";
+
+  const requestClose = () => {
+    if (submitting.current) return;
+    const dirty = (Object.keys(baseline) as (keyof JobApplicationFormValues)[])
+      .some(field => values[field] !== baseline[field]);
+    if (dirty) setConfirmDiscard(true);
+    else onClose();
+  };
+
+  useEffect(() => {
+    if (!focusValidationError.current) return;
+    const firstInvalidInput = errors.companyName ? companyInput.current
+      : errors.jobTitle ? jobTitleInput.current
+        : errors.contactPerson ? contactPersonInput.current
+          : errors.contactEmail ? contactEmailInput.current : null;
+    if (firstInvalidInput) {
+      firstInvalidInput.focus();
+      focusValidationError.current = false;
+    }
+  }, [errors, contactExpanded]);
 
   const handleFieldChange =
     (field: keyof JobApplicationFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +126,7 @@ export function ApplicationFormDialog({
       nextErrors.contactEmail = "Enter a valid contact email address (at most 254 characters).";
     }
     if (values.contactPerson.length > 200) nextErrors.contactPerson = "Use at most 200 characters.";
+    focusValidationError.current = Object.keys(nextErrors).length > 0;
     setErrors(nextErrors);
     if (nextErrors.contactEmail || nextErrors.contactPerson) setContactExpanded(true);
 
@@ -119,9 +148,9 @@ export function ApplicationFormDialog({
   };
 
   return (
-    <Dialog
+    <><Dialog
       open={open}
-      onClose={isSaving ? undefined : onClose}
+      onClose={requestClose}
       fullWidth
       maxWidth={false}
       PaperProps={{
@@ -133,8 +162,11 @@ export function ApplicationFormDialog({
         },
       }}
     >
-      <DialogTitle sx={{ pb: 1.5, fontSize: "1.25rem", fontWeight: 750 }}>
-        {mode === "add" ? "Add Application" : "Edit Application"}
+      <Box component="form" noValidate
+        onSubmit={(event) => { event.preventDefault(); void handleSubmit(); }}
+        sx={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
+      <DialogTitle sx={{ pb: 1.5, fontSize: "1.25rem", fontWeight: 600 }}>
+        {mode === "add" ? "Add application" : "Edit application"}
       </DialogTitle>
       <DialogContent
         dividers
@@ -145,12 +177,13 @@ export function ApplicationFormDialog({
       >
         <Stack gap={2.5}>
           {submitError ? <Alert severity="error">{submitError}</Alert> : null}
-          <FormSection title="Basic Info">
+          <FormSection title="Basic info">
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   disabled={isSaving}
                   label="Company"
+                  inputRef={companyInput}
                   value={values.companyName}
                   onChange={handleFieldChange("companyName")}
                   fullWidth
@@ -163,6 +196,7 @@ export function ApplicationFormDialog({
                 <TextField
                   disabled={isSaving}
                   label="Job title"
+                  inputRef={jobTitleInput}
                   value={values.jobTitle}
                   onChange={handleFieldChange("jobTitle")}
                   fullWidth
@@ -260,10 +294,10 @@ export function ApplicationFormDialog({
           <OptionalFormSection title="Contact" expanded={contactExpanded} onChange={setContactExpanded} disabled={isSaving}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField fullWidth disabled={isSaving} label="Contact person" value={values.contactPerson} onChange={handleFieldChange("contactPerson")} error={!!errors.contactPerson} helperText={errors.contactPerson} />
+                <TextField inputRef={contactPersonInput} fullWidth disabled={isSaving} label="Contact person" value={values.contactPerson} onChange={handleFieldChange("contactPerson")} error={!!errors.contactPerson} helperText={errors.contactPerson} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField fullWidth disabled={isSaving} label="Contact email" type="email" value={values.contactEmail} onChange={handleFieldChange("contactEmail")} error={!!errors.contactEmail} helperText={errors.contactEmail} />
+                <TextField inputRef={contactEmailInput} fullWidth disabled={isSaving} label="Contact email" type="email" value={values.contactEmail} onChange={handleFieldChange("contactEmail")} error={!!errors.contactEmail} helperText={errors.contactEmail} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField select fullWidth disabled={isSaving} label="Follow-up preference" value={values.followUpMode} onChange={handleFieldChange("followUpMode")} helperText={followUpHelp}>
@@ -274,7 +308,7 @@ export function ApplicationFormDialog({
           </OptionalFormSection>
 
           <FormSection
-            title="Job Description"
+            title="Job description"
             actions={<Stack direction="row" gap={0.5} flexWrap="wrap">
               <Button size="small" disabled={isSaving || !values.jobDescription.trim()} onClick={() => {
                 const cleaned = cleanJobDescriptionFormatting(values.jobDescription);
@@ -332,12 +366,16 @@ export function ApplicationFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: { xs: 2.5, md: 3 }, py: 2 }}>
-        <Button onClick={onClose} disabled={isSaving}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={isSaving}>
+        <Button onClick={requestClose} disabled={isSaving}>Cancel</Button>
+        <Button variant="contained" type="submit" disabled={isSaving}>
           {isSaving ? "Saving…" : mode === "add" ? "Add application" : "Save changes"}
         </Button>
       </DialogActions>
+      </Box>
     </Dialog>
+    <UnsavedChangesDialog open={confirmDiscard} onKeepEditing={() => setConfirmDiscard(false)}
+      onDiscard={() => { setConfirmDiscard(false); onClose(); }} />
+    </>
   );
 }
 
@@ -350,7 +388,7 @@ function FormSection({ title, actions, children }: FormSectionProps) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" sx={{ mb: 1 }}>
-        <Typography component="h3" variant="overline" color="text.secondary">
+        <Typography component="h3" variant="body2" fontWeight={600}>
           {title}
         </Typography>
         {actions}
@@ -375,7 +413,7 @@ function OptionalFormSection({ title, expanded, onChange, disabled, children }: 
       disableGutters elevation={0} slotProps={{ transition: { unmountOnExit: true } }}
       sx={{ border: 1, borderColor: "divider", borderRadius: 1, "&::before": { display: "none" } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />} id={`${sectionId}-heading`} aria-controls={`${sectionId}-content`}>
-        <Typography component="h3" variant="body2" fontWeight={600} color="text.secondary">{title}</Typography>
+        <Typography component="span" variant="body2" fontWeight={600} color="text.secondary">{title}</Typography>
       </AccordionSummary>
       <AccordionDetails id={`${sectionId}-content`}>{children}</AccordionDetails>
     </Accordion>

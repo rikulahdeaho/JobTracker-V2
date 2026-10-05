@@ -15,6 +15,8 @@ type SectionCardProps = PropsWithChildren<{
   title: string;
   description?: string;
   action?: ReactNode;
+  variant?: "card" | "plain";
+  headingComponent?: "h2" | "h3";
 }>;
 
 export function PageShell({ children, maxWidth = 1536 }: PageShellProps) {
@@ -34,7 +36,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
       gap={2.5}
     >
       <Box sx={{ maxWidth: 720 }}>
-        <Typography variant="h4" gutterBottom sx={{ lineHeight: 1.12 }}>
+        <Typography component="h1" variant="h4" gutterBottom sx={{ fontSize: { xs: "1.625rem", md: "1.875rem" } }}>
           {title}
         </Typography>
         <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
@@ -46,10 +48,10 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
   );
 }
 
-export function SectionCard({ title, description, action, children }: SectionCardProps) {
+export function SectionCard({ title, description, action, children, variant = "card", headingComponent = "h2" }: SectionCardProps) {
   return (
-    <Card sx={{ height: "100%" }}>
-      <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
+    <Card sx={{ height: "100%", ...(variant === "plain" ? { border: 0, borderRadius: 0, bgcolor: "transparent", boxShadow: "none" } : {}) }}>
+      <CardContent sx={{ p: variant === "plain" ? 0 : { xs: 2.25, md: 3 }, "&:last-child": { pb: variant === "plain" ? 0 : 3 } }}>
         <Stack gap={2.25} sx={{ height: "100%" }}>
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -58,7 +60,7 @@ export function SectionCard({ title, description, action, children }: SectionCar
             gap={1.5}
           >
             <Box>
-              <Typography variant="h6" sx={{ lineHeight: 1.25 }}>
+              <Typography component={headingComponent} variant="h6" sx={{ lineHeight: 1.25 }}>
                 {title}
               </Typography>
               {description ? (

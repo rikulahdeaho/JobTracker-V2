@@ -33,7 +33,7 @@ export function ThemeModeProvider({ children }: PropsWithChildren) {
   return (
     <ThemeModeContext.Provider value={value}>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
+        <CssBaseline enableColorScheme />
         {children}
       </ThemeProvider>
     </ThemeModeContext.Provider>

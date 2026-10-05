@@ -69,21 +69,16 @@ export function Sidebar({
     >
       <Box sx={{ px: 3, pt: 3.5, pb: 2.5 }}>
         <Box>
-          <Typography variant="h5" sx={{ color: sidebarColors.eyebrow, lineHeight: 1.05 }}>
+          <Typography component="p" variant="h5" sx={{ color: sidebarColors.eyebrow, lineHeight: 1.05 }}>
             JobTracker
           </Typography>
           <Typography variant="body2" sx={{ color: sidebarColors.text, mt: 0.5 }}>
-            Career Co-pilot
+            Your job search
           </Typography>
         </Box>
       </Box>
-      <List sx={{ px: 1.5, pt: 3 }}>
-        <Typography
-          variant="overline"
-          sx={{ display: "block", color: sidebarColors.muted, px: 1.5, mb: 1 }}
-        >
-          Workspace
-        </Typography>
+      <Box component="nav" aria-label="Main navigation">
+      <List component="div" sx={{ px: 1.5, pt: 3 }}>
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.to}
@@ -99,22 +94,22 @@ export function Sidebar({
               "&.active": {
                 bgcolor: sidebarColors.activeBackground,
                 color: sidebarColors.activeText,
-                borderRight: 3,
-                borderColor: "primary.main",
               },
               "&:hover": {
                 bgcolor: sidebarColors.hoverBackground,
               },
+              "&.active:hover": { bgcolor: sidebarColors.activeBackground },
             }}
           >
             <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>{item.icon}</ListItemIcon>
             <ListItemText
               primary={item.label}
-              primaryTypographyProps={{ variant: "body2", fontWeight: 700 }}
+              primaryTypographyProps={{ variant: "body1", fontWeight: 500 }}
             />
           </ListItemButton>
         ))}
       </List>
+      </Box>
       <Box sx={{ mt: "auto", p: 2.5, borderTop: 1, borderColor: sidebarColors.border }}>
         <Stack gap={2}>
           <Stack direction="row" gap={1.25} alignItems="center">

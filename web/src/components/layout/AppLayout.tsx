@@ -23,7 +23,7 @@ export function AppLayout() {
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
-      <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, bgcolor: "background.paper" }}>
         <Box sx={{ px: { xs: 2, md: 3, xl: 4 }, py: { xs: 2, md: 3.5 } }}>
           {!isDesktop ? (
             <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>

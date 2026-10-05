@@ -6,7 +6,6 @@ import RecordVoiceOverOutlinedIcon from "@mui/icons-material/RecordVoiceOverOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 import { Avatar, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import type { TimelineEvent } from "../types/workflow";
 import { formatApplicationDate } from "../utils/applicationPresentation";
 
@@ -29,18 +28,22 @@ export function TimelineEventList({ events }: TimelineEventListProps) {
               sx={{
                 width: 40,
                 height: 40,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.22 : 0.1),
-                color: "primary.main",
+                bgcolor: "transparent",
+                color: "text.secondary",
+                border: 1,
+                borderColor: "divider",
               }}
             >
               {getTimelineEventIcon(event.type)}
             </Avatar>
           </ListItemAvatar>
           <ListItemText
+            sx={{ minWidth: 0, m: 0, overflowWrap: "anywhere" }}
+            slotProps={{ primary: { fontWeight: 600 } }}
             primary={event.title}
             secondary={
               <>
-                <Typography component="span" display="block" color="text.secondary">
+                <Typography component="span" variant="body2" display="block" color="text.secondary" sx={{ mt: 0.5, mb: 0.75, fontVariantNumeric: "tabular-nums" }}>
                   {formatApplicationDate(event.occurredAt, "Recently")}
                 </Typography>
                 <Typography component="span" display="block" color="text.secondary">
