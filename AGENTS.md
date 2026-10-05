@@ -5,7 +5,7 @@
 JobTracker is a fullstack job application tracking app.
 
 The mock-data and API-integration milestones are complete. The desktop-first React
-web app uses an ASP.NET Core API, EF Core and local SQLite. Clerk authenticates users;
+web app is deployed on Vercel with an ASP.NET Core API on Railway and Neon PostgreSQL. Clerk authenticates users;
 the API validates tokens and enforces ownership. See docs/how-it-works.md for current behavior.
 
 A mobile app may be added later using Expo React Native. The mobile app should use the same API, the same authentication model, and the same database.
@@ -20,9 +20,9 @@ Expo Mobile ─────┘
 
 Authentication: Clerk
 ORM: Entity Framework Core  
-Frontend hosting later: Vercel  
-API hosting later: Railway  
-Database hosting later: Neon PostgreSQL  
+Frontend hosting: Vercel
+API hosting: Railway
+Database hosting: Neon PostgreSQL
 
 ## Repository Structure
 
@@ -54,7 +54,7 @@ jobtracker/
 - C#
 - Entity Framework Core
 - SQLite locally
-- PostgreSQL later in production
+- Neon PostgreSQL in production
 
 ### Auth
 
@@ -68,10 +68,10 @@ Build the app in small, clear slices.
 Current implemented flow:
 
 ```text
-React + MUI + Clerk -> TanStack Query + Axios -> authenticated ASP.NET Core API -> SQLite
+React + MUI + Clerk -> TanStack Query + Axios -> authenticated ASP.NET Core API -> PostgreSQL (production) / SQLite (local)
 ```
 
-Follow docs/current-feature.md for the current scope. Do not add deployment, mobile
+Follow docs/current-feature.md for the current scope. Do not change deployment or add mobile
 or advanced features unless explicitly requested.
 
 Completed first milestone:
@@ -103,7 +103,7 @@ The same UI connected to ASP.NET Core API and database.
 13. Dashboard
 14. Search, filters, and sorting
 15. Polish and documentation
-16. Deploy
+16. Deploy (completed)
 17. Mobile later
 
 ## MVP Features
@@ -216,7 +216,7 @@ Do not implement these unless explicitly asked:
 - Use EF Core migrations for schema changes.
 - Do not manually edit production database schema.
 - SQLite is acceptable for early local development.
-- PostgreSQL is the target production database.
+- Neon PostgreSQL is the production database.
 - Keep `CreatedAt` and `UpdatedAt` fields updated consistently.
 - Do not add advanced database models before the core `JobApplication` flow works.
 
@@ -238,8 +238,8 @@ npm run lint
 cd api/JobTracker.Api
 dotnet run
 dotnet build
-dotnet ef migrations add <MigrationName>
-dotnet ef database update
+dotnet ef migrations add <MigrationName> --context AppDbContext --output-dir Migrations/Sqlite
+dotnet ef database update --context AppDbContext
 ```
 
 ## Testing Expectations

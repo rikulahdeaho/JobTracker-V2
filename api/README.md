@@ -1,6 +1,6 @@
 # JobTracker API
 
-ASP.NET Core 10 controller API with EF Core 10 and local SQLite persistence.
+ASP.NET Core 10 controller API with EF Core 10, deployed on Railway with Neon PostgreSQL. Local development defaults to SQLite.
 The React application uses this API for Applications CRUD through TanStack Query.
 See [How JobTracker works](../docs/how-it-works.md) for the current application behavior.
 
@@ -18,7 +18,7 @@ From the repository root:
 cd api/JobTracker.Api
 dotnet tool restore
 dotnet build
-dotnet ef database update
+dotnet ef database update --context AppDbContext
 dotnet run
 ```
 
@@ -26,8 +26,8 @@ dotnet run
 - OpenAPI document: http://localhost:5080/swagger/v1/swagger.json
 - API: http://localhost:5080/api/applications
 
-The launch profile selects Development. Swagger and CORS for
-`http://localhost:5173` and `http://127.0.0.1:5173` are enabled only in Development.
+The launch profile selects Development. Swagger is available only in Development. CORS for
+`http://localhost:5173`, `http://127.0.0.1:5173` and the configured `FrontendUrl` is enabled in all environments.
 All application and event endpoints require a validated Clerk session token.
 Swagger/OpenAPI remain public in Development; data operations still require Bearer authentication.
 
@@ -78,7 +78,7 @@ $env:Clerk__AuthorizedParties__1 = 'http://localhost:5173'
 Configuration uses the standard ASP.NET Core `Clerk` section; double underscores map
 environment variables to nested keys. Missing/invalid authority or permitted origins
 fail startup rather than enabling anonymous access. Tenant configuration is not checked in.
-`ConnectionStrings__DefaultConnection` remains an optional SQLite override.
+`ConnectionStrings__DefaultConnection` overrides the connection string for the selected provider. See [deployment configuration](../docs/architecture.md#deployment-architecture).
 
 `Microsoft.AspNetCore.Authentication.JwtBearer` 10.0.9 validates tokens following
 [Clerk's JWT guidance](https://clerk.com/docs/guides/sessions/manual-jwt-verification).
@@ -95,6 +95,11 @@ resource IDs return 404, and requests without valid authentication return 401.
 
 ## Database
 
+Production uses `DatabaseProvider=Postgres` with a Neon connection string.
+SQLite uses `AppDbContext`; PostgreSQL uses `PostgresAppDbContext`, each with its own
+migration series. See [database migrations](../docs/database-migrations.md) for both
+providers. Model changes require matching migrations for both providers.
+
 `appsettings.json` defines `ConnectionStrings:DefaultConnection` as
 `Data Source=jobtracker.db`. Run the commands from `api/JobTracker.Api` so the
 relative database path is consistent. Override it with
@@ -108,8 +113,8 @@ Migrations are applied explicitly, not automatically on startup.
 For future model changes:
 
 ```powershell
-dotnet ef migrations add <MigrationName>
-dotnet ef database update
+dotnet ef migrations add <MigrationName> --context AppDbContext --output-dir Migrations/Sqlite
+dotnet ef database update --context AppDbContext
 ```
 
 The local tool manifest in `api/.config/dotnet-tools.json` pins dotnet-ef to
@@ -149,7 +154,7 @@ unused SQLite filename in the same API terminal, then apply migrations and resta
 ```powershell
 cd api/JobTracker.Api
 $env:ConnectionStrings__DefaultConnection = 'Data Source=jobtracker-auth-local.db'
-dotnet ef database update
+dotnet ef database update --context AppDbContext
 dotnet run
 ```
 
@@ -197,9 +202,8 @@ Example POST or PUT body:
 
 ## Verification
 
-The 2026-10-03 review passed all 77 backend tests and the build without warnings.
-For cross-stack checks and remaining browser limits, see
-[release preparation](../docs/current-feature.md#release-preparation-2026-10-03).
+For current test results, cross-stack checks and remaining browser limits, see
+[verification](../docs/current-feature.md#verification).
 
 Run the isolated automated suite from `api/` (the solution includes API and tests):
 
@@ -257,7 +261,7 @@ invalid events return 400 and missing/other-user applications return 404.
 No separate GET events call is needed because both application GET endpoints include history.
 
 Migration `20260916123052_ApplicationWorkflow` creates ApplicationEvents and
-backfills only creation and known applied dates. Run `dotnet ef database update`
+backfills only creation and known applied dates. Run `dotnet ef database update --context AppDbContext`
 before starting the updated API. No inferred interviews or follow-ups are created.
 
 See [workflow model, API example and rules](../docs/application-workflow.md),
@@ -265,7 +269,7 @@ including date corrections and intentionally deferred reminder/event management.
 
 Migration `20261002084434_ApplicationContactPreferences` adds method, follow-up mode,
 contact person and contact email. Existing rows receive Unknown/Unknown/null/null;
-ownership, status, dates and events remain unchanged. Apply with `dotnet ef database update`.
+ownership, status, dates and events remain unchanged. Apply with `dotnet ef database update --context AppDbContext`.
 `ContactReceived` is accepted by the existing event POST with required past/present
 `occurredAt`, optional note and no `dueAt`. It preserves status and uses the same
 parent ownership checks. No Next Action or Schedule values are stored by the API.

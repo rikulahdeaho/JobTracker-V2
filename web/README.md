@@ -3,6 +3,12 @@
 See [How JobTracker works](../docs/how-it-works.md) for a guide to
 the current pages, data flow, application rules and test commands.
 
+## Deployment
+
+The web app is deployed on Vercel and calls the Railway API backed by Neon PostgreSQL.
+See [deployment configuration](../docs/architecture.md#deployment-architecture).
+The committed `vercel.json` rewrite supports direct navigation to application routes.
+
 ## Local setup
 
 Configure a Clerk development application first (see [API setup](../api/README.md#clerk-configuration)).
@@ -15,7 +21,7 @@ Run the existing API in one terminal:
 ```powershell
 cd api/JobTracker.Api
 dotnet tool restore
-dotnet ef database update
+dotnet ef database update --context AppDbContext
 dotnet run
 ```
 
@@ -37,7 +43,7 @@ existing local settings. The integration workspace already has `.env.local`.
 configuration error. API failures never fall back to mock data.
 
 The API permits `http://localhost:5173` and `http://127.0.0.1:5173` in Development.
-Use port 5173; another origin needs an explicit CORS change.
+Use port 5173 locally; set the API `FrontendUrl` to allow another frontend origin.
 
 If npm reports `UNABLE_TO_VERIFY_LEAF_SIGNATURE` on Windows with a Node version
 supporting system certificates, this session used:
@@ -92,7 +98,7 @@ failed saves, and delete failures keep the confirmation open.
 - `mockApplications.ts`, `applicationStorage.ts` and `applicationCrud.ts` remain
   as unused legacy code; the runtime provider no longer imports them.
 - The demo reset control is disabled because it must not replace API data.
-- Authentication protects the existing workspace; no new data endpoints, deployment or mobile changes.
+- Authentication protects the existing workspace in local and deployed environments.
 
 ## Authentication
 
@@ -163,5 +169,5 @@ UI coverage. Backend update/delete behavior is covered in the xUnit suite.
 Frontend integration tests also cover edit success updating both caches, failed edits
 preserving input, and failed deletion followed by retry, cache removal and list navigation.
 
-See [current verification and remaining checks](../docs/current-feature.md#release-preparation-2026-10-03)
+See [current verification and remaining checks](../docs/current-feature.md#verification)
 for the latest test totals, browser coverage and the feature acceptance checklist.

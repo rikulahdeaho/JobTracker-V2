@@ -9,8 +9,8 @@ These instructions apply to the ASP.NET Core Web API in `api/`.
 - ASP.NET Core Web API
 - C#
 - Entity Framework Core
-- SQLite locally at first
-- PostgreSQL later
+- SQLite locally
+- Neon PostgreSQL in production
 
 ## Structure
 
@@ -46,7 +46,7 @@ JobTracker.Api/
 - Do not manually edit generated migrations unless necessary.
 - Do not manually change production database structure.
 - SQLite is acceptable for early local development.
-- PostgreSQL is the production target.
+- Neon PostgreSQL is the production database; keep both provider migration series in sync (see docs/database-migrations.md).
 
 ## Authentication and Ownership
 

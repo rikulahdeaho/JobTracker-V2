@@ -1,737 +1,96 @@
-# Current Feature
-
-## Feature Name
-
-Application Form UX Refinement
-
-## Status
-
-Implemented; automated checks pass. Applied date entry/persistence and deletion
-have browser coverage. Native application-deadline entry, activity datetime pickers
-and the full manual workflow matrix still need a manual browser pass.
-
-### Release preparation (2026-10-03)
-
-- Updated the Edit preservation test to the current `Application due date` label.
-  No application behavior or API code changed.
-- Frontend: 131 tests passed across nine files; build and lint passed.
-- Backend: 77 tests passed; build passed with zero warnings and errors during
-  the same-day review. Backend code was unchanged during this preparation.
-- Vite still reports the existing large-bundle warning (about 881 kB JavaScript,
-  268 kB gzip). This is a performance follow-up, not a failed build.
-- Browser: signed-in application loading, creating a disposable Applied record,
-  entering Applied date through the native field, saving, reloading and reopening
-  Edit preserved `2026-10-02`. Its Timeline and Next Action reflected that date.
-- Browser deletion: the disposable record was removed through its confirmation
-  dialog. Navigation returned to Applications, and searching after reload found
-  no matching record. Existing records were left unchanged.
-- Browser limitation: automatic date filling did not populate the application
-  deadline, and attempts with native input did not produce a value. The deadline
-  was left blank; its native entry/persistence is not marked as verified. No
-  production defect was established by that automation limitation.
-- Current form layout, setup requirements and historical/current verification
-  notes were aligned across the documentation. Design concepts remain explicitly
-  separate from implemented behavior.
-- Repository cleanup removes the generated TypeScript cache from tracking and
-  ignores SQLite sidecar/journal files. Git history was not rewritten: the old
-  database and commit email addresses remain accessible in historical commits.
-- No deployment, commit, push or repository visibility change was performed.
-
-### Historical implementation and verification (2026-10-02)
-
-- Historical initial layout: Add and Edit shared four sections. The 2026-10-03
-  layout below supersedes that arrangement and its deadline label.
-- Applied date is visible for submitted statuses or whenever a value exists;
-  changing status never clears or invents the date.
-- Job description starts at eight rows (now capped at sixteen before scrolling);
-  Notes starts at three.
-- Clean formatting normalizes line endings, trims trailing spaces and reduces extra
-  blank lines. It preserves words, paragraphs, bullets and indentation. Undo restores
-  the original text; further manual description edits dismiss that undo action.
-- Added 35 frontend tests for required fields, enum mappings, date visibility and
-  preservation, Edit values, contact validation, formatting and Undo.
-- `npm run test`: 123 tests passed across nine files.
-- `npm run build` and `npm run lint`: passed. Vite retains its bundle-size warning.
-- Signed-in browser checks covered minimal Draft creation, Edit/save/reload,
-  Applied date appearing on status change, portal without contact details, valid
-  and invalid contact email, description cleanup/Undo, and responsive stacking at
-  390px with visible footer actions.
-- Native date entry/persistence and the complete workflow matrix below were not
-  repeated in the browser. Date preservation and eligibility have automated coverage.
-- One browser QA record, `Form UX QA / Draft verification`, was retained locally.
-- Backend, API contracts and workflow rules were unchanged; backend checks were not
-  rerun for this frontend-only feature. Application Documents remains separate.
-
-## Scope
-
-Improve the existing Add Application and Edit Application forms.
-
-Work mainly inside:
-
-- `web/`
-- `docs/`
-
-Minimal API changes are allowed only if a clear integration issue is discovered.
-
-Do not modify the current application workflow rules or persistence model unless required to fix a bug.
-
-Do not implement CV/file uploads or Cover Letter persistence during this feature.
-
----
-
-## Goal
-
-Make Add Application and Edit Application easier to scan, faster to use and clearer about what each field represents.
-
-The current application model and workflow are already functional.
-
-This feature should improve:
-
-- information hierarchy
-- section organization
-- field labels
-- conditional field visibility
-- helper text
-- Job Description usability
-- Add vs Edit usability
-
-without redesigning the whole application.
-
----
-
-## Existing Behavior to Preserve
-
-The form currently supports:
-
-- Company
-- Job title
-- Job URL
-- Location
-- Status
-- Applied date
-- Application due date
-- Source
-- Salary range
-- Application method
-- Follow-up preference
-- Contact person
-- Contact email
-- Notes
-- Job description
-
-Application method values currently are:
-
-```text
-Unknown
-CompanyPortal
-Email
-RecruiterDirect
-LinkedInEasyApply
-Other
-```
-
-Follow-up mode values currently are:
-
-```text
-Unknown
-Possible
-NotAvailable
-NotNeeded
-```
-
-The stored enum/API values must remain compatible with the existing backend.
-
-Do not change workflow behavior simply to improve labels.
-
----
-
-## Form Structure
-
-Organize the form into these sections:
-
-```text
-Basic Info
-Application
-Contact (expandable)
-Job Description
-More details (expandable)
-```
-
-A future `Documents` section may be added later, but it is not part of this feature.
-
----
-
-## Basic Info
-
-Fields:
-
-```text
-Company *
-Job title *
-Job URL
-Location
-```
-
-Requirements:
-
-- Company remains required.
-- Job title remains required.
-- Keep Job URL optional.
-- Keep Location optional.
-- Preserve existing validation.
-- Keep two-column layout on desktop where practical.
-- Stack cleanly on smaller screens.
-
----
-
-## Application
-
-Fields:
-
-```text
-Status
-Applied date
-Application due date
-Source
-Application method
-```
-
-### Deadline Label
-
-Rename the user-facing label:
-
-```text
-Deadline
-```
-
-to:
-
-```text
-Application due date
-```
-
-Do not rename the backend/database field.
-
-The purpose is to distinguish the application deadline from:
-
-- interview time
-- assignment deadline
-- offer response deadline
-
-which already belong to workflow events.
-
-### Applied Date
-
-Make Applied date context-aware.
-
-For Add Application:
-
-- hide or de-emphasize Applied date while status is `Draft` or `ToApply`
-- show it when the selected status represents an application that has already been submitted or progressed further
-
-Relevant statuses include:
-
-```text
-Applied
-Interviewing
-Assignment
-Offer
-Rejected
-Ghosted
-Withdrawn
-```
-
-For Edit Application:
-
-- show Applied date when it already contains a value
-- also show it when the current status implies the application has been submitted
-
-Important:
-
-- never silently clear an existing Applied date because the field becomes hidden
-- do not invent an Applied date
-- preserve current API behavior around ApplicationSent events
-
----
-
-## Contact
-
-Fields:
-
-```text
-Contact person
-Contact email
-Follow-up preference
-```
-
-Application method is in the Application section. Contact starts collapsed in Add;
-Edit expands it for existing contact details or a non-default follow-up preference.
-Collapsing the section preserves its values.
-
-Keep the existing stored enum values.
-
-Improve only the user-facing labels.
-
-### Application Method Labels
-
-Suggested UI labels:
-
-```text
-Unknown             -> Not specified
-CompanyPortal       -> Company portal
-Email               -> Email
-RecruiterDirect     -> Direct recruiter contact
-LinkedInEasyApply   -> LinkedIn Easy Apply
-Other               -> Other
-```
-
-The API values must remain unchanged.
-
-### Follow-Up Preference Labels
-
-Suggested UI labels:
-
-```text
-Unknown       -> Default
-Possible      -> Follow-up possible
-NotAvailable  -> No direct follow-up channel
-NotNeeded     -> Do not suggest follow-up
-```
-
-These are display labels only.
-
-Do not rename the persisted enum values during this feature.
-
-### Helper Text
-
-Make the relationship between follow-up preference and contact email easier to understand.
-
-For example:
-
-```text
-Follow-up suggestions require a valid contact email.
-```
-
-If a user selects a follow-up option that requires direct contact but no valid email is available, preserve the existing validation/business rules and explain the situation clearly.
-
-Do not imply that:
-
-```text
-Company portal
-LinkedIn Easy Apply
-Contact person name
-```
-
-alone provide a direct follow-up channel.
-
----
-
-## Job Description and More details
-
-Job Description has its own always-visible section. More details contains Salary
-range and Notes. More details starts collapsed in Add and expands in Edit when
-either field has saved content. Collapsing it preserves its values.
-
-Preferred order:
-
-```text
-Job description
-Notes
-```
-
-### Job Description
-
-Job Description should be the larger field.
-
-The field may contain a full copied job advertisement, so give it noticeably more vertical space than Notes.
-
-Suggested helper text:
-
-```text
-Paste the relevant job advertisement text here for later reference.
-```
-
-The textarea grows from eight to sixteen rows, then scrolls internally for longer text.
-
-### Notes
-
-Notes should remain a smaller field intended for the user's own observations.
-
-Suggested helper text:
-
-```text
-Your own notes about the application, company or hiring process.
-```
-
-Do not mix Notes and Job Description content.
-
----
-
-## Job Description Formatting
-
-Add a small deterministic formatting utility if it can be implemented cleanly without adding dependencies.
-
-Suggested action:
-
-```text
-Clean formatting
-```
-
-This action may:
-
-- normalize line endings
-- trim leading/trailing whitespace
-- reduce excessive blank lines
-- remove trailing spaces
-- preserve meaningful paragraph breaks
-- preserve bullet-style lines where possible
-
-It must not:
-
-- rewrite content
-- summarize the job advertisement
-- invent missing information
-- use AI
-- remove meaningful text
-
-The cleanup should be reversible before saving through normal form editing, because it only changes the textarea value.
-
-If a safe implementation would require significant complexity, leave the button out and only improve the textarea UX.
-
----
-
-## Add Application Behavior
-
-Add Application should feel fast.
-
-Required information remains only:
-
-```text
-Company
-Job title
-```
-
-Do not make optional fields required.
-
-Avoid overwhelming the user with unnecessary explanatory text.
-
-The form should still support entering all available information before saving.
-
-Do not add a separate multi-step wizard.
-
----
-
-## Edit Application Behavior
-
-Edit Application should use the same underlying form and field structure where practical.
-
-Existing saved values must populate correctly.
-
-Editing must preserve:
-
-- application method
-- follow-up preference
-- contact information
-- dates
-- status
-- job description
-- notes
-- source
-- salary
-- URL
-- location
-
-Do not reset optional fields when opening Edit.
-
----
-
-## Add vs Edit Consistency
-
-Prefer shared field components/form logic rather than maintaining two divergent forms.
-
-Differences between Add and Edit should be limited to things such as:
-
-```text
-dialog title
-submit button text
-existing field values
-context-aware Applied date visibility
-```
-
-Avoid duplicated business logic.
-
----
-
-## Layout
-
-Keep the current MUI visual direction.
-
-Requirements:
-
-- clear section headings
-- consistent spacing
-- readable helper text
-- two-column layout where useful
-- full-width long-text fields
-- responsive stacking
-- footer actions remain easy to reach
-
-Do not make the dialog unnecessarily wider.
-
-If the form exceeds the available viewport height:
-
-- allow the content area to scroll
-- keep actions usable
-- avoid making the whole browser page scroll behind the dialog
-
----
-
-## Documents
-
-Do not implement Documents during this feature.
-
-A future feature may add:
-
-```text
-Saved CVs
-CV versions
-CV selection per application
-Cover Letter
-Original file storage
-Extracted document text
-```
-
-Do not add temporary Base64/PDF fields to JobApplication.
-
-Do not add placeholder database columns for future document functionality yet.
-
----
-
-## Workflow Rules
-
-Do not change the current Next Action rules.
-
-Preserve the existing behavior where:
-
-- metadata edits do not reset response timing
-- ApplicationSent, FollowUpSent and ContactReceived drive response timing
-- contactability affects follow-up suggestions
-- application deadline is separate from interview, assignment and offer dates
-- status is not automatically changed to Ghosted
-
-Form UX changes must not alter these rules.
-
----
-
-## API Compatibility
-
-Preserve the existing API contracts unless an actual bug requires a change.
-
-Do not rename API fields such as:
-
-```text
-deadline
-applicationMethod
-followUpMode
-contactPerson
-contactEmail
-jobDescription
-notes
-```
-
-UI labels may differ from backend property names.
-
----
-
-## Tests
-
-Update frontend tests where necessary.
-
-Test important behavior such as:
-
-- Company remains required
-- Job title remains required
-- Add form maps application method correctly
-- Add form maps follow-up mode correctly
-- Edit form preserves existing values
-- user-facing enum labels map to the correct API values
-- Applied date visibility follows the intended status rules
-- hidden Applied date is not silently cleared
-- contact validation still works
-- Job Description formatting utility preserves content correctly, if implemented
-
-Do not add tests for MUI implementation details.
-
-Do not use snapshot tests just to capture the form layout.
-
----
-
-## Manual Validation
-
-Test Add Application:
-
-1. Open Add Application.
-2. Verify the section hierarchy is clear.
-3. Create a Draft application with only Company and Job title.
-4. Create a ToApply application with an application deadline.
-5. Create an Applied application with an Applied date.
-6. Create an Email application with a contact email.
-7. Create a portal application without contact details.
-8. Verify all saved values after reopening the application.
-
-Test Edit Application:
-
-1. Open an existing application.
-2. Verify all saved values populate.
-3. Change Status.
-4. Verify Applied date behavior.
-5. Change Application method.
-6. Change Follow-up preference.
-7. Change Contact person/email.
-8. Edit Job Description and Notes.
-9. Save.
-10. Reload the page.
-11. Verify values persist.
-
-Verify workflow behavior:
-
-- portal application without direct email does not incorrectly gain a follow-up suggestion
-- valid contact email still enables the existing eligible follow-up behavior
-- unrelated form edits do not reset workflow timing
-- Application due date continues to behave as an application deadline
-- Next Action remains correct
-
----
-
-## Not Included
-
-Do not implement:
-
-- CV uploads
-- CV selection
-- CV versioning
-- Cover Letter persistence
-- file storage
-- Base64 file storage
-- PDF parsing
-- AI job-description parsing
-- AI rewriting
-- AI cover-letter generation
-- document comparison
-- reminder persistence
-- deployment
-- production PostgreSQL
-- mobile changes
-
----
-
-## Validation
-
-Frontend:
+# Current feature and verification
+
+## Current scope
+
+**Application Form UX Refinement is implemented.** Remaining work is manual
+validation of native date controls and the combined workflow. Deployment is
+complete, as confirmed by the project owner on 2026-10-05.
+
+The documentation review updates descriptions and removes obsolete plans.
+It does not expand the product scope or change application behavior.
+See [roadmap](roadmap.md) for uncommitted future options.
+
+## Implemented form behavior
+
+- Shared Add/Edit form: Basic Info, Application, expandable Contact, Job Description
+  and expandable More details.
+- Company and Job title remain the only required fields.
+- The visible Application due date label maps to the existing `deadline` field.
+- Applied date appears when relevant or already populated; status changes preserve it.
+- Application method and follow-up preference labels retain their API enum values.
+- Job description grows from eight to sixteen rows. Clean formatting is reversible
+  and preserves wording; Notes remains separate.
+- Edit populates existing values, collapsed fields retain values and failed saves
+  preserve input.
+- Fields stack on small screens and dialog footer actions stay outside the scroll area.
+
+The [product guide](how-it-works.md#adding-and-editing) explains the form.
+[Workflow rules](application-workflow.md) remain unchanged. File uploads, CV
+selection, cover-letter persistence, AI rewriting and reminder persistence are
+outside this feature.
+
+## Verification
+
+Local automated checks on **2026-10-05**:
+
+| Check | Result |
+| --- | --- |
+| Frontend tests | 131 passed across 9 files. |
+| Frontend lint | Passed. |
+| Frontend build | Passed; existing bundle-size warning remains (about 881 kB JavaScript, 268 kB gzip). |
+| Backend tests | 84 passed. |
+| Backend build | Passed with no warnings or errors. |
+
+The builds were run during the deployment-documentation update; tests and lint
+were rerun during the full documentation review. No runtime code changed.
+
+Tests cover CRUD, ownership/JWT validation, session/cache isolation, workflow
+timing, Schedule derivation, form validation/preservation and provider-specific
+migrations. Backend integration tests use isolated SQLite databases. PostgreSQL
+migration SQL is checked offline; the suite does not use the production database.
+
+Run from the repository root:
 
 ```powershell
+dotnet build api/JobTracker.sln
+dotnet test api/JobTracker.sln
 cd web
 npm run test
 npm run build
 npm run lint
 ```
 
-Backend should not normally require changes.
+### Recorded browser coverage
 
-If backend code is changed:
+| Date | Confirmed locally |
+| --- | --- |
+| 2026-09-17 | Real Clerk A → B → A sessions, separate data/reminders, blocked foreign Details links, create/edit/activity writes, reload, navigation and themes. |
+| 2026-10-02 | Minimal Draft creation, Edit/save/reload, conditional Applied date, contact validation, description cleanup/Undo and form stacking at 390 px. |
+| 2026-10-03 | Native Applied date entry persisted through save/reload/Edit; a disposable application was deleted and remained absent after reload. |
 
-```powershell
-cd api
-dotnet test
-dotnet build
-```
+These are historical local checks, not a new production browser pass.
 
----
+### Release preparation (2026-10-03)
 
-## Definition of Done
+The earlier run passed 131 frontend and 77 backend tests, both builds and frontend
+lint. Its browser scope is summarized above. The newer 84-test backend result
+supersedes that automated total.
 
-This feature is complete when:
+## Remaining manual checks
 
-- Add/Edit forms are easier to scan
-- sections have clear purposes
-- `Application due date` is clearly named in the UI
-- Application Method labels are user-friendly
-- Follow-up Preference labels are user-friendly
-- persisted enum/API values remain unchanged
-- Applied date is presented contextually without data loss
-- Job Description is easier to enter and review
-- Notes remain clearly separate from Job Description
-- optional deterministic formatting works safely if implemented
-- existing validation still works
-- existing contact/follow-up logic still works
-- existing workflow rules still work
-- Add Application works
-- Edit Application works
-- frontend tests pass
-- frontend build passes
-- lint passes
-- no document/file-storage system was added
+- Enter an **Application due date** through its native control and confirm
+  save/reload/Edit preservation. Earlier automation could not populate it;
+  that limitation did not establish a product defect.
+- Exercise the native activity datetime controls for an interview, assignment and
+  offer, checking local display and saved dates.
+- Run the combined workflow: a portal application without direct email gets no
+  follow-up suggestion; eligible email contact does; a recorded reply resets
+  timing; ordinary edits do not.
+- Verify manual status review and that Schedule removes past interviews and
+  submitted assignments while keeping real deadlines distinct from suggestions.
+- Record a production smoke-test result separately if one is performed. Deployment
+  confirmation alone does not mark these checks complete.
 
----
-
-## Expected Result
-
-The form should feel like:
-
-```text
-BASIC INFO
-Company              Job title
-Job URL              Location
-
-APPLICATION
-Status               Applied date
-Application due date Source
-Application method
-
-CONTACT (expandable)
-Contact person       Contact email
-Follow-up preference
-
-JOB DESCRIPTION
-Job description
-
-MORE DETAILS (expandable)
-Salary range
-Notes
-```
-
-The form remains comprehensive without making the initial application creation unnecessarily difficult.
-
----
-
-## Next Possible Feature
-
-A separate future feature can be:
-
-```text
-Application Documents
-```
-
-Possible scope:
-
-```text
-Reusable CV library
-CV versions
-Select CV version per application
-Cover Letter text
-Optional original files
-Extracted document text
-Job Description normalization
-```
-
-Do not implement it as part of the current feature.
-
----
-
-## History
-
-- Completed Applications API Integration
-- Completed Application Workflow Model
-- Completed Authentication and User Ownership
-- Completed Application Contact Preferences
-- Started Application Form UX Refinement
+Browser sign-in expiry and in-flight session races were not manually induced;
+automated tests cover those paths. General activity editing/deletion, immutable
+audit history and concurrent-editor conflict handling are not implemented.
