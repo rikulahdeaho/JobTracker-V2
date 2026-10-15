@@ -8,6 +8,7 @@ implemented product clear and reliable; a new feature needs its own agreed scope
 | Area | Current result |
 | --- | --- |
 | Application management | Create, read, edit and delete; nine statuses and shared Add/Edit form. |
+| Description parsing | Explicit review and selective application of grounded job-ad facts in the shared Add/Edit form. |
 | Authentication | Clerk sessions, API ownership checks and isolated frontend caches. |
 | Workflow | Persisted Timeline events, contact preferences and derived Next Action. |
 | Schedule | Recorded commitments and suggested follow-up/status-review dates. |

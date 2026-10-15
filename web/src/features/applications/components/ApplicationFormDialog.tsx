@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, ClipboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   Accordion,
@@ -23,10 +23,14 @@ import type { PropsWithChildren, ReactNode } from "react";
 import type { ApplicationStatus, JobApplicationFormValues } from "../types/application";
 import { emptyApplicationFormValues } from "../utils/applicationForm";
 import { cleanJobDescriptionFormatting } from "../utils/jobDescriptionFormatting";
+import { restorePastedListMarkers } from "../utils/jobDescriptionPaste";
 import { applicationMethodLabels, followUpModeLabels, isValidContactEmail } from "../utils/applicationContact";
 import { applicationStatusLabel } from "../utils/applicationStatus";
 import { getApiErrorMessage } from "../../../lib/apiClient";
 import { UnsavedChangesDialog } from "../../../components/ui/UnsavedChangesDialog";
+import { parseJobDescription } from "../api/jobDescriptionApi";
+import type { DescriptionSuggestion, ParseJobDescriptionResponse } from "../types/jobDescription";
+import { DescriptionReviewDialog } from "./DescriptionReviewDialog";
 
 type ApplicationFormDialogProps = {
   mode: "add" | "edit";
@@ -60,6 +64,11 @@ export function ApplicationFormDialog({
   const contactPersonInput = useRef<HTMLInputElement>(null);
   const contactEmailInput = useRef<HTMLInputElement>(null);
   const [descriptionBeforeCleanup, setDescriptionBeforeCleanup] = useState<string | null>(null);
+  const [parseResult, setParseResult] = useState<ParseJobDescriptionResponse | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [noMatches, setNoMatches] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const descriptionRef = useRef(values.jobDescription);
   const [contactExpanded, setContactExpanded] = useState(mode === "edit" && Boolean(
     initialValues?.contactPerson || initialValues?.contactEmail ||
     (initialValues?.followUpMode && initialValues.followUpMode !== "Unknown"),
@@ -96,7 +105,13 @@ export function ApplicationFormDialog({
 
   const handleFieldChange =
     (field: keyof JobApplicationFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
-      if (field === "jobDescription") setDescriptionBeforeCleanup(null);
+      if (field === "jobDescription") {
+        descriptionRef.current = event.target.value;
+        setDescriptionBeforeCleanup(null);
+        setParseResult(null);
+        setParseError(null);
+        setNoMatches(false);
+      }
       setValues((currentValues) => ({
         ...currentValues,
         [field]: event.target.value,
@@ -109,6 +124,61 @@ export function ApplicationFormDialog({
         }));
       }
     };
+
+  const handleDescriptionPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const plainText = event.clipboardData.getData("text/plain");
+    const restored = restorePastedListMarkers(plainText, event.clipboardData.getData("text/html"));
+    if (restored === plainText) return;
+    event.preventDefault();
+    const input = event.currentTarget;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const next = input.value.slice(0, start) + restored + input.value.slice(end);
+    descriptionRef.current = next;
+    setDescriptionBeforeCleanup(null);
+    setParseResult(null);
+    setParseError(null);
+    setNoMatches(false);
+    setValues(current => ({ ...current, jobDescription: next }));
+    requestAnimationFrame(() => input.setSelectionRange(start + restored.length, start + restored.length));
+  };
+
+  const analyzeDescription = async () => {
+    const source = values.jobDescription;
+    if (!source.trim() || isParsing) return;
+    if (source.length > 20000) {
+      setParseError("Analyze up to 20,000 characters. Shorten the description and try again.");
+      return;
+    }
+    setIsParsing(true);
+    setParseError(null);
+    setNoMatches(false);
+    try {
+      const result = await parseJobDescription(source);
+      if (descriptionRef.current !== source) return;
+      if (result.suggestions.length || result.detected.length) setParseResult(result);
+      else setNoMatches(true);
+    } catch (error) {
+      if (descriptionRef.current === source) setParseError(getApiErrorMessage(error));
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  const applySuggestions = (selected: DescriptionSuggestion[]) => {
+    setValues(current => {
+      const next = { ...current };
+      for (const suggestion of selected) next[suggestion.field] = suggestion.value;
+      return next;
+    });
+    setErrors(current => ({ ...current,
+      companyName: selected.some(item => item.field === "companyName") ? undefined : current.companyName,
+      jobTitle: selected.some(item => item.field === "jobTitle") ? undefined : current.jobTitle,
+      contactEmail: selected.some(item => item.field === "contactEmail") ? undefined : current.contactEmail,
+      contactPerson: selected.some(item => item.field === "contactPerson") ? undefined : current.contactPerson,
+    }));
+    setParseResult(null);
+  };
 
   const handleSubmit = async () => {
     if (submitting.current) return;
@@ -310,25 +380,39 @@ export function ApplicationFormDialog({
           <FormSection
             title="Job description"
             actions={<Stack direction="row" gap={0.5} flexWrap="wrap">
+              <Button type="button" size="small" disabled={isSaving || isParsing || !values.jobDescription.trim()}
+                onClick={() => void analyzeDescription()}>{isParsing ? "Analyzing…" : "Analyze description"}</Button>
               <Button size="small" disabled={isSaving || !values.jobDescription.trim()} onClick={() => {
                 const cleaned = cleanJobDescriptionFormatting(values.jobDescription);
                 if (cleaned === values.jobDescription) return;
+                descriptionRef.current = cleaned;
+                setParseResult(null);
+                setParseError(null);
+                setNoMatches(false);
                 setDescriptionBeforeCleanup(values.jobDescription);
                 setValues(current => ({ ...current, jobDescription: cleaned }));
               }}>Clean formatting</Button>
               {descriptionBeforeCleanup !== null && <Button size="small" disabled={isSaving} onClick={() => {
+                descriptionRef.current = descriptionBeforeCleanup;
+                setParseResult(null);
+                setParseError(null);
+                setNoMatches(false);
                 setValues(current => ({ ...current, jobDescription: descriptionBeforeCleanup }));
                 setDescriptionBeforeCleanup(null);
               }}>Undo formatting</Button>}
             </Stack>}
           >
             <Grid container spacing={2}>
+              {isParsing && <Grid size={{ xs: 12 }}><Typography role="status" aria-live="polite" variant="body2" color="text.secondary">Analyzing description…</Typography></Grid>}
+              {parseError && <Grid size={{ xs: 12 }}><Alert severity="error" role="alert">{parseError}</Alert></Grid>}
+              {noMatches && <Grid size={{ xs: 12 }}><Alert severity="info">No clear matches found. You can still enter details manually.</Alert></Grid>}
               <Grid size={{ xs: 12 }}>
                 <TextField
                   disabled={isSaving}
                   label="Job description"
                   value={values.jobDescription}
                   onChange={handleFieldChange("jobDescription")}
+                  slotProps={{ htmlInput: { onPaste: handleDescriptionPaste } }}
                   fullWidth
                   multiline
                   minRows={8}
@@ -375,6 +459,8 @@ export function ApplicationFormDialog({
     </Dialog>
     <UnsavedChangesDialog open={confirmDiscard} onKeepEditing={() => setConfirmDiscard(false)}
       onDiscard={() => { setConfirmDiscard(false); onClose(); }} />
+    {parseResult && <DescriptionReviewDialog result={parseResult} values={values}
+      onClose={() => setParseResult(null)} onApply={applySuggestions} />}
     </>
   );
 }

@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddClerkAuthentication(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddSingleton<JobDescriptionParser>();
 
 // Controllers + enum serialization
 builder.Services.AddControllers().AddJsonOptions(options =>

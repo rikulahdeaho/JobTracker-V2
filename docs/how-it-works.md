@@ -60,7 +60,7 @@ sections:
 | Basic Info | Company, job title, job URL and location. |
 | Application | Status, Applied date, Application due date, source and application method. |
 | Contact | Contact person, email and follow-up preference; expandable. |
-| Job Description | Saved advertisement text with Clean formatting and Undo. |
+| Job Description | Saved advertisement text with Analyze description, Clean formatting and Undo. |
 | More details | Salary range and personal notes; expandable. |
 
 Contact and More details start collapsed when adding. Edit opens them when saved
@@ -71,10 +71,48 @@ a value. Changing status never inserts or clears that date. **Application due
 date** is the deadline for sending the application, separate from interview,
 assignment and offer dates.
 
-Clean formatting removes trailing whitespace and excessive blank lines while
-preserving wording, paragraphs, bullets and indentation. It affects only the
-unsaved job description. Undo restores the previous text until another manual
-description edit is made.
+When a web page copies a real HTML list, pasting into Job Description restores
+the list markers that a plain text field would otherwise lose. Existing pasted
+text and spacing are kept for review. Clean formatting removes pasted Markdown
+emphasis and line-break artifacts,
+normalizes bullet symbols to `-`, and keeps at most one blank line between text
+sections. It adds space around headings and lists. After clearly labeled
+requirements or benefits sections, consecutive unmarked items also become
+`-`-bullets. It preserves the wording and nested-list indentation, and affects
+only the unsaved job description. Undo restores the previous text until another
+manual description edit is made.
+
+**Analyze description** is available when the Job Description contains text. It
+looks for explicit company, job title, location, application due date, contact
+email, contact person, source and salary range facts in
+Finnish or English adverts, including a limited set of clear narrative phrases.
+Review each suggestion and its source excerpt, then
+select the values to copy into the unsaved form. Existing filled fields are not
+selected for replacement by default. **Cancel** leaves the form unchanged.
+Technologies and work arrangements appear only under **Detected in description**;
+they are not stored as separate fields. Analysis does not save the application or
+change the description or personal Notes. If nothing clear is found, enter details
+manually. Analysis accepts up to 20,000 characters; this limit does not restrict
+saving the description itself.
+
+Contact details require an explicit contact cue; privacy addresses are excluded.
+Source may come from a Source/Lähde label or the listing header's Duunitori
+links. Salary suggestions require a stated pay amount and currency. Ambiguous
+or conflicting values stay out of the suggestions.
+
+Some job boards include publication dates, listing end labels, or relative text
+such as “3 days left”. A concrete **Ends** date is suggested for **Application
+due date**. If its year is missing, analysis infers the year from the publication
+date and today's local date; the review marks it as inferred so you can check it
+before applying. For example, `Published 12.10. (Ends 12.4.)` analyzed on
+15.10.2026 suggests 12.4.2027. If the employer states a different deadline,
+the listing's **Ends** date is suggested and the employer date is shown separately
+for review. A relative countdown alone stays informational because it has no
+exact calendar date.
+The same date matching also recognizes Finnish **Julkaistu**, **Päättyy**,
+**Haku päättyy** and **Hakuaika päättyy** labels. For example,
+`Julkaistu 12.10. (Päättyy 12.4.)` suggests 12.4.2027 when analyzed on
+15.10.2026, with the inferred year called out for review.
 
 Saving persists changes through the API. If saving fails, the form keeps its
 values and shows an error. Deletion requires confirmation and removes the
