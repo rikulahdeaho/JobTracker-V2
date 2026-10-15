@@ -183,6 +183,13 @@ function renderPage(path = "/applications") {
 }
 
 beforeEach(() => {
+  const storage = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => { storage.set(key, value); },
+    removeItem: (key: string) => { storage.delete(key); },
+    clear: () => storage.clear(),
+  });
   unbindSession = bindApiSession({ getToken: async () => "test-token", onUnauthorized: vi.fn() });
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   http.mockReset();
@@ -197,6 +204,7 @@ afterEach(() => {
   unbindSession();
   queryClient.clear();
   apiClient.defaults.adapter = originalAdapter;
+  vi.unstubAllGlobals();
 });
 
 it("shows loading until the API responds, then an empty state with Add available", async () => {
@@ -236,6 +244,42 @@ it("renders API records with nullable fields and searches the returned list", as
   expect(screen.queryByText("Location not specified")).not.toBeInTheDocument();
   await user.type(screen.getByRole("textbox", { name: "Search applications" }), "unmatched");
   expect(screen.getByText("No matching applications")).toBeInTheDocument();
+});
+
+it("restores saved list, status and sort choices after reopening the page", async () => {
+  const user = userEvent.setup();
+  http.mockImplementation(async config => response(config, [applicationFixture({ status: "Rejected" })]));
+  const page = renderPage();
+  await screen.findByRole("button", { name: "Archived" });
+  await user.click(screen.getByRole("button", { name: "Archived" }));
+  await user.click(screen.getByRole("combobox", { name: "Status" }));
+  await user.click(screen.getByRole("option", { name: "Rejected" }));
+  await user.click(screen.getByRole("combobox", { name: "Sort by" }));
+  await user.click(screen.getByRole("option", { name: "Deadline" }));
+  expect(JSON.parse(window.localStorage.getItem("jobtracker.applications.view") ?? "null")).toEqual({
+    status: "Rejected", filter: "archived", sort: "deadlineAsc",
+  });
+
+  page.unmount();
+  renderPage();
+  expect(await screen.findByRole("button", { name: "Archived" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("combobox", { name: "Status" })).toHaveTextContent("Rejected");
+  expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveTextContent("Deadline");
+  await user.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(JSON.parse(window.localStorage.getItem("jobtracker.applications.view") ?? "null")).toEqual({
+    status: "all", filter: "all", sort: "updatedDesc",
+  });
+});
+
+it("ignores invalid saved application view choices", async () => {
+  window.localStorage.setItem("jobtracker.applications.view", JSON.stringify({
+    status: "Unknown", filter: "missing", sort: "missing",
+  }));
+  http.mockImplementation(async config => response(config, [applicationFixture()]));
+  renderPage();
+  expect(await screen.findByRole("button", { name: "All" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("combobox", { name: "Status" })).toHaveTextContent("All statuses");
+  expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveTextContent("Recently updated");
 });
 
 it("creates through POST and refreshes the shared list without reloading", async () => {

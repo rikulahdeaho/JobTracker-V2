@@ -30,14 +30,47 @@ import {
 } from "../utils/applicationList";
 import { applicationStatusLabel } from "../utils/applicationStatus";
 
+const VIEW_STORAGE_KEY = "jobtracker.applications.view";
+type SavedView = {
+  status: "all" | ApplicationStatus;
+  filter: ApplicationListFilter;
+  sort: ApplicationSortOption;
+};
+const defaultView: SavedView = { status: "all", filter: "all", sort: "updatedDesc" };
+
+function loadSavedView(): SavedView {
+  try {
+    const saved: unknown = JSON.parse(window.localStorage.getItem(VIEW_STORAGE_KEY) ?? "null");
+    if (!saved || typeof saved !== "object") return defaultView;
+    const view = saved as Record<string, unknown>;
+    return {
+      status: view.status === "all" || (typeof view.status === "string" && view.status in applicationStatusLabel)
+        ? view.status as SavedView["status"] : "all",
+      filter: ["all", "active", "archived", "needsAttention"].includes(String(view.filter))
+        ? view.filter as ApplicationListFilter : "all",
+      sort: ["updatedDesc", "appliedDesc", "deadlineAsc"].includes(String(view.sort))
+        ? view.sort as ApplicationSortOption : "updatedDesc",
+    };
+  } catch {
+    return defaultView;
+  }
+}
+
 export function ApplicationsPage() {
   const { applications, addApplication, isPending, error, refetch } = useApplications();
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState<"all" | ApplicationStatus>("all");
-  const [listFilter, setListFilter] = React.useState<ApplicationListFilter>("all");
-  const [sortOption, setSortOption] = React.useState<ApplicationSortOption>("updatedDesc");
+  const [view, setView] = React.useState(loadSavedView);
+  const { status: statusFilter, filter: listFilter, sort: sortOption } = view;
+
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(view));
+    } catch {
+      // The filters still work for this visit if browser storage is unavailable.
+    }
+  }, [view]);
 
   const visibleApplications = React.useMemo(
     () =>
@@ -61,9 +94,7 @@ export function ApplicationsPage() {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setStatusFilter("all");
-    setListFilter("all");
-    setSortOption("updatedDesc");
+    setView(defaultView);
   };
 
   return (
@@ -99,7 +130,7 @@ export function ApplicationsPage() {
           </Stack>
           <Stack direction={{ xs: "column", md: "row" }} gap={2} justifyContent="space-between" alignItems={{ xs: "stretch", md: "center" }}>
             <ToggleButtonGroup exclusive value={listFilter} onChange={(_, nextFilter: ApplicationListFilter | null) => {
-              if (nextFilter) setListFilter(nextFilter);
+              if (nextFilter) setView(current => ({ ...current, filter: nextFilter }));
             }} aria-label="Application view filter" size="small" sx={{
               flexWrap: "wrap", gap: 0.5,
               "& .MuiToggleButtonGroup-grouped": { border: 0, borderRadius: "8px !important", px: { xs: 1, sm: 1.5 }, fontWeight: 500 },
@@ -112,11 +143,11 @@ export function ApplicationsPage() {
             </ToggleButtonGroup>
             <Box id="application-filters" sx={{ display: { xs: filtersOpen ? "block" : "none", md: "block" } }}>
               <Stack direction={{ xs: "column", sm: "row" }} gap={1.5}>
-                <TextField select label="Status" value={statusFilter} onChange={event => setStatusFilter(event.target.value as "all" | ApplicationStatus)} sx={{ minWidth: { xs: "100%", sm: 160 } }}>
+                <TextField select label="Status" value={statusFilter} onChange={event => setView(current => ({ ...current, status: event.target.value as SavedView["status"] }))} sx={{ minWidth: { xs: "100%", sm: 160 } }}>
                   <MenuItem value="all">All statuses</MenuItem>
                   {(Object.keys(applicationStatusLabel) as ApplicationStatus[]).map(status => <MenuItem key={status} value={status}>{applicationStatusLabel[status]}</MenuItem>)}
                 </TextField>
-                <TextField select label="Sort by" value={sortOption} onChange={event => setSortOption(event.target.value as ApplicationSortOption)} sx={{ minWidth: { xs: "100%", sm: 180 } }}>
+                <TextField select label="Sort by" value={sortOption} onChange={event => setView(current => ({ ...current, sort: event.target.value as ApplicationSortOption }))} sx={{ minWidth: { xs: "100%", sm: 180 } }}>
                   <MenuItem value="updatedDesc">Recently updated</MenuItem>
                   <MenuItem value="appliedDesc">Applied date</MenuItem>
                   <MenuItem value="deadlineAsc">Deadline</MenuItem>
@@ -127,7 +158,7 @@ export function ApplicationsPage() {
           <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between" flexWrap="wrap">
             <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>{visibleApplications.length} result{visibleApplications.length === 1 ? "" : "s"}</Typography>
-              {statusFilter !== "all" ? <Chip label={applicationStatusLabel[statusFilter]} size="small" variant="outlined" onDelete={() => setStatusFilter("all")} /> : null}
+              {statusFilter !== "all" ? <Chip label={applicationStatusLabel[statusFilter]} size="small" variant="outlined" onDelete={() => setView(current => ({ ...current, status: "all" }))} /> : null}
             </Stack>
             {hasActiveFilters ? <Button startIcon={<CloseOutlinedIcon />} onClick={clearFilters}>Clear filters</Button> : null}
           </Stack>
